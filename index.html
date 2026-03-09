@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGC GSCI - Sistema de Gestión</title>
+    <title>SGC GSCI - Sistema de Gestión Profesional</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -16,177 +16,227 @@
             --primary: #1e40af; --accent: #3b82f6; --bg: #f8fafc;
             --success: #059669; --warning: #d97706; --danger: #dc2626;
             --info: #0891b2; --white: #ffffff; --border: #e2e8f0; --sidebar: #0f172a;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: #1e293b; height: 100vh; display: flex; overflow: hidden; }
+        body { background: var(--bg); color: #1e293b; height: 100vh; display: flex; overflow: hidden; flex-direction: row; }
 
-        /* Pantallas de Acceso */
+        /* Pantallas de Bloqueo */
         #login-screen, #setup-screen { position: fixed; inset: 0; background: var(--sidebar); display: flex; align-items: center; justify-content: center; z-index: 5000; padding: 20px; }
-        .login-box { background: var(--white); padding: 30px; border-radius: 24px; max-width: 400px; width: 100%; text-align: center; }
+        .login-box { background: var(--white); padding: 40px; border-radius: 24px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
 
-        /* Sidebar Responsivo */
+        /* Sidebar (Desktop) */
         .sidebar { 
-            width: 280px; background: var(--sidebar); color: white; display: none; 
-            flex-direction: column; padding: 20px; transition: all 0.3s ease;
+            width: 280px; background: var(--sidebar); color: white; display: flex; 
+            flex-direction: column; padding: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative; z-index: 1000;
         }
 
+        /* Header Móvil */
         .mobile-header {
             display: none; background: var(--sidebar); color: white;
             padding: 12px 20px; justify-content: space-between; align-items: center;
-            position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 2000; height: 60px;
         }
 
-        /* Main Content */
-        .main { flex: 1; padding: 30px; overflow-y: auto; display: none; }
-        .section { display: none; max-width: 1200px; margin: 0 auto; }
+        /* Contenido Principal */
+        .main { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
+        .section { display: none; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.3s ease; }
         .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* UI Elements */
-        .card { background: white; padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        /* Componentes UI */
+        .card { background: white; padding: 25px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: var(--shadow); }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+        /* Inputs y Selects */
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; font-size: 14px; outline: none; transition: border 0.2s; }
+        input:focus, select:focus { border-color: var(--accent); }
+        label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+
+        /* Botones */
+        .btn { padding: 12px 24px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #17368a; transform: translateY(-1px); }
+        .btn-ghost { background: #f1f5f9; color: #475569; }
+        .btn-danger { background: var(--danger); color: white; }
 
         /* Tablas */
-        .table-container { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th { text-align: left; padding: 12px; background: #f1f5f9; font-size: 11px; text-transform: uppercase; color: #64748b; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-
-        .btn { padding: 10px 18px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-ghost { background: #f1f5f9; color: #475569; }
+        .table-container { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; background: white; }
+        th { text-align: left; padding: 16px; background: #f8fafc; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 800; }
+        td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
 
         /* RESPONSIVIDAD */
-        @media (max-width: 900px) {
-            body { flex-direction: column; }
-            .sidebar { position: fixed; left: -280px; top: 0; bottom: 0; display: flex !important; width: 260px; box-shadow: 10px 0 30px rgba(0,0,0,0.4); }
+        @media (max-width: 1024px) {
+            .sidebar { position: fixed; left: -280px; top: 0; bottom: 0; width: 280px; box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
             .sidebar.open { left: 0; }
             .mobile-header { display: flex; }
-            .main { padding: 80px 15px 20px; }
-            .grid-4, .grid-2 { grid-template-columns: 1fr; }
-            .modal-content { grid-template-columns: 1fr !important; height: 90vh; overflow-y: auto; }
-            #sidebar-overlay.active { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 900; }
+            .main { padding: 80px 20px 20px; }
+            .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+            #sidebar-overlay.active { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 900; backdrop-filter: blur(2px); }
         }
 
-        #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .spinner { width: 45px; height: 45px; border: 5px solid #e2e8f0; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .nav-link { display: flex; align-items: center; padding: 12px; color: #94a3b8; border: none; background: none; cursor: pointer; width: 100%; border-radius: 12px; margin-bottom: 5px; font-size: 14px; text-align: left; }
-        .nav-link.active { background: var(--accent); color: white; }
+        .nav-link { display: flex; align-items: center; padding: 14px; color: #94a3b8; border: none; background: none; cursor: pointer; width: 100%; border-radius: 12px; margin-bottom: 6px; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover { color: white; background: rgba(255,255,255,0.05); }
+        .nav-link.active { background: var(--accent); color: white; font-weight: 700; }
         .nav-link span { margin-right: 12px; }
 
-        /* Modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 4000; padding: 15px; }
-        .modal-content { background: white; width: 100%; max-width: 1000px; border-radius: 20px; display: grid; grid-template-columns: 1fr 320px; overflow: hidden; max-height: 85vh; }
-        
-        .settings-item { padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        /* Modales Premium */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); display: none; align-items: center; justify-content: center; z-index: 4000; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-content { background: white; width: 100%; max-width: 1100px; border-radius: 24px; display: grid; grid-template-columns: 1fr 350px; overflow: hidden; max-height: 90vh; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+
+        .chat-msg { margin-bottom: 12px; padding: 10px; border-radius: 12px; background: #f1f5f9; font-size: 13px; }
+        .chat-msg b { color: var(--primary); display: block; margin-bottom: 2px; }
+        .chat-msg small { color: #94a3b8; font-size: 10px; }
+
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+
+        .btn-access { background: #fff; color: var(--primary); border: 2px solid var(--primary); text-decoration: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 8px; }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay"><div class="spinner"></div><p style="margin-top:10px; font-weight:700;">Sincronizando...</p></div>
+    <div id="loading-overlay"><div class="spinner"></div><p style="margin-top:15px; font-weight:800; color:var(--primary);">Sincronizando GSCI...</p></div>
     <div id="sidebar-overlay" onclick="window.toggleSidebar()"></div>
 
     <header class="mobile-header">
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px;">
             <button class="btn" style="background:none; color:white; padding:5px;" onclick="window.toggleSidebar()"><span class="material-icons-round">menu</span></button>
-            <span style="font-weight: 800;">GSCI SGC</span>
+            <span style="font-weight: 800; letter-spacing: 1px;">GSCI SGC</span>
         </div>
-        <a href="https://juniorrcede3002-arch.github.io/Sistemadegestion/" style="color:white; text-decoration:none;"><span class="material-icons-round">home</span></a>
+        <a href="https://juniorrcede3002-arch.github.io/Sistemadegestion/" style="color:white;"><span class="material-icons-round">home</span></a>
     </header>
 
     <div id="login-screen">
         <div class="login-box">
-            <h1 style="color:var(--primary); font-weight:800;">SGC GSCI</h1>
-            <p style="color:#64748b; margin:10px 0 25px;">Gestión Multi-Espacio</p>
-            <button class="btn btn-primary" id="btn-login-google" style="width:100%; padding:14px; gap:10px;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18">
-                Entrar con Google
+            <h1 style="color:var(--primary); font-weight:900; font-size:28px;">GSCI SGC</h1>
+            <p style="color:#64748b; margin:10px 0 30px;">Gestión de Calidad e Innovación</p>
+            <button class="btn btn-primary" id="btn-login-google" style="width:100%; padding:16px; background:white; color:#1e293b; border:1px solid #e2e8f0; gap:12px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20">
+                Iniciar sesión con Google
             </button>
         </div>
     </div>
 
     <div id="setup-screen" style="display:none;">
         <div class="login-box">
-            <h3>Nombre de tu Espacio</h3>
-            <input type="text" id="setup-ws-name" placeholder="Ej: Control Calidad S.A.">
-            <button class="btn btn-primary" style="width:100%" id="btn-confirm-setup">CREAR ESPACIO</button>
+            <h2 style="color:var(--primary)">Configura tu Espacio</h2>
+            <p style="font-size:14px; color:#64748b; margin-bottom:25px;">Cada espacio es una base de datos privada.</p>
+            <label>Nombre de la Organización</label>
+            <input type="text" id="setup-ws-name" placeholder="Ej: FCI Logística S.A.">
+            <button class="btn btn-primary" style="width:100%" id="btn-confirm-setup">CREAR MI ESPACIO</button>
         </div>
     </div>
 
     <aside class="sidebar" id="sidebar">
-        <div style="margin-bottom:30px; padding:10px;">
-            <h2 id="display-ws-name" style="color:var(--accent); font-size:15px; font-weight:800; text-transform:uppercase;">WORKSPACE</h2>
-            <p id="display-user-email" style="font-size:10px; color:#94a3b8; margin-top:4px;"></p>
+        <div style="margin-bottom:35px; padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
+            <h2 id="display-ws-name" style="color:var(--accent); font-size:16px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">CARGANDO...</h2>
+            <p id="display-user-email" style="font-size:10px; color:#64748b; margin-top:5px; font-weight:600;"></p>
         </div>
         <nav style="flex:1">
             <button class="nav-link active" onclick="window.cambiarVista('sec-dash', this)"><span class="material-icons-round">dashboard</span> Dashboard</button>
-            <button class="nav-link" onclick="window.cambiarVista('sec-crear', this)"><span class="material-icons-round">add_circle</span> Nueva Solicitud</button>
-            <button class="nav-link" onclick="window.cambiarVista('sec-gest', this)"><span class="material-icons-round">assignment</span> Gestión GSCI</button>
-            <button class="nav-link" onclick="window.cambiarVista('sec-listado', this)"><span class="material-icons-round">library_books</span> Listado Maestro</button>
-            <button class="nav-link" onclick="window.cambiarVista('sec-colab', this)"><span class="material-icons-round">people</span> Colaboradores</button>
-            <button class="nav-link" onclick="window.cambiarVista('sec-struct', this)"><span class="material-icons-round">settings</span> Estructura</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-multi', this)"><span class="material-icons-round">dynamic_form</span> Nueva Gestión</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-gest', this)"><span class="material-icons-round">rule</span> Bandeja GSCI</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-listado', this)"><span class="material-icons-round">inventory_2</span> Listado Maestro</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-colab', this)"><span class="material-icons-round">groups</span> Colaboradores</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-struct', this)"><span class="material-icons-round">account_tree</span> Estructura</button>
         </nav>
-        <button onclick="window.logout()" class="nav-link" style="color:var(--danger); margin-top:20px;"><span class="material-icons-round">logout</span> Salir</button>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
+            <button onclick="window.logout()" class="nav-link" style="color:var(--danger);"><span class="material-icons-round">power_settings_new</span> Cerrar Sesión</button>
+        </div>
     </aside>
 
     <main class="main" id="main">
+        
         <section id="sec-dash" class="section active">
-            <h1>Analytics del Espacio</h1>
-            <div class="grid-4" style="margin-top:20px;">
-                <div class="card" style="border-left:5px solid var(--primary)"><label>Solicitudes Totales</label><h2 id="dash-tot">0</h2></div>
-                <div class="card" style="border-left:5px solid var(--warning)"><label>En Gestión</label><h2 id="dash-pend">0</h2></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; flex-wrap:wrap; gap:15px;">
+                <h1>Panel de Analytics</h1>
+                <a href="https://juniorrcede3002-arch.github.io/Sistemadegestion/" class="btn-access" target="_blank">
+                    <span class="material-icons-round">rocket_launch</span> ACCESO DIRECTO GSCI
+                </a>
             </div>
-            <a href="https://juniorrcede3002-arch.github.io/Sistemadegestion/" class="btn btn-ghost" style="margin-top:20px;">
-                <span class="material-icons-round">link</span> Acceso Directo al Sistema
-            </a>
+            
+            <div class="grid-4">
+                <div class="card" style="border-top:5px solid var(--primary)"><label>Solicitudes Totales</label><h2 id="dash-tot">0</h2></div>
+                <div class="card" style="border-top:5px solid var(--warning)"><label>En Revisión</label><h2 id="dash-pend">0</h2></div>
+                <div class="card" style="border-top:5px solid var(--success)"><label>Aprobadas</label><h2 id="dash-ok">0</h2></div>
+                <div class="card" style="border-top:5px solid var(--info)"><label>Hoy</label><h2 id="dash-today">0</h2></div>
+            </div>
         </section>
 
-        <section id="sec-crear" class="section">
-            <div class="card" style="max-width:850px; margin:auto;">
-                <h2>Nueva Solicitud FCI-SOL</h2>
+        <section id="sec-multi" class="section">
+            <div class="card" style="max-width:900px; margin:auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                    <h2>Registro de Gestión Universal</h2>
+                    <span id="uni-id-tag" style="background:#f1f5f9; color:var(--sidebar); padding:6px 15px; border-radius:30px; font-weight:900; font-size:12px; border:1px solid #ddd;">ID: -----</span>
+                </div>
+
                 <div class="grid-2">
                     <div>
-                        <label>Acción a realizar</label>
-                        <select id="sol-accion" onchange="window.togglePanelExtra(this.value)">
-                            <option value="Creación">Creación</option>
-                            <option value="Modificación">Modificación</option>
-                            <option value="Inactivación">Inactivación</option>
+                        <label>Categoría del Registro</label>
+                        <select id="uni-categoria" onchange="window.adaptarPlantilla(this.value)">
+                            <option value="DOCUMENTOS">Control de Documentos (FCI-SOL)</option>
+                            <option value="AUDITORIA">Gestión de Auditorías</option>
+                            <option value="MEJORA">Oportunidad de Mejora / Tarea</option>
                         </select>
                     </div>
-                    <div><label>Tipo Documento</label><select id="sol-tipo-doc"></select></div>
-                </div>
-
-                <div id="panel-extra" style="display:none; background:#f1f5f9; padding:15px; border-radius:12px; margin-bottom:15px; border: 1px solid #cbd5e1;">
-                    <div class="grid-3">
-                        <div><label>Código Actual</label><input type="text" id="sol-cod-ref" placeholder="Ej: FCI-001"></div>
-                        <div><label>Versión Actual</label><input type="text" id="sol-ver-ref" placeholder="Ej: 01"></div>
-                        <div><label>Fecha Ult. Versión</label><input type="date" id="sol-fecha-ref"></div>
+                    <div>
+                        <label>Tipo de Acción</label>
+                        <select id="uni-accion" onchange="window.togglePanelRef(this.value)">
+                            <option value="CREACION">Nueva Creación</option>
+                            <option value="MODIFICACION">Modificación de Existente</option>
+                            <option value="INACTIVACION">Inactivación / Baja</option>
+                        </select>
                     </div>
                 </div>
 
-                <label>Título del Documento</label><input type="text" id="sol-tit">
+                <div id="panel-ref" style="display:none; background:#f8fafc; padding:20px; border-radius:15px; margin:20px 0; border:1px dashed #cbd5e1;">
+                    <p style="font-size:11px; font-weight:900; color:var(--primary); margin-bottom:15px;">DATOS DEL DOCUMENTO ORIGINAL</p>
+                    <div class="grid-3">
+                        <div><label>Código Actual</label><input type="text" id="sol-cod-ref" placeholder="Ej: FCI-PRO-01"></div>
+                        <div><label>Versión</label><input type="text" id="sol-ver-ref" placeholder="Ej: 02"></div>
+                        <div><label>Fecha Edición</label><input type="date" id="sol-fecha-ref"></div>
+                    </div>
+                </div>
+
                 <div class="grid-2">
-                    <div><label>Gerencia</label><select id="sol-ger" onchange="window.actualizarDeptos(this.value)"></select></div>
+                    <div><label>Título del Item</label><input type="text" id="uni-tit" placeholder="Nombre descriptivo..."></div>
+                    <div><label>Tipo de Item</label><select id="sol-tipo-doc"></select></div>
+                </div>
+
+                <div class="grid-2">
+                    <div><label>Gerencia Responsable</label><select id="sol-ger" onchange="window.actualizarDeptos(this.value)"></select></div>
                     <div><label>Departamento</label><select id="sol-dep"></select></div>
                 </div>
-                <label>Motivo del Cambio / Justificación</label><textarea id="sol-motivo" rows="3"></textarea>
-                <label>Adjuntar Archivo</label><input type="file" id="sol-file">
-                <button class="btn btn-primary" style="width:100%; margin-top:10px; padding:15px;" id="btnSendSol">REGISTRAR SOLICITUD</button>
+
+                <label id="lbl-motivo">Justificación / Descripción de la Gestión</label>
+                <textarea id="uni-motivo" rows="4" placeholder="Detalle los motivos de esta solicitud..."></textarea>
+
+                <label>Adjuntar Evidencia / Documento</label>
+                <input type="file" id="uni-file" style="padding:10px; border:2px dashed #e2e8f0; background:#fdfdfd;">
+
+                <button class="btn btn-primary" style="width:100%; padding:18px; font-size:16px; margin-top:10px;" id="btnSendUni">
+                    <span class="material-icons-round">send</span> ENVIAR SOLICITUD AL FLUJO
+                </button>
             </div>
         </section>
 
         <section id="sec-gest" class="section">
-            <h1>Gestión Administrativa</h1>
+            <h1>Bandeja de Aprobaciones</h1>
             <div class="card" style="padding:0; margin-top:20px;">
                 <div class="table-container">
                     <table>
-                        <thead><tr><th>ID</th><th>Solicitante</th><th>Título</th><th>Estado</th><th>Acción</th></tr></thead>
+                        <thead><tr><th>ID GSCI</th><th>Solicitante</th><th>Título</th><th>Estado</th><th>Acción</th></tr></thead>
                         <tbody id="tbody-gestionar"></tbody>
                     </table>
                 </div>
@@ -194,37 +244,44 @@
         </section>
 
         <section id="sec-colab" class="section">
-            <h1>Gestión de Colaboradores</h1>
-            <div class="grid-2">
+            <h1>Miembros del Espacio</h1>
+            <div class="grid-2" style="margin-top:20px;">
                 <div class="card">
-                    <h3>Invitar por Correo</h3>
-                    <input type="email" id="invite-email" placeholder="usuario@gmail.com">
-                    <button class="btn btn-primary" onclick="window.enviarInvitacion()" style="margin-top:10px;">DAR ACCESO AL ESPACIO</button>
+                    <h3>Invitar Colaborador</h3>
+                    <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Permite que otros usuarios accedan con su cuenta de Google.</p>
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="invite-email" placeholder="ejemplo@gmail.com">
+                    <button class="btn btn-primary" style="width:100%" onclick="window.enviarInvitacion()">CONCEDER ACCESO</button>
                 </div>
                 <div class="card" style="padding:0;">
-                    <table><thead><tr><th>Usuario</th><th>Rol</th><th>Eliminar</th></tr></thead><tbody id="tbody-colabs"></tbody></table>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Usuario</th><th>Rol</th><th>Gestión</th></tr></thead>
+                            <tbody id="tbody-colabs"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
 
         <section id="sec-struct" class="section">
             <h1>Configuración de Estructura</h1>
-            <div class="grid-3">
+            <div class="grid-3" style="margin-top:20px;">
                 <div class="card">
-                    <h3>Tipos Doc.</h3>
-                    <div style="display:flex; gap:5px;"><input type="text" id="t-nom" style="margin:0;"><button class="btn btn-success" onclick="window.agregarTipoDoc()">+</button></div>
+                    <h3>Tipos de Doc.</h3>
+                    <div style="display:flex; gap:8px; margin-bottom:15px;"><input type="text" id="t-nom" style="margin:0;"><button class="btn btn-primary" onclick="window.agregarTipoDoc()">+</button></div>
                     <div id="list-tipos"></div>
                 </div>
                 <div class="card">
                     <h3>Gerencias</h3>
-                    <div style="display:flex; gap:5px;"><input type="text" id="g-nom" style="margin:0;"><button class="btn btn-success" onclick="window.guardarGerencia()">+</button></div>
+                    <div style="display:flex; gap:8px; margin-bottom:15px;"><input type="text" id="g-nom" style="margin:0;"><button class="btn btn-primary" onclick="window.guardarGerencia()">+</button></div>
                     <div id="list-ger"></div>
                 </div>
                 <div class="card">
                     <h3>Deptos.</h3>
-                    <select id="d-ger-sel"></select>
-                    <div style="display:flex; gap:5px;"><input type="text" id="d-nom" style="margin:0;"><button class="btn btn-success" onclick="window.guardarDepartamento()">+</button></div>
-                    <div id="list-dep"></div>
+                    <select id="d-ger-sel" style="margin-bottom:8px;"></select>
+                    <div style="display:flex; gap:8px;"><input type="text" id="d-nom" style="margin:0;"><button class="btn btn-primary" onclick="window.guardarDepto()">+</button></div>
+                    <div id="list-dep" style="margin-top:10px;"></div>
                 </div>
             </div>
         </section>
@@ -232,19 +289,22 @@
 
     <div class="modal-overlay" id="modal">
         <div class="modal-content">
-            <div style="padding:25px; overflow-y:auto;">
-                <h2 id="m-tit">Detalle</h2>
-                <div id="m-data" style="margin-top:15px; font-size:14px; line-height:1.6;"></div>
-                <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
-                    <button class="btn btn-primary" onclick="window.firmarPaso()">Aprobar Etapa</button>
+            <div style="padding:30px; overflow-y:auto;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <h2 id="m-tit">Detalle</h2>
                     <button class="btn btn-ghost" onclick="window.closeModal()">Cerrar</button>
                 </div>
+                <div id="m-data" style="margin-top:20px; font-size:14px; line-height:1.7;"></div>
+                <div style="margin-top:30px; display:flex; gap:12px; flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="window.firmarPaso()"><span class="material-icons-round">draw</span> APROBAR ETAPA</button>
+                    <button class="btn btn-danger" onclick="window.rechazarSolicitud()"><span class="material-icons-round">close</span> RECHAZAR</button>
+                </div>
             </div>
-            <div style="background:#f8fafc; padding:20px; border-left:1px solid #ddd; display:flex; flex-direction:column;">
-                <h4>Bitácora / Chat</h4>
-                <div id="chat-box" style="flex:1; height:250px; overflow-y:auto; margin:15px 0; font-size:12px; background:white; padding:10px; border-radius:8px; border:1px solid #e2e8f0;"></div>
-                <textarea id="m-comment" placeholder="Comentar..." rows="2"></textarea>
-                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="window.enviarComentario()">Enviar</button>
+            <div style="background:#f8fafc; border-left:1px solid #e2e8f0; display:flex; flex-direction:column; padding:25px;">
+                <h4 style="margin-bottom:15px;">Bitácora de Eventos</h4>
+                <div id="chat-box" style="flex:1; overflow-y:auto; margin-bottom:15px; background:white; border-radius:15px; padding:15px; border:1px solid #e2e8f0;"></div>
+                <textarea id="m-comment" placeholder="Escribir comentario..." rows="2" style="margin-bottom:8px;"></textarea>
+                <button class="btn btn-primary" style="width:100%" onclick="window.enviarComentario()">ENVIAR MENSAJE</button>
             </div>
         </div>
     </div>
@@ -254,6 +314,7 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, updateDoc, setDoc, query, where, getDocs, arrayUnion, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
+        // CONFIGURACIÓN PROPORCIONADA
         const firebaseConfig = {
             apiKey: "AIzaSyDHflRFI5xQjiRQDwZyfizelEilAE0TjXo",
             authDomain: "sistemadegestion2-fd38e.firebaseapp.com",
@@ -268,19 +329,15 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        // EmailJS Init
+        // EmailJS y Cloudinary
         emailjs.init("0xTGvm-GEN3ZBckbY");
-        const SERVICE_ID = "service_20sm1nj";
-        const TEMPLATE_ID = "template_60rn43d";
-
-        // Cloudinary Config
         const CLOUD_NAME = "df79cjklp";
         const UPLOAD_PRESET = "sistema2";
 
         let currentWS = null, userData = null, selectedId = null, selectedData = null;
         let allDeps = [], tiposDoc = [];
 
-        // --- FUNCIONES GLOBALES ---
+        // --- FUNCIONES GLOBALES (Solución ReferenceError) ---
         window.showLoading = () => document.getElementById('loading-overlay').style.display = 'flex';
         window.hideLoading = () => document.getElementById('loading-overlay').style.display = 'none';
 
@@ -292,52 +349,42 @@
         window.cambiarVista = (id, btn) => {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            const sec = document.getElementById(id);
-            if(sec) sec.classList.add('active');
+            const target = document.getElementById(id);
+            if(target) target.classList.add('active');
             if(btn) btn.classList.add('active');
-            if(window.innerWidth < 900) window.toggleSidebar();
+            if(window.innerWidth < 1024) window.toggleSidebar();
         };
 
-        window.togglePanelExtra = (val) => {
-            document.getElementById('panel-extra').style.display = (val === 'Creación') ? 'none' : 'block';
+        window.adaptarPlantilla = (cat) => {
+            const lbl = document.getElementById('lbl-motivo');
+            if(cat === 'AUDITORIA') lbl.innerText = "Alcance y Objetivo de la Auditoría";
+            else if(cat === 'MEJORA') lbl.innerText = "Descripción de la Mejora o Tarea";
+            else lbl.innerText = "Justificación del Cambio / Creación";
         };
 
-        window.verDetalle = async (id) => {
-            selectedId = id;
-            const snap = await getDoc(doc(db, "Solicitudes", id));
-            selectedData = snap.data();
-            document.getElementById('m-tit').innerText = "Solicitud ID: " + (selectedData.customId || id);
-            document.getElementById('m-data').innerHTML = `
-                <b>Título:</b> ${selectedData.titulo}<br>
-                <b>Gerencia:</b> ${selectedData.gerencia} - ${selectedData.departamento}<br>
-                <b>Acción:</b> ${selectedData.accion}<br>
-                <b>Estado:</b> ${selectedData.estado}<br>
-                ${selectedData.adjunto ? `<a href="${selectedData.adjunto}" target="_blank" style="color:var(--primary); font-weight:700;">Ver Archivo Adjunto</a>` : 'Sin adjunto'}
-            `;
-            const cb = document.getElementById('chat-box');
-            cb.innerHTML = (selectedData.chat || []).map(c => `<div><b>${c.u}:</b> ${c.m} <br><small style="color:#999">${c.t}</small></div>`).join('');
-            document.getElementById('modal').style.display = 'flex';
+        window.togglePanelRef = (val) => {
+            document.getElementById('panel-ref').style.display = (val === 'CREACION') ? 'none' : 'block';
         };
 
         window.closeModal = () => document.getElementById('modal').style.display = 'none';
 
-        // --- ID CORRELATIVO 5 DÍGITOS ---
-        async function getNextSequenceId() {
-            const counterRef = doc(db, "workspaces", currentWS, "config", "counters");
+        // --- GENERADOR ID 5 DÍGITOS ---
+        async function getNextId() {
+            const ref = doc(db, "workspaces", currentWS, "config", "counters");
             let newId = 1;
-            await runTransaction(db, async (transaction) => {
-                const snap = await transaction.get(counterRef);
-                if (snap.exists()) {
-                    newId = (snap.data().sol_count || 0) + 1;
-                    transaction.update(counterRef, { sol_count: newId });
+            await runTransaction(db, async (t) => {
+                const snap = await t.get(ref);
+                if(snap.exists()) {
+                    newId = (snap.data().val || 0) + 1;
+                    t.update(ref, { val: newId });
                 } else {
-                    transaction.set(counterRef, { sol_count: 1 });
+                    t.set(ref, { val: 1 });
                 }
             });
             return String(newId).padStart(5, '0');
         }
 
-        // --- AUTH & WORKSPACE ---
+        // --- AUTH & DATA SYNC ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 window.showLoading();
@@ -346,7 +393,7 @@
                 if (snap.exists()) {
                     userData = snap.data();
                     currentWS = userData.wsId;
-                    initWorkspace();
+                    initApp();
                 } else {
                     const q = query(collection(db, "invitations"), where("email", "==", user.email.toLowerCase()));
                     const invSnap = await getDocs(q);
@@ -354,7 +401,7 @@
                         currentWS = invSnap.docs[0].data().wsId;
                         userData = { uid: user.uid, email: user.email, wsId: currentWS, role: "Colaborador", nombre: user.displayName };
                         await setDoc(uRef, userData);
-                        initWorkspace();
+                        initApp();
                     } else {
                         document.getElementById('setup-screen').style.display = 'flex';
                         document.getElementById('login-screen').style.display = 'none';
@@ -371,16 +418,16 @@
         document.getElementById('btn-login-google').onclick = () => signInWithPopup(auth, provider);
 
         document.getElementById('btn-confirm-setup').onclick = async () => {
-            const wsName = document.getElementById('setup-ws-name').value.trim();
-            if(!wsName) return;
+            const name = document.getElementById('setup-ws-name').value.trim();
+            if(!name) return;
             window.showLoading();
             const wsId = "WS-" + Date.now();
-            await setDoc(doc(db, "workspaces", wsId), { name: wsName, owner: auth.currentUser.uid });
+            await setDoc(doc(db, "workspaces", wsId), { name, owner: auth.currentUser.uid });
             await setDoc(doc(db, "users", auth.currentUser.uid), { uid: auth.currentUser.uid, email: auth.currentUser.email, wsId, role: "Admin", nombre: auth.currentUser.displayName });
             location.reload();
         };
 
-        async function initWorkspace() {
+        async function initApp() {
             const wsSnap = await getDoc(doc(db, "workspaces", currentWS));
             document.getElementById('display-ws-name').innerText = wsSnap.data().name;
             document.getElementById('display-user-email').innerText = userData.email;
@@ -388,28 +435,31 @@
             document.getElementById('main').style.display = 'block';
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('setup-screen').style.display = 'none';
-            cargarDatos();
+            syncData();
         }
 
-        function cargarDatos() {
+        function syncData() {
             const q = (c) => query(collection(db, c), where("wsId", "==", currentWS));
 
+            // Solicitudes / Gestiones
             onSnapshot(q("Solicitudes"), s => {
-                let html = "", tot = 0, pend = 0;
+                let html = "", tot = 0, pend = 0, ok = 0;
                 s.forEach(d => {
                     const sol = d.data(); tot++;
-                    if(sol.estado !== "Aprobado Final") pend++;
-                    html += `<tr><td><b>${sol.customId || 'S/N'}</b></td><td>${sol.solicitante}</td><td>${sol.titulo}</td><td>${sol.estado}</td><td><button class="btn btn-ghost" onclick="window.verDetalle('${d.id}')">Ver</button></td></tr>`;
+                    if(sol.estado === "APROBADO FINAL") ok++; else pend++;
+                    html += `<tr><td><b>${sol.customId || 'S/N'}</b></td><td>${sol.solicitante}</td><td>${sol.titulo}</td><td><span class="badge ${sol.estado === 'APROBADO FINAL' ? 'badge-success' : 'badge-pending'}">${sol.estado}</span></td><td><button class="btn btn-ghost" style="padding:6px 12px;" onclick="window.verDetalle('${d.id}')">Gestionar</button></td></tr>`;
                 });
                 document.getElementById('tbody-gestionar').innerHTML = html;
                 document.getElementById('dash-tot').innerText = tot;
                 document.getElementById('dash-pend').innerText = pend;
+                document.getElementById('dash-ok').innerText = ok;
             });
 
+            // Estructura
             onSnapshot(q("Gerencias"), s => {
                 let h = "", opts = "<option value=''>-- Seleccionar --</option>";
                 s.forEach(d => {
-                    h += `<div class="settings-item">${d.data().nombre} <button onclick="window.del('Gerencias','${d.id}')" style="color:red; border:none; background:none; cursor:pointer;">X</button></div>`;
+                    h += `<div class="settings-item">${d.data().nombre} <button onclick="window.del('Gerencias','${d.id}')" style="color:red;border:none;background:none;cursor:pointer;">X</button></div>`;
                     opts += `<option value="${d.data().nombre}">${d.data().nombre}</option>`;
                 });
                 document.getElementById('list-ger').innerHTML = h;
@@ -421,16 +471,16 @@
                 allDeps = []; let h = "";
                 s.forEach(d => {
                     const dep = d.data(); allDeps.push(dep);
-                    h += `<div class="settings-item">${dep.nombre} <small>(${dep.gerencia})</small> <button onclick="window.del('Departamentos','${d.id}')" style="color:red; border:none; background:none; cursor:pointer;">X</button></div>`;
+                    h += `<div class="settings-item">${dep.nombre} <small>(${dep.gerencia})</small> <button onclick="window.del('Departamentos','${d.id}')" style="color:red;border:none;background:none;cursor:pointer;">X</button></div>`;
                 });
                 document.getElementById('list-dep').innerHTML = h;
             });
 
             onSnapshot(doc(db, "workspaces", currentWS), snap => {
-                tiposDoc = snap.data().tiposDoc || [];
+                tiposDoc = snap.data().tiposDoc || ["PROCEDIMIENTO", "MANUAL", "FORMATO"];
                 let h = "", opts = "";
                 tiposDoc.forEach((t, i) => {
-                    h += `<div class="settings-item">${t} <button onclick="window.eliminarTipoDoc(${i})" style="color:red; border:none; background:none; cursor:pointer;">X</button></div>`;
+                    h += `<div class="settings-item">${t} <button onclick="window.eliminarTipoDoc(${i})" style="color:red;border:none;background:none;cursor:pointer;">X</button></div>`;
                     opts += `<option value="${t}">${t}</option>`;
                 });
                 document.getElementById('list-tipos').innerHTML = h;
@@ -441,7 +491,7 @@
                 let h = "";
                 s.forEach(d => {
                     const u = d.data();
-                    h += `<tr><td>${u.nombre}</td><td>${u.role}</td><td><button onclick="window.del('users','${d.id}')" style="color:red; border:none; background:none; cursor:pointer;">X</button></td></tr>`;
+                    h += `<tr><td>${u.nombre}</td><td>${u.role}</td><td><button onclick="window.del('users','${d.id}')">X</button></td></tr>`;
                 });
                 document.getElementById('tbody-colabs').innerHTML = h;
             });
@@ -449,8 +499,8 @@
 
         // --- ACCIONES CORE ---
 
-        document.getElementById('btnSendSol').onclick = async () => {
-            const f = document.getElementById('sol-file').files[0];
+        document.getElementById('btnSendUni').onclick = async () => {
+            const f = document.getElementById('uni-file').files[0];
             window.showLoading();
             try {
                 let url = null;
@@ -460,60 +510,64 @@
                     const dat = await res.json(); url = dat.secure_url;
                 }
 
-                const cid = await getNextSequenceId();
-                const accion = document.getElementById('sol-accion').value;
+                const cid = await getNextId();
+                const accion = document.getElementById('uni-accion').value;
                 const data = {
                     wsId: currentWS,
                     customId: cid,
-                    titulo: document.getElementById('sol-tit').value,
+                    categoria: document.getElementById('uni-categoria').value,
                     accion: accion,
+                    titulo: document.getElementById('uni-tit').value,
                     tipoDoc: document.getElementById('sol-tipo-doc').value,
                     gerencia: document.getElementById('sol-ger').value,
                     departamento: document.getElementById('sol-dep').value,
-                    motivo: document.getElementById('sol-motivo').value,
+                    motivo: document.getElementById('uni-motivo').value,
                     solicitante: userData.nombre,
-                    estado: "Pendiente Verificado",
+                    estado: "PENDIENTE VERIFICADO",
                     idx: 1,
                     adjunto: url,
-                    chat: [{u: "SISTEMA", m: "Solicitud iniciada con ID: " + cid, t: new Date().toLocaleString()}]
+                    chat: [{u: "SISTEMA", m: "Solicitud GSCI iniciada con éxito.", t: new Date().toLocaleString()}]
                 };
 
-                if (accion !== 'Creación') {
-                    data.cod_ref = document.getElementById('sol-cod-ref').value;
-                    data.ver_ref = document.getElementById('sol-ver-ref').value;
-                    data.fecha_ref = document.getElementById('sol-fecha-ref').value;
+                if(accion !== 'CREACION') {
+                    data.ref_cod = document.getElementById('sol-cod-ref').value;
+                    data.ref_ver = document.getElementById('sol-ver-ref').value;
+                    data.ref_fecha = document.getElementById('sol-fecha-ref').value;
                 }
 
                 await addDoc(collection(db, "Solicitudes"), data);
-                alert("¡Éxito! Solicitud guardada con ID: " + cid);
-                window.cambiarVista('sec-gest', document.querySelector('[onclick*="sec-gest"]'));
+                alert("¡Éxito! Registro guardado con ID: " + cid);
+                window.cambiarVista('sec-gest');
             } catch (e) { alert("Error: " + e.message); }
             finally { window.hideLoading(); }
         };
 
-        window.enviarInvitacion = async () => {
-            const email = document.getElementById('invite-email').value.trim().toLowerCase();
-            if(!email) return;
-            window.showLoading();
-            await addDoc(collection(db, "invitations"), { email, wsId: currentWS, date: new Date().toISOString() });
-            
-            emailjs.send(SERVICE_ID, TEMPLATE_ID, { to_email: email, from_name: userData.nombre })
-                .then(() => alert("Acceso otorgado e invitación enviada."))
-                .catch(() => alert("Acceso otorgado (Error enviando correo)"));
-
-            document.getElementById('invite-email').value = "";
-            window.hideLoading();
+        window.verDetalle = async (id) => {
+            selectedId = id;
+            const snap = await getDoc(doc(db, "Solicitudes", id));
+            selectedData = snap.data();
+            document.getElementById('m-tit').innerText = "Gestión ID: " + (selectedData.customId || id);
+            document.getElementById('m-data').innerHTML = `
+                <b>Categoría:</b> ${selectedData.categoria} | <b>Acción:</b> ${selectedData.accion}<br>
+                <b>Título:</b> ${selectedData.titulo}<br>
+                <b>Gerencia:</b> ${selectedData.gerencia} / ${selectedData.departamento}<br>
+                <b>Solicitante:</b> ${selectedData.solicitante}<br>
+                <b>Estado Actual:</b> <span class="badge badge-pending">${selectedData.estado}</span><br>
+                ${selectedData.adjunto ? `<a href="${selectedData.adjunto}" target="_blank" style="color:var(--primary); font-weight:800; display:block; margin-top:10px;">📄 VER ARCHIVO ADJUNTO</a>` : ''}
+            `;
+            const cb = document.getElementById('chat-box');
+            cb.innerHTML = (selectedData.chat || []).map(c => `<div class="chat-msg"><b>${c.u}</b>${c.m}<br><small>${c.t}</small></div>`).join('');
+            document.getElementById('modal').style.display = 'flex';
         };
 
         window.firmarPaso = async () => {
-            if(!selectedId) return;
             window.showLoading();
             const nIdx = selectedData.idx + 1;
-            const nEst = nIdx < 4 ? ["Elaborado", "Verificado", "Aprobado Gerencia", "Aprobado SGC"][nIdx] : "Aprobado Final";
+            const nEst = nIdx < 4 ? ["ELABORADO", "VERIFICADO", "GERENCIA APROBADO", "SGC APROBADO"][nIdx] : "APROBADO FINAL";
             await updateDoc(doc(db, "Solicitudes", selectedId), { 
                 idx: nIdx, 
                 estado: nEst, 
-                chat: arrayUnion({u: userData.nombre, m: "✅ Aprobó esta etapa.", t: new Date().toLocaleString()}) 
+                chat: arrayUnion({u: userData.nombre, m: "✅ Firmó y aprobó esta etapa.", t: new Date().toLocaleString()}) 
             });
             window.hideLoading();
             window.closeModal();
@@ -527,19 +581,23 @@
             window.verDetalle(selectedId);
         };
 
-        window.agregarTipoDoc = async () => {
-            const v = document.getElementById('t-nom').value.trim();
-            if(v) {
-                tiposDoc.push(v);
-                await updateDoc(doc(db, "workspaces", currentWS), { tiposDoc: tiposDoc });
-                document.getElementById('t-nom').value = "";
-            }
+        window.enviarInvitacion = async () => {
+            const email = document.getElementById('invite-email').value.trim().toLowerCase();
+            if(!email) return;
+            window.showLoading();
+            await addDoc(collection(db, "invitations"), { email, wsId: currentWS, date: new Date().toISOString() });
+            emailjs.send("service_20sm1nj", "template_60rn43d", { to_email: email, from_name: userData.nombre })
+                .then(() => alert("Invitación enviada.")).catch(() => alert("Acceso concedido (Email falló)."));
+            document.getElementById('invite-email').value = "";
+            window.hideLoading();
         };
 
-        window.eliminarTipoDoc = async (idx) => {
-            tiposDoc.splice(idx, 1);
-            await updateDoc(doc(db, "workspaces", currentWS), { tiposDoc: tiposDoc });
+        window.agregarTipoDoc = async () => {
+            const v = document.getElementById('t-nom').value.trim();
+            if(v) { tiposDoc.push(v.toUpperCase()); await updateDoc(doc(db, "workspaces", currentWS), { tiposDoc: tiposDoc }); document.getElementById('t-nom').value = ""; }
         };
+
+        window.eliminarTipoDoc = async (i) => { tiposDoc.splice(i, 1); await updateDoc(doc(db, "workspaces", currentWS), { tiposDoc: tiposDoc }); };
 
         window.guardarGerencia = async () => {
             const n = document.getElementById('g-nom').value.trim();
@@ -547,7 +605,7 @@
             document.getElementById('g-nom').value = "";
         };
 
-        window.guardarDepartamento = async () => {
+        window.guardarDepto = async () => {
             const g = document.getElementById('d-ger-sel').value;
             const n = document.getElementById('d-nom').value.trim();
             if(g && n) await addDoc(collection(db, "Departamentos"), { nombre: n, gerencia: g, wsId: currentWS });
