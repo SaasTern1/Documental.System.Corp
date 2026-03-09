@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Calidad Avanzada</title>
+    <title>SGC - Sistema de Gestión de Calidad</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -21,46 +21,48 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: #1e293b; height: 100vh; display: flex; overflow: hidden; }
 
-        /* Pantallas de Acceso */
-        #login-screen, #setup-screen { position: fixed; inset: 0; background: var(--sidebar); display: flex; align-items: center; justify-content: center; z-index: 5000; padding: 20px; }
-        .login-box { background: var(--white); padding: 35px; border-radius: 24px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-
-        /* Sidebar & Header */
+        /* Estructura Base */
         .sidebar { width: 280px; background: var(--sidebar); color: white; display: none; flex-direction: column; padding: 20px; transition: 0.3s; z-index: 1000; }
         .mobile-header { display: none; background: var(--sidebar); color: white; padding: 12px 20px; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; z-index: 2000; height: 60px; }
-
-        /* Main */
         .main { flex: 1; padding: 30px; overflow-y: auto; display: none; }
-        .section { display: none; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.3s ease-in-out; }
+        .section { display: none; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.3s ease; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Login & Setup */
+        #login-screen, #setup-screen { position: fixed; inset: 0; background: var(--sidebar); display: flex; align-items: center; justify-content: center; z-index: 5000; padding: 20px; }
+        .login-box { background: var(--white); padding: 35px; border-radius: 24px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
 
         /* UI Cards */
         .card { background: white; padding: 22px; border-radius: 18px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; font-size: 14px; outline: none; transition: 0.2s; }
-        input:focus { border-color: var(--accent); }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; font-size: 14px; outline: none; }
         label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block; }
 
         .btn { padding: 11px 20px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; }
         .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
         .btn-ghost { background: #f1f5f9; color: #475569; }
 
         /* Tablas */
-        .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; background: white; min-width: 800px; }
         th { text-align: left; padding: 14px; background: #f8fafc; font-size: 11px; color: #64748b; text-transform: uppercase; border-bottom: 2px solid var(--border); }
         td { padding: 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
 
-        /* RESPONSIVO */
+        /* Badge */
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+
+        /* Responsivo */
         @media (max-width: 900px) {
             .sidebar { position: fixed; left: -280px; top: 0; bottom: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); }
             .sidebar.open { left: 0; }
             .mobile-header { display: flex; }
             .main { padding: 80px 15px 20px; }
-            .grid-4, .grid-2 { grid-template-columns: 1fr; }
+            .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
             #sidebar-overlay.active { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 900; }
         }
 
@@ -74,24 +76,25 @@
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 4000; padding: 15px; }
         .modal-content { background: white; width: 100%; max-width: 1000px; border-radius: 20px; display: grid; grid-template-columns: 1fr 320px; overflow: hidden; max-height: 85vh; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay"><div class="spinner"></div><p style="margin-top:10px; font-weight:700;">GSCI Sincronizando...</p></div>
+    <div id="loading-overlay"><div class="spinner"></div><p style="margin-top:10px; font-weight:700;">Sincronizando Sistema...</p></div>
     <div id="sidebar-overlay" onclick="window.toggleSidebar()"></div>
 
     <header class="mobile-header">
         <div style="display:flex; align-items:center; gap:10px;">
             <button class="btn" style="background:none; color:white; padding:5px;" onclick="window.toggleSidebar()"><span class="material-icons-round">menu</span></button>
-            <span style="font-weight: 800; font-size: 14px;">GSCI SGC</span>
+            <span style="font-weight: 800; font-size: 14px;">SGC - GESTIÓN</span>
         </div>
     </header>
 
     <div id="login-screen">
         <div class="login-box">
-            <h1 style="color:var(--primary); font-weight:800; font-size:26px;">GSCI SGC</h1>
-            <p style="color:#64748b; margin:10px 0 25px;">Gestión de Calidad Multi-Espacio</p>
+            <h1 style="color:var(--primary); font-weight:800; font-size:26px;">SGC</h1>
+            <p style="color:#64748b; margin:10px 0 25px;">Sistema de Gestión de Calidad</p>
             <button class="btn btn-primary" id="btn-login-google" style="width:100%; padding:14px; gap:10px;">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18">
                 Entrar con Google
@@ -101,10 +104,10 @@
 
     <div id="setup-screen" style="display:none;">
         <div class="login-box">
-            <h3>Configura tu Espacio</h3>
-            <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Crea una sección privada para tus documentos.</p>
-            <input type="text" id="setup-ws-name" placeholder="Ej: Mi Empresa SGC">
-            <button class="btn btn-primary" style="width:100%" id="btn-confirm-setup">COMENZAR</button>
+            <h3>Configurar Espacio de Trabajo</h3>
+            <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Crea un entorno privado para tu organización.</p>
+            <input type="text" id="setup-ws-name" placeholder="Nombre de la Empresa">
+            <button class="btn btn-primary" style="width:100%" id="btn-confirm-setup">CREAR ESPACIO</button>
         </div>
     </div>
 
@@ -116,29 +119,36 @@
         <nav style="flex:1">
             <button class="nav-link active" onclick="window.cambiarVista('sec-dash', this)"><span class="material-icons-round">dashboard</span> Dashboard</button>
             <button class="nav-link" onclick="window.cambiarVista('sec-crear', this)"><span class="material-icons-round">add_circle</span> Nueva Solicitud</button>
-            <button class="nav-link" onclick="window.cambiarVista('sec-gest', this)"><span class="material-icons-round">assignment</span> Gestión GSCI</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-gest', this)"><span class="material-icons-round">assignment</span> Bandeja de Gestión</button>
             <button class="nav-link" onclick="window.cambiarVista('sec-maestro', this)"><span class="material-icons-round">library_books</span> Listado Maestro</button>
-            <button class="nav-link" onclick="window.cambiarVista('sec-colab', this)"><span class="material-icons-round">people</span> Colaboradores</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-colab', this)"><span class="material-icons-round">people</span> Usuarios y Accesos</button>
             <button class="nav-link" onclick="window.cambiarVista('sec-struct', this)"><span class="material-icons-round">settings</span> Estructura</button>
         </nav>
-        <button onclick="window.logout()" class="nav-link" style="color:var(--danger); margin-top:20px;"><span class="material-icons-round">logout</span> Salir</button>
+        <button onclick="window.logout()" class="nav-link" style="color:var(--danger); margin-top:20px;"><span class="material-icons-round">logout</span> Salir del Sistema</button>
     </aside>
 
     <main class="main" id="main">
         
         <section id="sec-dash" class="section active">
-            <h1>Analytics del Espacio</h1>
+            <h1>Analytics</h1>
             <div class="grid-4" style="margin-top:20px;">
-                <div class="card" style="border-left:5px solid var(--primary)"><label>Solicitudes Totales</label><h2 id="dash-tot">0</h2></div>
-                <div class="card" style="border-left:5px solid var(--warning)"><label>En Proceso</label><h2 id="dash-pend">0</h2></div>
+                <div class="card" style="border-left:5px solid var(--primary)"><label>Total Solicitudes</label><h2 id="dash-tot">0</h2></div>
+                <div class="card" style="border-left:5px solid var(--warning)"><label>Pendientes</label><h2 id="dash-pend">0</h2></div>
                 <div class="card" style="border-left:5px solid var(--success)"><label>Aprobadas</label><h2 id="dash-ok">0</h2></div>
-                <div class="card" style="border-left:5px solid var(--danger)"><label>Docs. Maestros</label><h2 id="dash-maestro">0</h2></div>
+                <div class="card" style="border-left:5px solid var(--danger)"><label>Listado Maestro</label><h2 id="dash-maestro">0</h2></div>
             </div>
         </section>
 
         <section id="sec-crear" class="section">
             <div class="card" style="max-width:850px; margin:auto;">
-                <h2>Registrar Solicitud FCI-SOL</h2>
+                <h2>Registrar Nueva Solicitud</h2>
+                <div style="background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #e2e8f0;">
+                    <div class="grid-2">
+                        <div><label>Solicitante</label><p id="sol-info-email" style="font-size:14px; font-weight:700; color:var(--primary);"></p></div>
+                        <div><label>Gerente Asignado</label><p id="sol-info-gerente" style="font-size:14px; font-weight:700; color:var(--info); font-style:italic;">Buscando gerente...</p></div>
+                    </div>
+                </div>
+
                 <div class="grid-2">
                     <div>
                         <label>Acción</label>
@@ -153,8 +163,8 @@
 
                 <div id="panel-extra" style="display:none; background:#f1f5f9; padding:15px; border-radius:12px; margin-bottom:15px; border: 1px solid #cbd5e1;">
                     <div class="grid-3">
-                        <div><label>Código Actual</label><input type="text" id="sol-cod-ref" placeholder="Ej: FCI-001"></div>
-                        <div><label>Versión Actual</label><input type="text" id="sol-ver-ref" placeholder="Ej: 01"></div>
+                        <div><label>Código Actual</label><input type="text" id="sol-cod-ref"></div>
+                        <div><label>Versión</label><input type="text" id="sol-ver-ref"></div>
                         <div><label>Fecha Ult. Versión</label><input type="date" id="sol-fecha-ref"></div>
                     </div>
                 </div>
@@ -164,18 +174,18 @@
                     <div><label>Gerencia</label><select id="sol-ger" onchange="window.actualizarDeptos(this.value)"></select></div>
                     <div><label>Departamento</label><select id="sol-dep"></select></div>
                 </div>
-                <label>Motivo del Cambio</label><textarea id="sol-motivo" rows="3"></textarea>
-                <label>Adjuntar Archivo</label><input type="file" id="sol-file">
+                <label>Justificación del Cambio</label><textarea id="sol-motivo" rows="3"></textarea>
+                <label>Adjuntar Documento</label><input type="file" id="sol-file">
                 <button class="btn btn-primary" style="width:100%; margin-top:10px; padding:15px;" id="btnSendSol">ENVIAR SOLICITUD</button>
             </div>
         </section>
 
         <section id="sec-gest" class="section">
-            <h1>Gestión Administrativa</h1>
+            <h1>Bandeja de Aprobaciones</h1>
             <div class="card" style="padding:0; margin-top:20px;">
                 <div class="table-responsive">
                     <table>
-                        <thead><tr><th>ID GSCI</th><th>Solicitante</th><th>Gerencia</th><th>Título</th><th>Estado</th><th>Gestión</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Solicitante</th><th>Área</th><th>Título</th><th>Estado</th><th>Acción</th></tr></thead>
                         <tbody id="tbody-gestionar"></tbody>
                     </table>
                 </div>
@@ -187,7 +197,7 @@
             <div class="card" style="padding:0; margin-top:20px;">
                 <div class="table-responsive">
                     <table>
-                        <thead><tr><th>Código</th><th>Título</th><th>Tipo</th><th>Gerencia</th><th>Versión</th><th>Archivo</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Título</th><th>Tipo</th><th>Gerencia</th><th>Versión</th><th>Documento</th></tr></thead>
                         <tbody id="tbody-maestro"></tbody>
                     </table>
                 </div>
@@ -195,19 +205,17 @@
         </section>
 
         <section id="sec-colab" class="section">
-            <h1>Colaboradores y Accesos</h1>
-            <div class="grid-2" style="margin-top:20px;">
+            <h1>Gestión de Usuarios</h1>
+            <div class="grid-2">
                 <div class="card">
-                    <h3>Invitar por Correo</h3>
-                    <p style="font-size:11px; color:#64748b; margin-bottom:15px;">Se enviará una notificación a este correo.</p>
-                    <label>Email del Invitado</label>
-                    <input type="email" id="invite-email" placeholder="usuario@gmail.com">
-                    <button class="btn btn-primary" onclick="window.enviarInvitacion()" style="width:100%;">DAR ACCESO AL ESPACIO</button>
+                    <h3>Invitar Usuario</h3>
+                    <input type="email" id="invite-email" placeholder="correo@google.com">
+                    <button class="btn btn-primary" onclick="window.enviarInvitacion()" style="width:100%; margin-top:10px;">Invitar vía EmailJS</button>
                 </div>
                 <div class="card" style="padding:0;">
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Usuario</th><th>Rol</th><th>Gerencia</th><th>Acción</th></tr></thead>
+                            <thead><tr><th>Usuario</th><th>Rol</th><th>Gerencia / Depto</th><th>Acción</th></tr></thead>
                             <tbody id="tbody-colabs"></tbody>
                         </table>
                     </div>
@@ -216,23 +224,22 @@
         </section>
 
         <section id="sec-struct" class="section">
-            <h1>Estructura Organizativa</h1>
-            <div class="grid-3" style="margin-top:20px;">
+            <div class="grid-3">
                 <div class="card">
-                    <h3>Tipos Doc.</h3>
-                    <div style="display:flex; gap:5px;"><input type="text" id="t-nom" style="margin:0;"><button class="btn btn-success" onclick="window.agregarTipoDoc()">+</button></div>
-                    <div id="list-tipos" style="margin-top:10px;"></div>
+                    <h3>Tipos de Documento</h3>
+                    <div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" id="t-nom" style="margin:0;"><button class="btn btn-primary" onclick="window.agregarTipoDoc()">+</button></div>
+                    <div id="list-tipos"></div>
                 </div>
                 <div class="card">
                     <h3>Gerencias</h3>
-                    <div style="display:flex; gap:5px;"><input type="text" id="g-nom" style="margin:0;"><button class="btn btn-success" onclick="window.guardarGerencia()">+</button></div>
-                    <div id="list-ger" style="margin-top:10px;"></div>
+                    <div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" id="g-nom" style="margin:0;"><button class="btn btn-primary" onclick="window.guardarGerencia()">+</button></div>
+                    <div id="list-ger"></div>
                 </div>
                 <div class="card">
-                    <h3>Deptos.</h3>
+                    <h3>Departamentos</h3>
                     <select id="d-ger-sel"></select>
-                    <div style="display:flex; gap:5px;"><input type="text" id="d-nom" style="margin:0;"><button class="btn btn-success" onclick="window.guardarDepartamento()">+</button></div>
-                    <div id="list-dep" style="margin-top:10px;"></div>
+                    <div style="display:flex; gap:5px;"><input type="text" id="d-nom" style="margin:0;"><button class="btn btn-primary" onclick="window.guardarDepto()">+</button></div>
+                    <div id="list-dep" style="margin-top:10px; font-size:12px; max-height:200px; overflow-y:auto;"></div>
                 </div>
             </div>
         </section>
@@ -243,36 +250,36 @@
             <div style="padding:25px; overflow-y:auto;">
                 <h2 id="m-tit">Detalle</h2>
                 <div id="m-data" style="margin-top:15px; font-size:14px; line-height:1.6;"></div>
-                <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
-                    <button class="btn btn-primary" onclick="window.firmarPaso()">Aprobar Etapa</button>
+                <div style="margin-top:20px; display:flex; gap:10px;">
+                    <button class="btn btn-primary" onclick="window.firmarPaso()">Aprobar Paso</button>
                     <button class="btn btn-ghost" onclick="window.closeModal()">Cerrar</button>
                 </div>
             </div>
             <div style="background:#f8fafc; padding:20px; border-left:1px solid #ddd; display:flex; flex-direction:column;">
-                <h4>Bitácora del Documento</h4>
-                <div id="chat-box" style="flex:1; height:250px; overflow-y:auto; margin:15px 0; font-size:12px; background:white; padding:10px; border-radius:8px; border:1px solid #e2e8f0;"></div>
+                <h4>Bitácora</h4>
+                <div id="chat-box" style="flex:1; height:300px; overflow-y:auto; margin:10px 0; background:white; padding:10px; border:1px solid #e2e8f0; border-radius:8px;"></div>
                 <textarea id="m-comment" placeholder="Comentar..." rows="2"></textarea>
-                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="window.enviarComentario()">Enviar</button>
+                <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="window.enviarComentario()">Enviar</button>
             </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="modal-user">
         <div class="login-box" style="text-align:left;">
-            <h3 id="edit-user-name">Editar Usuario</h3>
-            <label>Rol del Usuario</label>
+            <h3 id="edit-user-title">Configurar Usuario</h3>
+            <label>Rol</label>
             <select id="edit-user-role">
                 <option value="Solicitante">Solicitante</option>
                 <option value="Gerente">Gerente</option>
                 <option value="Administrador">Administrador</option>
             </select>
-            <label>Gerencia Asignada</label>
+            <label>Gerencia</label>
             <select id="edit-user-ger" onchange="window.actualizarDeptosEdicion(this.value)"></select>
             <label>Departamento</label>
             <select id="edit-user-dep"></select>
             <div style="display:flex; gap:10px; margin-top:15px;">
-                <button class="btn btn-primary" onclick="window.guardarEdicionUsuario()">GUARDAR</button>
-                <button class="btn btn-ghost" onclick="window.closeModalUser()">CANCELAR</button>
+                <button class="btn btn-primary" onclick="window.guardarEdicionUsuario()">Guardar Cambios</button>
+                <button class="btn btn-ghost" onclick="window.closeModalUser()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -301,9 +308,9 @@
         const UPLOAD_PRESET = "sistema2";
 
         let currentWS = null, userData = null, selectedId = null, selectedData = null, editingUid = null;
-        let allDeps = [], tiposDoc = [], todasGerencias = [];
+        let allDeps = [], tiposDoc = [];
 
-        // --- FUNCIONES DE VENTANA ---
+        // --- WINDOW GLOBALS ---
         window.showLoading = () => document.getElementById('loading-overlay').style.display = 'flex';
         window.hideLoading = () => document.getElementById('loading-overlay').style.display = 'none';
 
@@ -315,44 +322,37 @@
         window.cambiarVista = (id, btn) => {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            const sec = document.getElementById(id);
-            if(sec) sec.classList.add('active');
+            const sec = document.getElementById(id); if(sec) sec.classList.add('active');
             if(btn) btn.classList.add('active');
             if(window.innerWidth < 900) window.toggleSidebar();
+            
+            if(id === 'sec-crear') window.prepararFormularioSolicitud();
         };
 
-        window.togglePanelExtra = (val) => {
-            document.getElementById('panel-extra').style.display = (val === 'Creación') ? 'none' : 'block';
-        };
-
+        window.togglePanelExtra = (v) => document.getElementById('panel-extra').style.display = (v === 'Creación') ? 'none' : 'block';
         window.closeModal = () => document.getElementById('modal').style.display = 'none';
         window.closeModalUser = () => document.getElementById('modal-user').style.display = 'none';
 
-        // --- ID SECUENCIAL 5 DÍGITOS ---
+        // --- GENERADOR ID ---
         async function getNextId() {
             const ref = doc(db, "workspaces", currentWS, "config", "counters");
             let newId = 1;
             await runTransaction(db, async (t) => {
                 const snap = await t.get(ref);
-                if(snap.exists()) {
-                    newId = (snap.data().val || 0) + 1;
-                    t.update(ref, { val: newId });
-                } else {
-                    t.set(ref, { val: 1 });
-                }
+                if(snap.exists()) { newId = (snap.data().val || 0) + 1; t.update(ref, { val: newId }); }
+                else { t.set(ref, { val: 1 }); }
             });
             return String(newId).padStart(5, '0');
         }
 
-        // --- AUTH & SYNC ---
+        // --- AUTH ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 window.showLoading();
                 const uRef = doc(db, "users", user.uid);
                 const snap = await getDoc(uRef);
                 if (snap.exists()) {
-                    userData = snap.data();
-                    currentWS = userData.wsId;
+                    userData = snap.data(); currentWS = userData.wsId;
                     initWorkspace();
                 } else {
                     const q = query(collection(db, "invitations"), where("email", "==", user.email.toLowerCase()));
@@ -360,17 +360,14 @@
                     if (!invSnap.empty) {
                         currentWS = invSnap.docs[0].data().wsId;
                         userData = { uid: user.uid, email: user.email, wsId: currentWS, role: "Solicitante", nombre: user.displayName };
-                        await setDoc(uRef, userData);
-                        initWorkspace();
+                        await setDoc(uRef, userData); initWorkspace();
                     } else {
                         document.getElementById('setup-screen').style.display = 'flex';
                         document.getElementById('login-screen').style.display = 'none';
                     }
                 }
                 window.hideLoading();
-            } else {
-                document.getElementById('login-screen').style.display = 'flex';
-            }
+            } else { document.getElementById('login-screen').style.display = 'flex'; }
         });
 
         document.getElementById('btn-login-google').onclick = () => signInWithPopup(auth, provider);
@@ -392,42 +389,35 @@
             document.getElementById('main').style.display = 'block';
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('setup-screen').style.display = 'none';
-            cargarDatos();
+            syncData();
         }
 
-        function cargarDatos() {
+        function syncData() {
             const q = (c) => query(collection(db, c), where("wsId", "==", currentWS));
 
-            // Solicitudes
             onSnapshot(q("Solicitudes"), s => {
-                let hGest = "", hMaestro = "", tot = 0, pend = 0, ok = 0;
+                let hG = "", hM = "", tot = 0, pend = 0, ok = 0;
                 s.forEach(d => {
-                    const sol = d.data(); sol.id = d.id;
-                    tot++;
+                    const sol = d.data(); sol.id = d.id; tot++;
                     if(sol.estado === "APROBADO FINAL") {
-                        ok++;
-                        hMaestro += `<tr><td>${sol.customId}</td><td>${sol.titulo}</td><td>${sol.tipoDoc}</td><td>${sol.gerencia}</td><td>${sol.idx}</td><td><a href="${sol.adjunto}" target="_blank">Ver</a></td></tr>`;
+                        ok++; hM += `<tr><td>${sol.customId}</td><td>${sol.titulo}</td><td>${sol.tipoDoc}</td><td>${sol.gerencia}</td><td>${sol.idx}</td><td><a href="${sol.adjunto}" target="_blank">PDF</a></td></tr>`;
                     } else {
-                        pend++;
-                        hGest += `<tr><td><b>${sol.customId}</b></td><td>${sol.solicitante}</td><td>${sol.gerencia}</td><td>${sol.titulo}</td><td>${sol.estado}</td><td><button class="btn btn-ghost" onclick="window.verDetalle('${sol.id}')">Gestionar</button></td></tr>`;
+                        pend++; hG += `<tr><td><b>${sol.customId}</b></td><td>${sol.solicitante}</td><td>${sol.gerencia}</td><td>${sol.titulo}</td><td>${sol.estado}</td><td><button class="btn btn-ghost" onclick="window.verDetalle('${sol.id}')">Ver</button></td></tr>`;
                     }
                 });
-                document.getElementById('tbody-gestionar').innerHTML = hGest;
-                document.getElementById('tbody-maestro').innerHTML = hMaestro;
+                document.getElementById('tbody-gestionar').innerHTML = hG;
+                document.getElementById('tbody-maestro').innerHTML = hM;
                 document.getElementById('dash-tot').innerText = tot;
                 document.getElementById('dash-pend').innerText = pend;
                 document.getElementById('dash-ok').innerText = ok;
                 document.getElementById('dash-maestro').innerText = ok;
             });
 
-            // Estructura
             onSnapshot(q("Gerencias"), s => {
                 let h = "", opts = "<option value=''>-- Seleccionar --</option>";
-                todasGerencias = [];
                 s.forEach(d => {
-                    const g = d.data(); todasGerencias.push(g);
-                    h += `<div style="display:flex; justify-content:space-between; padding:8px;">${g.nombre} <button onclick="window.del('Gerencias','${d.id}')">X</button></div>`;
-                    opts += `<option value="${g.nombre}">${g.nombre}</option>`;
+                    h += `<div style="display:flex; justify-content:space-between; padding:5px;">${d.data().nombre} <button onclick="window.del('Gerencias','${d.id}')">X</button></div>`;
+                    opts += `<option value="${d.data().nombre}">${d.data().nombre}</option>`;
                 });
                 document.getElementById('list-ger').innerHTML = h;
                 document.getElementById('sol-ger').innerHTML = opts;
@@ -436,32 +426,46 @@
             });
 
             onSnapshot(q("Departamentos"), s => {
-                allDeps = []; s.forEach(d => allDeps.push(d.data()));
+                allDeps = []; let h = "";
+                s.forEach(d => {
+                    allDeps.push(d.data());
+                    h += `<div style="padding:4px; border-bottom:1px solid #eee;">${d.data().nombre} (${d.data().gerencia}) <button onclick="window.del('Departamentos','${d.id}')" style="float:right; border:none; background:none; cursor:pointer; color:red;">X</button></div>`;
+                });
+                document.getElementById('list-dep').innerHTML = h;
             });
 
             onSnapshot(doc(db, "workspaces", currentWS), snap => {
                 tiposDoc = snap.data().tiposDoc || [];
                 let h = "", opts = "";
-                tiposDoc.forEach(t => {
-                    h += `<div>${t}</div>`;
+                tiposDoc.forEach((t, i) => {
+                    h += `<div style="display:flex; justify-content:space-between; padding:5px;">${t} <button onclick="window.eliminarTipoDoc(${i})">X</button></div>`;
                     opts += `<option value="${t}">${t}</option>`;
                 });
                 document.getElementById('list-tipos').innerHTML = h;
                 document.getElementById('sol-tipo-doc').innerHTML = opts;
             });
 
-            // Usuarios
             onSnapshot(q("users"), s => {
                 let h = "";
                 s.forEach(d => {
                     const u = d.data();
-                    h += `<tr><td>${u.nombre}<br><small>${u.email}</small></td><td>${u.role}</td><td>${u.gerencia || 'No asignada'}</td><td><button class="btn btn-ghost" onclick="window.abrirEditarUsuario('${d.id}')">Editar</button></td></tr>`;
+                    h += `<tr><td>${u.nombre}</td><td>${u.role}</td><td>${u.gerencia || 'N/A'}</td><td><button class="btn btn-ghost" onclick="window.abrirEditarUsuario('${d.id}')">Editar</button></td></tr>`;
                 });
                 document.getElementById('tbody-colabs').innerHTML = h;
             });
         }
 
-        // --- ACCIONES ---
+        // --- ACCIONES SOLICITUD ---
+        window.prepararFormularioSolicitud = async () => {
+            document.getElementById('sol-info-email').innerText = userData.email;
+            const q = query(collection(db, "users"), where("wsId", "==", currentWS), where("role", "==", "Gerente"), where("gerencia", "==", userData.gerencia || ''));
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                document.getElementById('sol-info-gerente').innerText = snap.docs[0].data().nombre;
+            } else {
+                document.getElementById('sol-info-gerente').innerText = "Sin gerente asignado";
+            }
+        };
 
         document.getElementById('btnSendSol').onclick = async () => {
             const f = document.getElementById('sol-file').files[0];
@@ -474,47 +478,39 @@
                     const dat = await res.json(); url = dat.secure_url;
                 }
                 const cid = await getNextId();
-                const accion = document.getElementById('sol-accion').value;
                 const data = {
                     wsId: currentWS, customId: cid, titulo: document.getElementById('sol-tit').value,
-                    accion, tipoDoc: document.getElementById('sol-tipo-doc').value,
+                    accion: document.getElementById('sol-accion').value, tipoDoc: document.getElementById('sol-tipo-doc').value,
                     gerencia: document.getElementById('sol-ger').value, departamento: document.getElementById('sol-dep').value,
-                    solicitante: userData.nombre, estado: "PENDIENTE VERIFICADO", idx: 1, adjunto: url,
-                    chat: [{u: "SISTEMA", m: "Solicitud GSCI " + cid + " iniciada.", t: new Date().toLocaleString()}]
+                    solicitante: userData.nombre, solicitante_email: userData.email,
+                    estado: "PENDIENTE VERIFICADO", idx: 1, adjunto: url,
+                    chat: [{u: "SISTEMA", m: "Solicitud iniciada.", t: new Date().toLocaleString()}]
                 };
                 await addDoc(collection(db, "Solicitudes"), data);
-                alert("Guardada con ID: " + cid);
-                window.cambiarVista('sec-gest');
-            } catch (e) { alert("Error: " + e.message); }
+                alert("Enviada con ID: " + cid); window.cambiarVista('sec-gest');
+            } catch (e) { alert(e.message); }
             finally { window.hideLoading(); }
         };
 
+        // --- GESTIÓN USUARIOS ---
         window.enviarInvitacion = async () => {
             const email = document.getElementById('invite-email').value.trim().toLowerCase();
             if(!email) return;
             window.showLoading();
             await addDoc(collection(db, "invitations"), { email, wsId: currentWS, date: new Date().toISOString() });
             
-            // EmailJS a la dirección registrada
             emailjs.send("service_20sm1nj", "template_60rn43d", { 
-                to_email: email, 
-                from_name: userData.nombre,
-                workspace_name: document.getElementById('display-ws-name').innerText
-            }).then(() => alert("Invitación enviada a " + email)).catch(() => alert("Invitación registrada (Falla EmailJS)."));
-
-            document.getElementById('invite-email').value = "";
-            window.hideLoading();
+                to_email: email, from_name: userData.nombre, workspace_name: document.getElementById('display-ws-name').innerText 
+            }).then(() => alert("Invitación enviada a " + email)).catch(() => alert("EmailJS falló."));
+            
+            document.getElementById('invite-email').value = ""; window.hideLoading();
         };
 
-        // --- GESTIÓN DE USUARIOS ---
-
-        window.abrirEditarUsuario = async (uid) => {
-            editingUid = uid;
-            const uRef = doc(db, "users", uid);
-            const snap = await getDoc(uRef);
+        window.abrirEditarUsuario = async (id) => {
+            editingUid = id;
+            const snap = await getDoc(doc(db, "users", id));
             const u = snap.data();
-            
-            document.getElementById('edit-user-name').innerText = u.nombre;
+            document.getElementById('edit-user-title').innerText = "Configurar: " + u.nombre;
             document.getElementById('edit-user-role').value = u.role || 'Solicitante';
             document.getElementById('edit-user-ger').value = u.gerencia || '';
             window.actualizarDeptosEdicion(u.gerencia);
@@ -523,70 +519,63 @@
         };
 
         window.guardarEdicionUsuario = async () => {
-            const role = document.getElementById('edit-user-role').value;
-            const gerencia = document.getElementById('edit-user-ger').value;
-            const departamento = document.getElementById('edit-user-dep').value;
-            
-            await updateDoc(doc(db, "users", editingUid), { role, gerencia, departamento });
-            alert("Usuario actualizado.");
-            window.closeModalUser();
+            await updateDoc(doc(db, "users", editingUid), {
+                role: document.getElementById('edit-user-role').value,
+                gerencia: document.getElementById('edit-user-ger').value,
+                departamento: document.getElementById('edit-user-dep').value
+            });
+            alert("Usuario actualizado."); window.closeModalUser();
         };
 
-        window.actualizarDeptosEdicion = (ger) => {
-            const filtered = allDeps.filter(d => d.gerencia === ger);
-            let h = "<option value=''>-- Seleccionar --</option>";
-            filtered.forEach(d => h += `<option value="${d.nombre}">${d.nombre}</option>`);
-            document.getElementById('edit-user-dep').innerHTML = h;
+        // --- ESTRUCTURA ---
+        window.agregarTipoDoc = async () => {
+            const v = document.getElementById('t-nom').value.trim().toUpperCase();
+            if(v) { tiposDoc.push(v); await updateDoc(doc(db, "workspaces", currentWS), { tiposDoc: tiposDoc }); document.getElementById('t-nom').value = ""; }
         };
-
-        // --- OTRAS FUNCIONES ---
-
-        window.verDetalle = async (id) => {
-            selectedId = id;
-            const snap = await getDoc(doc(db, "Solicitudes", id));
-            selectedData = snap.data();
-            document.getElementById('m-tit').innerText = "Gestión ID: " + selectedData.customId;
-            document.getElementById('m-data').innerHTML = `<b>Título:</b> ${selectedData.titulo}<br><b>Gerencia:</b> ${selectedData.gerencia}<br><b>Estado:</b> ${selectedData.estado}<br>${selectedData.adjunto ? `<a href="${selectedData.adjunto}" target="_blank">VER ARCHIVO</a>` : ''}`;
-            const cb = document.getElementById('chat-box');
-            cb.innerHTML = (selectedData.chat || []).map(c => `<div><b>${c.u}:</b> ${c.m}</div>`).join('');
-            document.getElementById('modal').style.display = 'flex';
+        window.eliminarTipoDoc = async (i) => {
+            tiposDoc.splice(i, 1); await updateDoc(doc(db, "workspaces", currentWS), { tiposDoc: tiposDoc });
         };
-
-        window.firmarPaso = async () => {
-            const nIdx = selectedData.idx + 1;
-            const nEst = nIdx < 4 ? ["Elaborado", "Verificado", "Gerencia OK", "SGC OK"][nIdx] : "APROBADO FINAL";
-            await updateDoc(doc(db, "Solicitudes", selectedId), { idx: nIdx, estado: nEst, chat: arrayUnion({u: userData.nombre, m: "Aprobó etapa.", t: new Date().toLocaleString()}) });
-            window.closeModal();
-        };
-
-        window.enviarComentario = async () => {
-            const m = document.getElementById('m-comment').value.trim();
-            if(!m) return;
-            await updateDoc(doc(db, "Solicitudes", selectedId), { chat: arrayUnion({u: userData.nombre, m: m, t: new Date().toLocaleString()}) });
-            document.getElementById('m-comment').value = "";
-            window.verDetalle(selectedId);
-        };
-
         window.guardarGerencia = async () => {
             const n = document.getElementById('g-nom').value.trim();
             if(n) await addDoc(collection(db, "Gerencias"), { nombre: n, wsId: currentWS });
             document.getElementById('g-nom').value = "";
         };
-
-        window.guardarDepartamento = async () => {
-            const g = document.getElementById('d-ger-sel').value;
-            const n = document.getElementById('d-nom').value.trim();
+        window.guardarDepto = async () => {
+            const g = document.getElementById('d-ger-sel').value; const n = document.getElementById('d-nom').value.trim();
             if(g && n) await addDoc(collection(db, "Departamentos"), { nombre: n, gerencia: g, wsId: currentWS });
             document.getElementById('d-nom').value = "";
         };
 
+        // --- HELPERS ---
         window.actualizarDeptos = (ger) => {
             const filtered = allDeps.filter(d => d.gerencia === ger);
             let h = "<option value=''>-- Seleccionar --</option>";
             filtered.forEach(d => h += `<option value="${d.nombre}">${d.nombre}</option>`);
             document.getElementById('sol-dep').innerHTML = h;
         };
-
+        window.actualizarDeptosEdicion = (ger) => {
+            const filtered = allDeps.filter(d => d.gerencia === ger);
+            let h = "<option value=''>-- Seleccionar --</option>";
+            filtered.forEach(d => h += `<option value="${d.nombre}">${d.nombre}</option>`);
+            document.getElementById('edit-user-dep').innerHTML = h;
+        };
+        window.verDetalle = async (id) => {
+            selectedId = id; const snap = await getDoc(doc(db, "Solicitudes", id)); selectedData = snap.data();
+            document.getElementById('m-tit').innerText = "Gestión: " + selectedData.customId;
+            document.getElementById('m-data').innerHTML = `<b>Título:</b> ${selectedData.titulo}<br><b>Área:</b> ${selectedData.gerencia}<br><b>Estado:</b> ${selectedData.estado}<br>${selectedData.adjunto ? `<a href="${selectedData.adjunto}" target="_blank">VER DOC</a>` : ''}`;
+            const cb = document.getElementById('chat-box'); cb.innerHTML = (selectedData.chat || []).map(c => `<div><b>${c.u}:</b> ${c.m}</div>`).join('');
+            document.getElementById('modal').style.display = 'flex';
+        };
+        window.firmarPaso = async () => {
+            const nIdx = selectedData.idx + 1; const nEst = nIdx < 4 ? ["Elaborado", "Verificado", "Gerencia OK", "SGC OK"][nIdx] : "APROBADO FINAL";
+            await updateDoc(doc(db, "Solicitudes", selectedId), { idx: nIdx, estado: nEst, chat: arrayUnion({u: userData.nombre, m: "Aprobó etapa.", t: new Date().toLocaleString()}) });
+            window.closeModal();
+        };
+        window.enviarComentario = async () => {
+            const m = document.getElementById('m-comment').value.trim(); if(!m) return;
+            await updateDoc(doc(db, "Solicitudes", selectedId), { chat: arrayUnion({u: userData.nombre, m: m, t: new Date().toLocaleString()}) });
+            document.getElementById('m-comment').value = ""; window.verDetalle(selectedId);
+        };
         window.del = async (c, id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, c, id)); };
         window.logout = () => signOut(auth).then(() => location.reload());
 
