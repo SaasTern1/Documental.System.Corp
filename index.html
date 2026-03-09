@@ -21,125 +21,142 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: #1e293b; height: 100vh; display: flex; overflow: hidden; }
 
-        /* Pantallas de Acceso */
-        #login-screen { position: fixed; inset: 0; background: var(--sidebar); display: flex; align-items: center; justify-content: center; z-index: 5000; }
-        #setup-screen { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); display: none; align-items: center; justify-content: center; z-index: 6000; }
-        
-        .login-box { background: var(--white); padding: 30px; border-radius: 24px; max-width: 400px; width: 90%; text-align: center; }
+        /* Pantallas Iniciales */
+        #login-screen, #setup-screen { position: fixed; inset: 0; background: var(--sidebar); display: flex; align-items: center; justify-content: center; z-index: 5000; padding: 20px; }
+        .login-box { background: var(--white); padding: 30px; border-radius: 24px; max-width: 400px; width: 100%; text-align: center; }
 
         /* Sidebar Responsivo */
         .sidebar { 
             width: 280px; background: var(--sidebar); color: white; display: none; 
             flex-direction: column; padding: 20px; transition: all 0.3s ease;
-            z-index: 1000;
+            position: relative; z-index: 1000;
         }
 
         /* Header Móvil */
         .mobile-header {
             display: none; background: var(--sidebar); color: white;
-            padding: 15px; justify-content: space-between; align-items: center;
+            padding: 10px 20px; justify-content: space-between; align-items: center;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
         }
 
         /* Main Content */
-        .main { flex: 1; padding: 30px; overflow-y: auto; display: none; }
-        .section { display: none; }
+        .main { flex: 1; padding: 30px; overflow-y: auto; display: none; margin-top: 0; }
+        .section { display: none; max-width: 1200px; margin: 0 auto; }
         .section.active { display: block; }
 
-        /* UI Elements */
-        .card { background: white; padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; }
-        .grid-2, .grid-3, .grid-4 { display: grid; gap: 20px; }
-        .grid-2 { grid-template-columns: repeat(2, 1fr); }
-        .grid-3 { grid-template-columns: repeat(3, 1fr); }
-        .grid-4 { grid-template-columns: repeat(4, 1fr); }
-        
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 14px; }
-        
-        .btn { padding: 10px 18px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+        /* Cards y Grids */
+        .card { background: white; padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        /* Tablas Responsivas */
+        .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; padding: 12px; background: #f1f5f9; font-size: 11px; text-transform: uppercase; color: #64748b; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+
+        /* Botones */
+        .btn { padding: 10px 18px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
+        .btn-ghost { background: #f1f5f9; color: #475569; }
 
         /* RESPONSIVIDAD */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             body { flex-direction: column; }
             .sidebar { 
                 position: fixed; left: -280px; top: 0; bottom: 0; 
-                display: flex !important; width: 260px; box-shadow: 10px 0 30px rgba(0,0,0,0.3);
+                display: flex !important; width: 280px; box-shadow: 10px 0 30px rgba(0,0,0,0.4);
             }
             .sidebar.open { left: 0; }
             .mobile-header { display: flex; }
-            .main { padding: 15px; }
-            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-            .modal-content { grid-template-columns: 1fr !important; height: 95vh; }
+            .main { padding: 80px 15px 20px; } /* Espacio para el header móvil */
+            .grid-4, .grid-2 { grid-template-columns: 1fr; }
+            .modal-content { grid-template-columns: 1fr !important; height: 95vh; overflow-y: auto; }
+            .overlay-active { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 900; }
         }
 
         #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; }
         .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .nav-link { display: flex; align-items: center; padding: 12px; color: #94a3b8; border: none; background: none; cursor: pointer; width: 100%; border-radius: 12px; margin-bottom: 5px; font-size: 14px; }
-        .nav-link.active { background: var(--accent); color: white; }
 
-        /* Modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 4000; }
-        .modal-content { background: white; width: 95%; max-width: 1000px; border-radius: 20px; display: grid; grid-template-columns: 1fr 300px; overflow: hidden; }
+        .nav-link { display: flex; align-items: center; padding: 12px; color: #94a3b8; border: none; background: none; cursor: pointer; width: 100%; border-radius: 12px; margin-bottom: 5px; font-size: 14px; text-decoration: none; }
+        .nav-link.active { background: var(--accent); color: white; }
+        .nav-link span { margin-right: 12px; }
+
+        /* Modal Overlay */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 4000; padding: 15px; }
+        .modal-content { background: white; width: 100%; max-width: 1000px; border-radius: 20px; display: grid; grid-template-columns: 1fr 320px; overflow: hidden; max-height: 90vh; }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay"><div class="spinner"></div></div>
+    <div id="loading-overlay"><div class="spinner"></div><p style="margin-top:10px; font-weight:700;">Procesando...</p></div>
+    <div id="sidebar-overlay" onclick="window.toggleSidebar()"></div>
 
-    <div class="mobile-header">
-        <span style="font-weight: 800;">GSCI SGC</span>
-        <button class="btn btn-primary" onclick="window.toggleSidebar()"><span class="material-icons-round">menu</span></button>
-    </div>
+    <header class="mobile-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="btn" style="background:none; color:white; padding:5px;" onclick="window.toggleSidebar()">
+                <span class="material-icons-round">menu</span>
+            </button>
+            <span style="font-weight: 800; font-size: 14px;">GSCI SGC</span>
+        </div>
+        <img id="mobile-user-photo" src="" style="width:30px; height:30px; border-radius:50%; display:none;">
+    </header>
 
     <div id="login-screen">
         <div class="login-box">
-            <h2 style="color:var(--primary)">SGC Acceso</h2>
-            <button class="btn-google" id="btn-login-google" style="width:100%; margin-top:20px; padding:12px; border:1px solid #ddd; border-radius:10px; background:white; cursor:pointer; font-weight:700;">
+            <h1 style="color:var(--primary); font-weight:800; font-size:24px;">SGC GSCI</h1>
+            <p style="color:#64748b; margin:10px 0 25px;">Gestión de Calidad Multi-Espacio</p>
+            <button class="btn btn-primary" id="btn-login-google" style="width:100%; padding:14px; gap:12px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18">
                 Continuar con Google
             </button>
         </div>
     </div>
 
-    <div id="setup-screen">
+    <div id="setup-screen" style="display:none;">
         <div class="login-box">
-            <h3>Nombre de tu Espacio</h3>
-            <input type="text" id="setup-ws-name" placeholder="Ej: Mi Empresa SGC">
-            <button class="btn btn-primary" style="width:100%" id="btn-confirm-setup">CREAR</button>
+            <h3>Configura tu Espacio</h3>
+            <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Dale un nombre a tu sección del sistema.</p>
+            <input type="text" id="setup-ws-name" placeholder="Ej: Mi Empresa S.A.">
+            <button class="btn btn-primary" style="width:100%" id="btn-confirm-setup">COMENZAR</button>
         </div>
     </div>
 
     <aside class="sidebar" id="sidebar">
-        <div style="margin-bottom:30px;">
-            <h2 id="display-ws-name" style="color:var(--accent); font-size:16px;">MI ESPACIO</h2>
+        <div style="margin-bottom:30px; padding:10px;">
+            <h2 id="display-ws-name" style="color:var(--accent); font-size:16px; font-weight:800; text-transform:uppercase;">MI ESPACIO</h2>
+            <p id="display-user-email" style="font-size:10px; color:#94a3b8; margin-top:4px;"></p>
         </div>
         <nav style="flex:1">
-            <button class="nav-link active" onclick="cambiarVista('sec-dash', this)"><span class="material-icons-round">dashboard</span> Dashboard</button>
-            <button class="nav-link" onclick="cambiarVista('sec-crear', this)"><span class="material-icons-round">add_circle</span> Nueva Solicitud</button>
-            <button class="nav-link" onclick="cambiarVista('sec-gest', this)"><span class="material-icons-round">assignment</span> Gestión</button>
-            <button class="nav-link" onclick="cambiarVista('sec-colab', this)"><span class="material-icons-round">people</span> Colaboradores</button>
-            <button class="nav-link" onclick="cambiarVista('sec-struct', this)"><span class="material-icons-round">settings</span> Estructura</button>
+            <button class="nav-link active" onclick="window.cambiarVista('sec-dash', this)"><span class="material-icons-round">dashboard</span> Dashboard</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-crear', this)"><span class="material-icons-round">add_circle</span> Nueva Solicitud</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-gest', this)"><span class="material-icons-round">assignment</span> Gestión GSCI</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-colab', this)"><span class="material-icons-round">people</span> Colaboradores</button>
+            <button class="nav-link" onclick="window.cambiarVista('sec-struct', this)"><span class="material-icons-round">settings</span> Estructura</button>
         </nav>
-        <button onclick="logout()" class="nav-link" style="color:var(--danger);"><span class="material-icons-round">logout</span> Salir</button>
+        <button onclick="window.logout()" class="nav-link" style="color:var(--danger); margin-top:20px;">
+            <span class="material-icons-round">logout</span> Cerrar Sesión
+        </button>
     </aside>
 
     <main class="main" id="main">
+        
         <section id="sec-dash" class="section active">
-            <h1>Dashboard</h1>
+            <h1>Analytics</h1>
             <div class="grid-4" style="margin-top:20px;">
-                <div class="card"><label>Total</label><h2 id="dash-tot">0</h2></div>
-                <div class="card"><label>Pendientes</label><h2 id="dash-pend">0</h2></div>
+                <div class="card" style="border-left:5px solid var(--primary)"><label>Total Solicitudes</label><h2 id="dash-tot">0</h2></div>
+                <div class="card" style="border-left:5px solid var(--warning)"><label>En Proceso</label><h2 id="dash-pend">0</h2></div>
             </div>
         </section>
 
         <section id="sec-crear" class="section">
-            <div class="card">
-                <h2>Registrar Solicitud</h2>
+            <div class="card" style="max-width:850px; margin:auto;">
+                <h2>Registrar Solicitud FCI-SOL</h2>
                 <div class="grid-2">
                     <div>
                         <label>Acción</label>
-                        <select id="sol-accion" onchange="toggleDetalles(this.value)">
+                        <select id="sol-accion" onchange="window.togglePanelExtra(this.value)">
                             <option value="Creación">Creación</option>
                             <option value="Modificación">Modificación</option>
                             <option value="Inactivación">Inactivación</option>
@@ -147,32 +164,32 @@
                     </div>
                     <div><label>Tipo Documento</label><select id="sol-tipo-doc"></select></div>
                 </div>
-                
-                <div id="panel-extra" style="display:none; background:#f1f5f9; padding:15px; border-radius:12px; margin-bottom:15px;">
+
+                <div id="panel-extra" style="display:none; background:#f1f5f9; padding:15px; border-radius:12px; margin-bottom:15px; border: 1px solid #cbd5e1;">
                     <div class="grid-3">
-                        <div><label>Código Actual</label><input type="text" id="sol-cod-ref"></div>
-                        <div><label>Versión Actual</label><input type="text" id="sol-ver-ref"></div>
+                        <div><label>Código Actual</label><input type="text" id="sol-cod-ref" placeholder="Ej: FCI-001"></div>
+                        <div><label>Versión Actual</label><input type="text" id="sol-ver-ref" placeholder="Ej: 02"></div>
                         <div><label>Fecha Ult. Ver.</label><input type="date" id="sol-fecha-ref"></div>
                     </div>
                 </div>
 
-                <label>Título</label><input type="text" id="sol-tit">
+                <label>Título del Documento</label><input type="text" id="sol-tit">
                 <div class="grid-2">
-                    <div><label>Gerencia</label><select id="sol-ger" onchange="actualizarDeptos(this.value)"></select></div>
+                    <div><label>Gerencia</label><select id="sol-ger" onchange="window.actualizarDeptos(this.value)"></select></div>
                     <div><label>Departamento</label><select id="sol-dep"></select></div>
                 </div>
-                <label>Justificación</label><textarea id="sol-motivo" rows="3"></textarea>
-                <label>Archivo</label><input type="file" id="sol-file">
-                <button class="btn btn-primary" style="width:100%" id="btnSendSol">ENVIAR</button>
+                <label>Justificación del Cambio</label><textarea id="sol-motivo" rows="3"></textarea>
+                <label>Adjuntar Archivo (Opcional)</label><input type="file" id="sol-file">
+                <button class="btn btn-primary" style="width:100%; margin-top:10px; padding:15px;" id="btnSendSol">ENVIAR A REVISIÓN</button>
             </div>
         </section>
 
         <section id="sec-gest" class="section">
-            <h1>Gestión de Solicitudes</h1>
+            <h1>Bandeja de Gestión Administrativa</h1>
             <div class="card" style="padding:0; margin-top:20px;">
-                <div style="overflow-x:auto;">
+                <div class="table-container">
                     <table>
-                        <thead><tr><th>ID</th><th>Título</th><th>Estado</th><th>Acción</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Solicitante</th><th>Título</th><th>Estado</th><th>Acción</th></tr></thead>
                         <tbody id="tbody-gestionar"></tbody>
                     </table>
                 </div>
@@ -180,15 +197,22 @@
         </section>
 
         <section id="sec-colab" class="section">
-            <h1>Colaboradores</h1>
-            <div class="grid-2">
+            <h1>Gestión de Accesos</h1>
+            <div class="grid-2" style="margin-top:20px;">
                 <div class="card">
-                    <h3>Añadir Miembro</h3>
-                    <input type="email" id="invite-email" placeholder="usuario@correo.com">
-                    <button class="btn btn-primary" onclick="enviarInvitacion()">Invitar</button>
+                    <h3>Invitar por Correo</h3>
+                    <p style="font-size:11px; color:#64748b; margin-bottom:15px;">El usuario debe entrar con Google usando este correo.</p>
+                    <label>Email del Invitado</label>
+                    <input type="email" id="invite-email" placeholder="ejemplo@gmail.com">
+                    <button class="btn btn-primary" onclick="window.enviarInvitacion()">DAR ACCESO</button>
                 </div>
                 <div class="card" style="padding:0;">
-                    <table><thead><tr><th>Usuario</th><th>Rol</th><th>Eliminar</th></tr></thead><tbody id="tbody-colabs"></tbody></table>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Usuario</th><th>Rol</th><th>Eliminar</th></tr></thead>
+                            <tbody id="tbody-colabs"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -197,19 +221,19 @@
             <div class="grid-3">
                 <div class="card">
                     <h3>Tipos Doc.</h3>
-                    <div style="display:flex; gap:5px;"><input type="text" id="t-nom"><button class="btn btn-success" onclick="agregarTipoDoc()">+</button></div>
-                    <div id="list-tipos"></div>
+                    <div style="display:flex; gap:5px;"><input type="text" id="t-nom" style="margin:0;"><button class="btn btn-primary" onclick="window.agregarTipoDoc()">+</button></div>
+                    <div id="list-tipos" style="margin-top:10px;"></div>
                 </div>
                 <div class="card">
                     <h3>Gerencias</h3>
-                    <div style="display:flex; gap:5px;"><input type="text" id="g-nom"><button class="btn btn-success" onclick="guardarGerencia()">+</button></div>
-                    <div id="list-ger"></div>
+                    <div style="display:flex; gap:5px;"><input type="text" id="g-nom" style="margin:0;"><button class="btn btn-primary" onclick="window.guardarGerencia()">+</button></div>
+                    <div id="list-ger" style="margin-top:10px;"></div>
                 </div>
                 <div class="card">
-                    <h3>Depto.</h3>
+                    <h3>Departamentos</h3>
                     <select id="d-ger-sel"></select>
-                    <div style="display:flex; gap:5px;"><input type="text" id="d-nom"><button class="btn btn-success" onclick="guardarDepartamento()">+</button></div>
-                    <div id="list-dep"></div>
+                    <div style="display:flex; gap:5px;"><input type="text" id="d-nom" style="margin:0;"><button class="btn btn-primary" onclick="window.guardarDepartamento()">+</button></div>
+                    <div id="list-dep" style="margin-top:10px;"></div>
                 </div>
             </div>
         </section>
@@ -217,19 +241,19 @@
 
     <div class="modal-overlay" id="modal">
         <div class="modal-content">
-            <div style="padding:20px;">
+            <div style="padding:25px; overflow-y:auto;">
                 <h2 id="m-tit">Detalle</h2>
-                <div id="m-data" style="margin-top:15px;"></div>
-                <div style="margin-top:20px; display:flex; gap:10px;">
-                    <button class="btn btn-primary" onclick="firmarPaso()">Firmar</button>
-                    <button class="btn btn-danger" onclick="closeModal()">Cerrar</button>
+                <div id="m-data" style="margin-top:15px; font-size:14px; line-height:1.6;"></div>
+                <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="window.firmarPaso()">Aprobar Etapa</button>
+                    <button class="btn btn-ghost" onclick="window.closeModal()">Cerrar</button>
                 </div>
             </div>
-            <div style="background:#f8fafc; padding:20px; border-left:1px solid #ddd;">
-                <h4>Chat</h4>
-                <div id="chat-box" style="height:300px; overflow-y:auto; font-size:12px;"></div>
-                <input type="text" id="m-comment" placeholder="Comentar...">
-                <button class="btn btn-primary" style="width:100%" onclick="enviarComentario()">Enviar</button>
+            <div style="background:#f8fafc; padding:20px; border-left:1px solid #ddd; display:flex; flex-direction:column;">
+                <h4>Bitácora / Comentarios</h4>
+                <div id="chat-box" style="flex:1; height:250px; overflow-y:auto; margin:15px 0; font-size:12px; background:white; border-radius:8px; padding:10px; border:1px solid #e2e8f0;"></div>
+                <textarea id="m-comment" placeholder="Escribe un mensaje..." rows="2" style="margin:0;"></textarea>
+                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="window.enviarComentario()">Enviar</button>
             </div>
         </div>
     </div>
@@ -259,20 +283,26 @@
         let currentWS = null, userData = null, selectedId = null, selectedData = null;
         let allDeps = [], tiposDoc = [];
 
-        // --- FUNCIONES GLOBALES (VINCULADAS A WINDOW PARA EVITAR REFERENCIA NO DEFINIDA) ---
+        // --- ASIGNACIÓN DE FUNCIONES GLOBALES ---
         
-        window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-        
+        window.showLoading = () => document.getElementById('loading-overlay').style.display = 'flex';
+        window.hideLoading = () => document.getElementById('loading-overlay').style.display = 'none';
+
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('overlay-active');
+        };
+
         window.cambiarVista = (id, btn) => {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             const sec = document.getElementById(id);
             if(sec) sec.classList.add('active');
             if(btn) btn.classList.add('active');
-            if(window.innerWidth < 768) document.getElementById('sidebar').classList.remove('open');
+            if(window.innerWidth < 900) window.toggleSidebar();
         };
 
-        window.toggleDetalles = (val) => {
+        window.togglePanelExtra = (val) => {
             document.getElementById('panel-extra').style.display = (val === 'Creación') ? 'none' : 'block';
         };
 
@@ -281,39 +311,46 @@
             const snap = await getDoc(doc(db, "Solicitudes", id));
             selectedData = snap.data();
             document.getElementById('m-tit').innerText = "Solicitud ID: " + (selectedData.customId || id);
-            document.getElementById('m-data').innerHTML = `<b>Título:</b> ${selectedData.titulo}<br><b>Estado:</b> ${selectedData.estado}`;
+            document.getElementById('m-data').innerHTML = `
+                <b>Título:</b> ${selectedData.titulo}<br>
+                <b>Gerencia/Depto:</b> ${selectedData.gerencia} - ${selectedData.departamento}<br>
+                <b>Acción:</b> ${selectedData.accion}<br>
+                <b>Estado:</b> ${selectedData.estado}<br>
+                ${selectedData.adjunto ? `<a href="${selectedData.adjunto}" target="_blank" style="color:var(--primary); font-weight:700;">Ver Archivo Adjunto</a>` : 'Sin adjunto'}
+            `;
             const cb = document.getElementById('chat-box');
-            cb.innerHTML = (selectedData.chat || []).map(c => `<div><b>${c.u}:</b> ${c.m}</div>`).join('');
+            cb.innerHTML = (selectedData.chat || []).map(c => `<div style="margin-bottom:8px;"><b>${c.u}:</b> ${c.m} <br><small style="color:#999">${c.t}</small></div>`).join('');
             document.getElementById('modal').style.display = 'flex';
         };
 
         window.closeModal = () => document.getElementById('modal').style.display = 'none';
 
-        // --- GENERADOR DE ID CODIFICADO (00001, 00002...) ---
+        // --- LÓGICA DE ID CORRELATIVO (00001, 00002...) ---
         async function getNextSequenceId() {
-            const counterRef = doc(db, "workspaces", currentWS, "counters", "solicitudes");
+            const counterRef = doc(db, "workspaces", currentWS, "config", "counters");
             let newId = 1;
             await runTransaction(db, async (transaction) => {
                 const snap = await transaction.get(counterRef);
                 if (snap.exists()) {
-                    newId = snap.data().val + 1;
-                    transaction.update(counterRef, { val: newId });
+                    newId = (snap.data().sol_count || 0) + 1;
+                    transaction.update(counterRef, { sol_count: newId });
                 } else {
-                    transaction.set(counterRef, { val: 1 });
+                    transaction.set(counterRef, { sol_count: 1 });
                 }
             });
             return String(newId).padStart(5, '0');
         }
 
-        // --- AUTH LOGIC ---
+        // --- LOGIN Y AUTH ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                window.showLoading();
                 const uRef = doc(db, "users", user.uid);
                 const snap = await getDoc(uRef);
                 if (snap.exists()) {
                     userData = snap.data();
                     currentWS = userData.wsId;
-                    initApp();
+                    initWorkspace();
                 } else {
                     const q = query(collection(db, "invitations"), where("email", "==", user.email.toLowerCase()));
                     const invSnap = await getDocs(q);
@@ -321,16 +358,15 @@
                         currentWS = invSnap.docs[0].data().wsId;
                         userData = { uid: user.uid, email: user.email, wsId: currentWS, role: "Colaborador", nombre: user.displayName };
                         await setDoc(uRef, userData);
-                        initApp();
+                        initWorkspace();
                     } else {
                         document.getElementById('setup-screen').style.display = 'flex';
                         document.getElementById('login-screen').style.display = 'none';
                     }
                 }
+                window.hideLoading();
             } else {
                 document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('sidebar').style.display = 'none';
-                document.getElementById('main').style.display = 'none';
             }
         });
 
@@ -339,18 +375,21 @@
         document.getElementById('btn-confirm-setup').onclick = async () => {
             const wsName = document.getElementById('setup-ws-name').value.trim();
             if(!wsName) return;
+            window.showLoading();
             const wsId = "WS-" + Date.now();
             await setDoc(doc(db, "workspaces", wsId), { name: wsName, owner: auth.currentUser.uid });
             await setDoc(doc(db, "users", auth.currentUser.uid), { uid: auth.currentUser.uid, email: auth.currentUser.email, wsId, role: "Admin", nombre: auth.currentUser.displayName });
             location.reload();
         };
 
-        async function initApp() {
+        async function initWorkspace() {
             const wsSnap = await getDoc(doc(db, "workspaces", currentWS));
             document.getElementById('display-ws-name').innerText = wsSnap.data().name;
+            document.getElementById('display-user-email').innerText = userData.email;
             document.getElementById('sidebar').style.display = 'flex';
             document.getElementById('main').style.display = 'block';
             document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('setup-screen').style.display = 'none';
             cargarDatos();
         }
 
@@ -362,7 +401,7 @@
                 s.forEach(d => {
                     const sol = d.data(); tot++;
                     if(sol.estado !== "Aprobado Final") pend++;
-                    html += `<tr><td>${sol.customId || 'S/N'}</td><td>${sol.titulo}</td><td>${sol.estado}</td><td><button class="btn btn-ghost" onclick="verDetalle('${d.id}')">Ver</button></td></tr>`;
+                    html += `<tr><td><b>${sol.customId || 'S/N'}</b></td><td>${sol.solicitante}</td><td>${sol.titulo}</td><td>${sol.estado}</td><td><button class="btn btn-ghost" style="padding:5px 10px;" onclick="window.verDetalle('${d.id}')">Ver</button></td></tr>`;
                 });
                 document.getElementById('tbody-gestionar').innerHTML = html;
                 document.getElementById('dash-tot').innerText = tot;
@@ -372,7 +411,7 @@
             onSnapshot(q("Gerencias"), s => {
                 let h = "", opts = "<option value=''>-- Seleccionar --</option>";
                 s.forEach(d => {
-                    h += `<div>${d.data().nombre} <button onclick="del('Gerencias','${d.id}')">X</button></div>`;
+                    h += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">${d.data().nombre} <button onclick="window.del('Gerencias','${d.id}')" style="color:red; border:none; background:none; cursor:pointer;">X</button></div>`;
                     opts += `<option value="${d.data().nombre}">${d.data().nombre}</option>`;
                 });
                 document.getElementById('list-ger').innerHTML = h;
@@ -381,14 +420,19 @@
             });
 
             onSnapshot(q("Departamentos"), s => {
-                allDeps = []; s.forEach(d => allDeps.push(d.data()));
+                allDeps = []; let h = "";
+                s.forEach(d => {
+                    const dep = d.data(); allDeps.push(dep);
+                    h += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">${dep.nombre} <small>(${dep.gerencia})</small> <button onclick="window.del('Departamentos','${d.id}')" style="color:red; border:none; background:none; cursor:pointer;">X</button></div>`;
+                });
+                document.getElementById('list-dep').innerHTML = h;
             });
 
             onSnapshot(doc(db, "workspaces", currentWS), snap => {
                 tiposDoc = snap.data().tiposDoc || [];
                 let h = "", opts = "";
-                tiposDoc.forEach(t => {
-                    h += `<div>${t}</div>`;
+                tiposDoc.forEach((t, i) => {
+                    h += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">${t} <button onclick="window.eliminarTipoDoc(${i})" style="color:red; border:none; background:none; cursor:pointer;">X</button></div>`;
                     opts += `<option value="${t}">${t}</option>`;
                 });
                 document.getElementById('list-tipos').innerHTML = h;
@@ -399,32 +443,86 @@
                 let h = "";
                 s.forEach(d => {
                     const u = d.data();
-                    h += `<tr><td>${u.nombre}</td><td>${u.role}</td><td><button onclick="del('users','${d.id}')">X</button></td></tr>`;
+                    h += `<tr><td>${u.nombre}<br><small>${u.email}</small></td><td>${u.role}</td><td><button onclick="window.del('users','${d.id}')" style="color:red; border:none; background:none; cursor:pointer;">X</button></td></tr>`;
                 });
                 document.getElementById('tbody-colabs').innerHTML = h;
             });
         }
 
+        // --- ACCIONES ---
+
         document.getElementById('btnSendSol').onclick = async () => {
+            const f = document.getElementById('sol-file').files[0];
             window.showLoading();
-            const cid = await getNextSequenceId();
-            const data = {
-                wsId: currentWS,
-                customId: cid,
-                titulo: document.getElementById('sol-tit').value,
-                accion: document.getElementById('sol-accion').value,
-                tipoDoc: document.getElementById('sol-tipo-doc').value,
-                gerencia: document.getElementById('sol-ger').value,
-                departamento: document.getElementById('sol-dep').value,
-                motivo: document.getElementById('sol-motivo').value,
-                solicitante: userData.nombre,
-                estado: "Pendiente Verificado",
-                idx: 1,
-                chat: [{u: "SISTEMA", m: "Creada con ID: " + cid, t: new Date().toLocaleString()}]
-            };
-            await addDoc(collection(db, "Solicitudes"), data);
+            try {
+                let url = null;
+                if(f) {
+                    const form = new FormData(); form.append("file", f); form.append("upload_preset", UPLOAD_PRESET);
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: form });
+                    const dat = await res.json(); url = dat.secure_url;
+                }
+
+                const cid = await getNextSequenceId();
+                const accion = document.getElementById('sol-accion').value;
+                const data = {
+                    wsId: currentWS,
+                    customId: cid,
+                    titulo: document.getElementById('sol-tit').value,
+                    accion: accion,
+                    tipoDoc: document.getElementById('sol-tipo-doc').value,
+                    gerencia: document.getElementById('sol-ger').value,
+                    departamento: document.getElementById('sol-dep').value,
+                    motivo: document.getElementById('sol-motivo').value,
+                    solicitante: userData.nombre,
+                    estado: "Pendiente Verificado",
+                    idx: 1,
+                    adjunto: url,
+                    chat: [{u: "SISTEMA", m: "Solicitud iniciada con ID: " + cid, t: new Date().toLocaleString()}]
+                };
+
+                if (accion !== 'Creación') {
+                    data.cod_ref = document.getElementById('sol-cod-ref').value;
+                    data.ver_ref = document.getElementById('sol-ver-ref').value;
+                    data.fecha_ref = document.getElementById('sol-fecha-ref').value;
+                }
+
+                await addDoc(collection(db, "Solicitudes"), data);
+                alert("¡Éxito! Solicitud guardada con ID: " + cid);
+                window.cambiarVista('sec-gest', document.querySelector('[onclick*="sec-gest"]'));
+            } catch (e) { alert("Error: " + e.message); }
+            finally { window.hideLoading(); }
+        };
+
+        window.enviarInvitacion = async () => {
+            const email = document.getElementById('invite-email').value.trim().toLowerCase();
+            if(!email) return;
+            window.showLoading();
+            await addDoc(collection(db, "invitations"), { email, wsId: currentWS, date: new Date().toISOString() });
+            alert("Acceso otorgado. El usuario puede entrar con su cuenta de Google.");
+            document.getElementById('invite-email').value = "";
             window.hideLoading();
-            alert("Enviada con ID: " + cid);
+        };
+
+        window.firmarPaso = async () => {
+            if(!selectedId) return;
+            window.showLoading();
+            const nIdx = selectedData.idx + 1;
+            const nEst = nIdx < 4 ? ["Elaborado", "Verificado", "Aprobado Gerencia", "Aprobado SGC"][nIdx] : "Aprobado Final";
+            await updateDoc(doc(db, "Solicitudes", selectedId), { 
+                idx: nIdx, 
+                estado: nEst, 
+                chat: arrayUnion({u: userData.nombre, m: "✅ Aprobó esta etapa.", t: new Date().toLocaleString()}) 
+            });
+            window.hideLoading();
+            window.closeModal();
+        };
+
+        window.enviarComentario = async () => {
+            const m = document.getElementById('m-comment').value.trim();
+            if(!m) return;
+            await updateDoc(doc(db, "Solicitudes", selectedId), { chat: arrayUnion({u: userData.nombre, m: m, t: new Date().toLocaleString()}) });
+            document.getElementById('m-comment').value = "";
+            window.verDetalle(selectedId);
         };
 
         window.agregarTipoDoc = async () => {
@@ -432,18 +530,26 @@
             if(v) {
                 tiposDoc.push(v);
                 await updateDoc(doc(db, "workspaces", currentWS), { tiposDoc: tiposDoc });
+                document.getElementById('t-nom').value = "";
             }
+        };
+
+        window.eliminarTipoDoc = async (idx) => {
+            tiposDoc.splice(idx, 1);
+            await updateDoc(doc(db, "workspaces", currentWS), { tiposDoc: tiposDoc });
         };
 
         window.guardarGerencia = async () => {
             const n = document.getElementById('g-nom').value.trim();
             if(n) await addDoc(collection(db, "Gerencias"), { nombre: n, wsId: currentWS });
+            document.getElementById('g-nom').value = "";
         };
 
         window.guardarDepartamento = async () => {
             const g = document.getElementById('d-ger-sel').value;
             const n = document.getElementById('d-nom').value.trim();
             if(g && n) await addDoc(collection(db, "Departamentos"), { nombre: n, gerencia: g, wsId: currentWS });
+            document.getElementById('d-nom').value = "";
         };
 
         window.actualizarDeptos = (ger) => {
@@ -453,8 +559,8 @@
             document.getElementById('sol-dep').innerHTML = h;
         };
 
-        window.logout = () => signOut(auth).then(() => location.reload());
         window.del = async (c, id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, c, id)); };
+        window.logout = () => signOut(auth).then(() => location.reload());
 
     </script>
 </body>
