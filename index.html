@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documental System Corp</title>
+    <title>SGC PRO SaaS</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -22,8 +22,8 @@
         body { background: var(--bg); color: #1e293b; height: 100vh; display: flex; overflow: hidden; }
 
         /* Pantallas Overlay (Login y Onboarding) */
-        #login-screen, #corp-screen { position: fixed; inset: 0; background: var(--sidebar); display: flex; align-items: center; justify-content: center; z-index: 5000; flex-direction: column; }
-        .auth-box { background: var(--white); padding: 40px; border-radius: 24px; max-width: 450px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }
+        #login-screen, #corp-screen { position: fixed; inset: 0; background: var(--sidebar); display: flex; align-items: center; justify-content: center; z-index: 5000; flex-direction: column; overflow-y: auto; padding: 20px; }
+        .auth-box { background: var(--white); padding: 40px; border-radius: 24px; max-width: 450px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }
 
         /* Botón Google */
         .btn-google { background: white; color: #334155; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.2s; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-top: 15px; }
@@ -190,8 +190,26 @@
 
     <div id="login-screen" style="display:none;">
         <div class="auth-box">
-            <h1 style="color:var(--primary); margin-bottom: 10px; font-weight: 800;">Documental System Corp</h1>
-            <p style="color:#64748b; font-size:13px; margin-bottom:30px;">Gestiona tus versiones de documentos</p>
+            <h1 style="color:var(--primary); margin-bottom: 10px; font-weight: 800;">SGC PRO SAAS</h1>
+            <p style="color:#64748b; font-size:13px; margin-bottom:20px;">Gestión de Calidad, Auditorías y OEA</p>
+            
+            <div id="email-login-form" style="text-align: left; margin-bottom: 20px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+                <label>Correo Electrónico</label>
+                <input type="email" id="login-email" placeholder="ejemplo@empresa.com" style="background:white;">
+                <label>Contraseña</label>
+                <input type="password" id="login-pass" placeholder="••••••" style="background:white;">
+                
+                <div style="display:flex; gap:10px; margin-top: 10px;">
+                    <button class="btn btn-primary" id="btnEmailLogin" style="flex:1; padding: 12px;">Iniciar Sesión</button>
+                    <button class="btn btn-ghost" id="btnEmailRegister" style="flex:1; padding: 12px; border:1px solid #cbd5e1;">Crear Cuenta</button>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; margin: 20px 0;">
+                <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+                <span style="padding: 0 10px; font-size: 12px; color: #94a3b8; font-weight:bold;">O CONTINUAR CON</span>
+                <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+            </div>
             
             <button class="btn-google" id="btnGoogleLogin">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
@@ -739,10 +757,10 @@
                     
                     <button class="btn btn-primary" id="btnSaveUser" style="width:100%; display:none;">ACTUALIZAR USUARIO</button>
                     <button class="btn btn-ghost" id="btnCancelEdit" style="width:100%; margin-top:5px; display:none;" onclick="resetUserForm()">CANCELAR EDICIÓN</button>
-                    <p style="font-size:10px; color:#94a3b8; text-align:center; margin-top:10px;">En este entorno SaaS, los usuarios se registran automáticamente usando Google. Haz clic en "Editar" en la tabla para asignarles permisos.</p>
+                    <p style="font-size:10px; color:#94a3b8; text-align:center; margin-top:10px;">En este entorno SaaS, los usuarios se registran automáticamente. Haz clic en "Editar" en la tabla para asignarles permisos.</p>
                 </div>
                 <div class="card table-responsive" style="padding:0;">
-                    <table id="table-users"><thead><tr><th>Usuario (Google)</th><th>Email</th><th>Rol/Gerencias</th><th>Acciones</th></tr></thead><tbody id="tbody-users"></tbody></table>
+                    <table id="table-users"><thead><tr><th>Usuario (Google / Correo)</th><th>Email</th><th>Rol/Gerencias</th><th>Acciones</th></tr></thead><tbody id="tbody-users"></tbody></table>
                 </div>
             </div>
         </section>
@@ -1137,10 +1155,10 @@
         // 1. IMPORTACIONES Y CONFIGURACIÓN INICIAL
         // ==========================================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, updateDoc, setDoc, query, where, getDocs, arrayUnion, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // CREDENCIALES
+        // CREDENCIALES SAAS
         const firebaseConfig = {
           apiKey: "AIzaSyAe0m1_geL_U9Q3a9QR2qiWLHUfxPh18DM",
           authDomain: "saas-7dab1.firebaseapp.com",
@@ -1320,9 +1338,75 @@
                 document.getElementById('main').style.display = 'none';
                 document.getElementById('corp-screen').style.display = 'none';
                 document.getElementById('login-screen').style.display = 'flex';
+                
+                document.getElementById('login-email').value = "";
+                document.getElementById('login-pass').value = "";
             }).catch((error) => {
                 console.error("Error cerrando sesión: ", error);
             });
+        };
+
+        // ==========================================
+        // LOGICA DE AUTENTICACION (GOOGLE Y EMAIL)
+        // ==========================================
+        
+        // Manejar el resultado del Redirect (Si el Popup falla por COOP)
+        getRedirectResult(auth).then((result) => {
+            if (result !== null && result.user) {
+                console.log("Login por redirección exitoso.");
+            }
+        }).catch((error) => {
+            console.warn("Error en redirect de Google:", error);
+            window.hideLoading();
+            alert("Atención: Hubo un problema al validar tu sesión de Google. Inténtalo nuevamente o usa Correo y Contraseña.");
+        });
+
+        // 1. Iniciar con Correo y Contraseña
+        document.getElementById('btnEmailLogin').onclick = async () => {
+            const e = document.getElementById('login-email').value.trim();
+            const p = document.getElementById('login-pass').value.trim();
+            if(!e || !p) return alert("Por favor, ingresa tu correo y contraseña.");
+            
+            window.showLoading();
+            try {
+                await signInWithEmailAndPassword(auth, e, p);
+                // onAuthStateChanged se encargará del resto
+            } catch (err) {
+                window.hideLoading();
+                alert("Error al iniciar sesión. Verifica tus credenciales.");
+                console.error(err);
+            }
+        };
+
+        // 2. Crear Cuenta con Correo y Contraseña
+        document.getElementById('btnEmailRegister').onclick = async () => {
+            const e = document.getElementById('login-email').value.trim();
+            const p = document.getElementById('login-pass').value.trim();
+            if(!e || !p) return alert("Ingresa un correo y contraseña para crear la cuenta.");
+            if(p.length < 6) return alert("La contraseña debe tener al menos 6 caracteres.");
+            
+            window.showLoading();
+            try {
+                await createUserWithEmailAndPassword(auth, e, p);
+                // onAuthStateChanged tomará el control
+            } catch (err) {
+                window.hideLoading();
+                if(err.code === 'auth/email-already-in-use') alert("Este correo ya está registrado. Por favor, Inicia Sesión.");
+                else alert("Error al crear la cuenta: " + err.message);
+                console.error(err);
+            }
+        };
+
+        // 3. Login Google (Intenta Popup primero, si falla intenta Redirect)
+        document.getElementById('btnGoogleLogin').onclick = async () => {
+            window.showLoading();
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.warn("Popup bloqueado o falló, cambiando a redirección...", error);
+                signInWithRedirect(auth, provider);
+            }
         };
 
         // ==========================================
@@ -1336,24 +1420,19 @@
             const newCorpId = 'CORP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
             const invCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-            // 1. Guardar Corporación global
             await setDoc(doc(db, "Corporaciones", newCorpId), {
-                nombre: nom,
-                codigo_invitacion: invCode,
-                owner: globalUserSession.uid,
-                fecha_creacion: new Date().toISOString()
+                nombre: nom, codigo_invitacion: invCode, owner: globalUserSession.uid, fecha_creacion: new Date().toISOString()
             });
 
-            // 2. Asociar el Google UID a esta corporación en la BD Global
             await setDoc(doc(db, "GlobalUsers", globalUserSession.uid), {
-                email: globalUserSession.email,
-                corpId: newCorpId
+                email: globalUserSession.email, corpId: newCorpId
             });
 
-            // 3. Crear el perfil de administrador dentro de la corporación (Artifacts)
             appId = newCorpId; 
+            const baseName = globalUserSession.displayName || globalUserSession.email.split('@')[0];
+            
             await setDoc(doc(db, "artifacts", appId, "public", "data", "Usuarios", globalUserSession.uid), {
-                nombre: globalUserSession.displayName || 'Admin',
+                nombre: baseName,
                 usuario: globalUserSession.uid, 
                 email: globalUserSession.email,
                 gerencias: ["SGC"],
@@ -1385,12 +1464,13 @@
                 appId = corpDoc.id;
                 
                 await setDoc(doc(db, "GlobalUsers", globalUserSession.uid), {
-                    email: globalUserSession.email,
-                    corpId: appId
+                    email: globalUserSession.email, corpId: appId
                 });
 
+                const baseName = globalUserSession.displayName || globalUserSession.email.split('@')[0];
+
                 await setDoc(doc(db, "artifacts", appId, "public", "data", "Usuarios", globalUserSession.uid), {
-                    nombre: globalUserSession.displayName || 'Usuario Nuevo',
+                    nombre: baseName,
                     usuario: globalUserSession.uid, 
                     email: globalUserSession.email,
                     gerencias: [],
@@ -1432,10 +1512,12 @@
                         window.completarLoginUI();
                         window.hideLoading();
                     } else {
+                        // Usuario existe globalmente pero no localmente (Sincronización)
+                        const baseName = globalUserSession.displayName || globalUserSession.email.split('@')[0];
                         await setDoc(userRef, {
-                            nombre: globalUserSession.displayName, usuario: globalUserSession.uid, email: globalUserSession.email, gerencias: [], permisos: { can_solicit:true, p_ver_propias:true }
+                            nombre: baseName, usuario: globalUserSession.uid, email: globalUserSession.email, gerencias: [], permisos: { can_solicit:true, p_ver_propias:true }
                         });
-                        currentUser = { nombre: globalUserSession.displayName, usuario: globalUserSession.uid, email: globalUserSession.email, permisos: { can_solicit:true, p_ver_propias:true } };
+                        currentUser = { nombre: baseName, usuario: globalUserSession.uid, email: globalUserSession.email, permisos: { can_solicit:true, p_ver_propias:true } };
                         window.completarLoginUI();
                         window.hideLoading();
                     }
@@ -1450,14 +1532,7 @@
             }
         }
 
-        // GOOGLE SIGN IN LOGIC (Falla corregida)
-        document.getElementById('btnGoogleLogin').onclick = () => {
-            window.showLoading();
-            const provider = new GoogleAuthProvider();
-            signInWithRedirect(auth, provider);
-        };
-
-        // Escucha cambios de estado de sesión automáticamente
+        // Listener de Autenticación de Firebase (Esto reemplaza el antiguo restaurarSesion manual)
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 globalUserSession = user;
@@ -2133,7 +2208,9 @@
             document.getElementById('p-audit-admin').checked = p.p_audit_admin || false; 
             document.getElementById('p-admin').checked = p.admin || false;
 
-            document.getElementById('btnSaveUser').innerText = "ACTUALIZAR USUARIO"; document.getElementById('btnCancelEdit').style.display = 'inline-flex'; window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('btnSaveUser').style.display = 'block'; 
+            document.getElementById('btnCancelEdit').style.display = 'inline-flex'; 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
         window.resetUserForm = () => {
@@ -2142,7 +2219,8 @@
             document.querySelectorAll('#u-ger-list input[type="checkbox"]').forEach(cb => cb.checked = false);
 
             document.getElementById('p-solicitar').checked = false; document.getElementById('p-ver-propias').checked = true; document.getElementById('p-ver-ger').checked = false; document.getElementById('p-gest-sgc').checked = false; document.getElementById('p-ger-apr').checked = false; document.getElementById('p-users').checked = false; document.getElementById('p-struct').checked = false; document.getElementById('p-ver-listado').checked = false; document.getElementById('p-audit-ver').checked = false; document.getElementById('p-audit-admin').checked = false; document.getElementById('p-admin').checked = false;
-            document.getElementById('btnSaveUser').innerText = "GUARDAR USUARIO"; document.getElementById('btnCancelEdit').style.display = 'none';
+            document.getElementById('btnSaveUser').style.display = 'none'; 
+            document.getElementById('btnCancelEdit').style.display = 'none';
         };
 
         window.actualizarDatosSGC = async () => {
@@ -2404,384 +2482,6 @@
         };
 
         window.rechazar = () => { tempAction = 'Rechazado'; document.getElementById('m-input-area').style.display='block'; document.getElementById('reunion-container').style.display = 'none'; };
-
-        function cargarDatos() {
-            const path = (c) => collection(db, "artifacts", appId, "public", "data", c);
-
-            // CARGAR AUDITORIAS
-            onSnapshot(path("Auditorias"), s => {
-                globalAllAuditorias = [];
-                s.forEach(d => { let a = d.data(); a.id = d.id; globalAllAuditorias.push(a); });
-                const currentYearFilter = document.getElementById('aud-year-select') ? document.getElementById('aud-year-select').value : new Date().getFullYear().toString();
-                renderTablaAuditorias(currentYearFilter);
-            });
-
-            // CARGAR USUARIOS Y GENERAR SELECTS/CHECKBOXES
-            onSnapshot(path("Usuarios"), s => {
-                const tb = document.getElementById('tbody-users'); if(!tb) return;
-                allUsers = []; let usersHtml = ""; 
-                let userOptionsHtmlSingle = `<option value="">-- Seleccionar Usuario --</option>`; 
-                let involucradosOptions = `<option value="">-- Seleccionar Usuario --</option>`; 
-                let checkboxHtml = "";
-
-                s.forEach(d => {
-                    const u = d.data(); u.docId = d.id; allUsers.push(u); 
-                    
-                    let grShow = (u.gerencias && u.gerencias.length > 0) ? u.gerencias.join(', ') : (u.gerencia || 'N/A');
-                    
-                    userOptionsHtmlSingle += `<option value="${u.nombre}" data-email="${u.email || ''}">${u.nombre} (${grShow})</option>`;
-                    checkboxHtml += `<label><input type="checkbox" value="${u.nombre}" data-email="${u.email || ''}"> ${u.nombre} <span style="font-size:10px;color:#94a3b8">(${grShow})</span></label>`;
-                    
-                    if(u.email) {
-                        involucradosOptions += `<option value="${u.email.toLowerCase()}">${u.nombre} (${u.email})</option>`;
-                    }
-
-                    usersHtml += `<tr><td><b>${u.nombre}</b><br><span style="font-size:10px;color:#64748b">${u.usuario}</span></td><td>${u.email || '-'}</td><td>${grShow}<br><span class="badge badge-info">${u.role || 'N/A'}</span></td><td><button class="btn btn-info" style="padding:5px 10px; font-size:10px;" onclick="cargarUsuarioParaEditar('${u.usuario}')">EDITAR</button> <button class="btn btn-danger" style="padding:5px 10px; font-size:10px;" onclick="del('Usuarios','${u.docId}')">X</button></td></tr>`;
-                });
-                
-                tb.innerHTML = usersHtml;
-                
-                // Actualizar Selects de Auditoría
-                if(document.getElementById('ah-lider')) document.getElementById('ah-lider').innerHTML = userOptionsHtmlSingle;
-                if(document.getElementById('ah-auditor-list')) document.getElementById('ah-auditor-list').innerHTML = checkboxHtml;
-                if(document.getElementById('aud-auditado-list')) document.getElementById('aud-auditado-list').innerHTML = checkboxHtml;
-                if(document.getElementById('aud-auditor-list')) document.getElementById('aud-auditor-list').innerHTML = checkboxHtml;
-
-                // Actualizar Selects de Involucrados
-                if(document.getElementById('sol-involucrado-sel')) document.getElementById('sol-involucrado-sel').innerHTML = involucradosOptions;
-                if(document.getElementById('m-new-involucrado-sel')) document.getElementById('m-new-involucrado-sel').innerHTML = involucradosOptions;
-            });
-
-            // CARGAR GERENCIAS
-            onSnapshot(path("Gerencias"), s => {
-                let h = "<option value=''>-- Seleccionar Gerencia --</option>", l = "";
-                let checkGerHtml = "";
-                s.forEach(d => {
-                    const g = d.data(); h += `<option value="${g.nombre}">${g.nombre}</option>`;
-                    l += `<div class="settings-item"><span>${g.nombre}</span><button class="btn-icon-danger" onclick="del('Gerencias','${d.id}')"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`;
-                    checkGerHtml += `<label><input type="checkbox" value="${g.nombre}"> ${g.nombre}</label>`;
-                });
-                if(document.getElementById('sol-ger')) document.getElementById('sol-ger').innerHTML = h;
-                if(document.getElementById('u-ger-sel')) document.getElementById('u-ger-sel').innerHTML = h;
-                if(document.getElementById('d-ger-sel')) document.getElementById('d-ger-sel').innerHTML = h; 
-                if(document.getElementById('list-ger')) document.getElementById('list-ger').innerHTML = l;
-                if(document.getElementById('u-ger-list')) document.getElementById('u-ger-list').innerHTML = checkGerHtml;
-                
-                if(document.getElementById('sol-ger') && document.getElementById('sol-ger').value) { document.getElementById('sol-ger').dispatchEvent(new Event('change')); }
-            });
-
-            // CARGAR DEPARTAMENTOS
-            onSnapshot(path("Departamentos"), s => {
-                let l = ""; allDepartamentos = [];
-                s.forEach(d => {
-                    const dep = d.data(); dep.docId = d.id; allDepartamentos.push(dep);
-                    l += `<div class="settings-item"><span>${dep.nombre} <small style="color:#94a3b8; margin-left:5px;">(${dep.gerencia || 'Sin Gerencia'})</small></span><button class="btn-icon-danger" onclick="del('Departamentos','${d.id}')"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`;
-                });
-                if(document.getElementById('list-dep')) document.getElementById('list-dep').innerHTML = l;
-                if(document.getElementById('sol-ger')) document.getElementById('sol-ger').dispatchEvent(new Event('change'));
-            });
-
-            // CARGAR CONFIGURACIÓN DINAMICA
-            const docConfigMaestro = doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings");
-            onSnapshot(docConfigMaestro, d => {
-                if(d.exists()) {
-                    columnasMaestro = d.data().columnas || ['Código', 'Gerencia', 'Departamento', 'Tipo de documento', 'Nombre del documento', 'Fecha de Creación', 'Fecha última versión', 'Versión', 'Ubicación del Documento', 'Estatus', 'Código Anterior'];
-                    estatusMaestro = d.data().estatus || ['Vigente', 'Obsoleto', 'En Revisión'];
-                    tiposDocumento = d.data().tiposDoc || ['Guía', 'Manual', 'Instructivo', 'Procedimiento', 'Formato'];
-                } else {
-                    columnasMaestro = ['Código', 'Gerencia', 'Departamento', 'Tipo de documento', 'Nombre del documento', 'Fecha de Creación', 'Fecha última versión', 'Versión', 'Ubicación del Documento', 'Estatus', 'Código Anterior'];
-                    estatusMaestro = ['Vigente', 'Obsoleto', 'En Revisión'];
-                    tiposDocumento = ['Guía', 'Manual', 'Instructivo', 'Procedimiento', 'Formato'];
-                    setDoc(docConfigMaestro, { columnas: columnasMaestro, estatus: estatusMaestro, tiposDoc: tiposDocumento }, {merge: true});
-                }
-                window.renderListasConfig(); window.renderTablaMaestro();
-            });
-
-            // CARGAR SOLICITUDES Y RENDERIZAR DASHBOARD/TABLAS
-            onSnapshot(path("Solicitudes"), s => {
-                const tbHist = document.getElementById('tbody-historial'); const tbGest = document.getElementById('tbody-gestionar');
-                if(!tbHist || !tbGest) return;
-                
-                let solicitudesList = [];
-                s.forEach(d => { let data = d.data(); data.docId = d.id; solicitudesList.push(data); });
-                solicitudesList.sort((a, b) => { return a.customId > b.customId ? 1 : -1; });
-                globalSolicitudes = solicitudesList; 
-
-                // Variables para Dashboard Personal
-                let misTot = 0, misPend = 0, misOk = 0, misRech = 0;
-                // Variables para Dashboard Global
-                let globTot = 0, globPend = 0, globOk = 0, globRech = 0;
-
-                let histHtml = ""; let gestHtml = "";
-
-                solicitudesList.forEach(sol => {
-                    if(!currentUser) return;
-                    const p = currentUser.permisos || {};
-                    let estadoStr = (sol.estado || "").toUpperCase();
-                    let isAprobadoFinal = estadoStr.includes('APROBADO FINAL');
-                    let isCancelado = estadoStr === 'ANULADO' || estadoStr === 'RECHAZADO';
-                    let isMine = (sol.uid === currentUser.usuario) || (sol.involucrados && currentUser.email && sol.involucrados.includes(currentUser.email.toLowerCase()));
-
-                    // Cálculos Dashboard Global
-                    globTot++;
-                    if (isAprobadoFinal) globOk++;
-                    else if (isCancelado) globRech++;
-                    else globPend++;
-
-                    // Cálculos Dashboard Personal
-                    if (isMine) {
-                        misTot++;
-                        if (isAprobadoFinal) misOk++;
-                        else if (isCancelado) misRech++;
-                        else misPend++;
-                    }
-
-                    // Renderizado de Tablas
-                    let ver = p.p_ver_all || (p.p_ver_ger && currentUser.gerencias && currentUser.gerencias.includes(sol.gerencia)) || (p.p_ver_propias && isMine);
-                    
-                    let badgeClass = 'badge-info';
-                    if(estadoStr.includes('APROBADO')) badgeClass = 'badge-success';
-                    if(isCancelado) badgeClass = 'badge-danger';
-                    if(estadoStr.includes('PENDIENTE')) badgeClass = 'badge-warning';
-
-                    let pr = sol.prioridad || "Normal";
-                    let bPr = pr === 'Alta' ? 'badge-danger' : (pr === 'Básica' ? 'badge-info' : 'badge-dark');
-
-                    let faseActual = PASOS_NOMBRES[sol.idx] || ""; let estadoMostrar = sol.estado; let infoFase = "";
-                    if (isAprobadoFinal) { estadoMostrar = "APROBADO FINAL"; } else if (!isCancelado && faseActual) { infoFase = `<br><span style="font-size:10px; color:#64748b; font-weight:700; display:inline-block; margin-top:5px;">📍 Etapa: ${faseActual}</span>`; }
-
-                    if(ver) { histHtml += `<tr><td>${sol.customId}</td><td>${sol.solicitante}</td><td>${sol.titulo}</td><td><span class="badge ${bPr}">${pr.toUpperCase()}</span></td><td><span class="badge ${badgeClass}">${estadoMostrar}</span>${infoFase}</td><td><button class="btn btn-ghost" onclick="verDetalle('${sol.docId}')">Ver</button></td></tr>`; }
-                    
-                    let gestionar = false;
-                    const activo = !isCancelado && !isAprobadoFinal;
-                    
-                    if (activo) {
-                        if (sol.idx === 2) {
-                            if (p.p_ger_apr && currentUser.gerencias && currentUser.gerencias.includes(sol.gerencia)) {
-                                gestionar = true;
-                            } 
-                        } else {
-                            if (p.p_gest_sgc || p.admin) gestionar = true;
-                        }
-                    }
-
-                    let mostrarFilaGestionSGC = (p.p_gest_sgc || p.admin) && activo;
-                    let mostrarFilaGerente = p.p_ger_apr && sol.idx === 2 && currentUser.gerencias && currentUser.gerencias.includes(sol.gerencia) && activo;
-
-                    if(mostrarFilaGestionSGC || mostrarFilaGerente) { 
-                        let btnHtml = "";
-                        if(gestionar) {
-                            btnHtml = `<button class="btn btn-primary" onclick="verDetalle('${sol.docId}')">Gestionar</button>`;
-                        } else {
-                            btnHtml = `<button class="btn btn-ghost" onclick="verDetalle('${sol.docId}')">Ver</button>`;
-                        }
-
-                        gestHtml += `<tr><td>${sol.customId}</td><td>${sol.solicitante}</td><td>${sol.titulo}<br><span class="badge ${bPr}" style="margin-top:4px;">${pr.toUpperCase()}</span></td><td><span class="badge ${badgeClass}">${estadoMostrar}</span>${infoFase}</td><td>${btnHtml}</td></tr>`; 
-                    }
-                });
-                
-                tbHist.innerHTML = histHtml; tbGest.innerHTML = gestHtml;
-                
-                // Actualizar Dashboard UI
-                if(document.getElementById('dash-mis-tot')) {
-                    document.getElementById('dash-mis-tot').innerText = misTot;
-                    document.getElementById('dash-mis-pend').innerText = misPend;
-                    document.getElementById('dash-mis-ok').innerText = misOk;
-                    document.getElementById('dash-mis-rech').innerText = misRech;
-
-                    if(currentUser && (currentUser.permisos.p_gest_sgc || currentUser.permisos.admin)) {
-                        document.getElementById('dash-admin-section').style.display = 'block';
-                        document.getElementById('dash-glob-tot').innerText = globTot;
-                        document.getElementById('dash-glob-pend').innerText = globPend;
-                        document.getElementById('dash-glob-ok').innerText = globOk;
-                        document.getElementById('dash-glob-rech').innerText = globRech;
-                    } else {
-                        document.getElementById('dash-admin-section').style.display = 'none';
-                    }
-                }
-
-                // Llamar comprobación de alertas (solo SGC)
-                setTimeout(() => { checkDailyAlerts(); }, 3000);
-            });
-
-            // CARGAR LISTADO MAESTRO
-            onSnapshot(path("ListadoMaestro"), s => {
-                dataMaestro = []; s.forEach(d => { let data = d.data(); data.docId = d.id; dataMaestro.push(data); });
-                window.renderTablaMaestro();
-            });
-        }
-
-        if(document.getElementById('sol-ger')){
-            document.getElementById('sol-ger').addEventListener('change', (e) => {
-                const gSelected = e.target.value;
-                // Buscar usuarios que tengan permisos de gerente y la gerencia seleccionada esté en sus gerencias vinculadas
-                const gerentes = allUsers.filter(u => u.gerencias && u.gerencias.includes(gSelected) && u.permisos && u.permisos.p_ger_apr === true);
-                
-                if (gerentes && gerentes.length > 0) { 
-                    const nombres = gerentes.map(g => g.nombre).join(', ');
-                    const emails = gerentes.map(g => g.email || '').filter(e=>e).join(', ');
-                    document.getElementById('sol-gerente-display').value = nombres; 
-                    document.getElementById('sol-email-gerente').value = emails || "Sin Email"; 
-                } 
-                else { 
-                    document.getElementById('sol-gerente-display').value = "No asignado"; 
-                    document.getElementById('sol-email-gerente').value = ""; 
-                }
-                
-                const depSelect = document.getElementById('sol-dep'); let depHtml = "<option value=''>-- Seleccionar Departamento --</option>";
-                const depsFiltrados = allDepartamentos.filter(d => d.gerencia === gSelected); depsFiltrados.forEach(d => { depHtml += `<option value="${d.nombre}">${d.nombre}</option>`; });
-                depSelect.innerHTML = depHtml;
-            });
-        }
-
-        if(document.getElementById('import-excel-file')){
-            document.getElementById('import-excel-file').addEventListener('change', async (e) => {
-                const file = e.target.files[0]; if(!file) return; window.showLoading(); const reader = new FileReader();
-                reader.onload = async (evt) => {
-                    try {
-                        const data = new Uint8Array(evt.target.result); const workbook = XLSX.read(data, {type: 'array'});
-                        const sheetName = workbook.SheetNames[0]; const sheet = workbook.Sheets[sheetName];
-                        const json = XLSX.utils.sheet_to_json(sheet, {defval: ""});
-                        if(json.length > 0) {
-                            const colsExcel = Object.keys(json[0]);
-                            await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings"), { columnas: colsExcel, estatus: estatusMaestro, tiposDoc: tiposDocumento }, {merge: true});
-                            for(let row of json) { row.importado_por = currentUser.nombre; row.fecha_importacion = new Date().toISOString(); await addDoc(collection(db, "artifacts", appId, "public", "data", "ListadoMaestro"), row); }
-                            alert(`Se importaron ${json.length} registros.`);
-                        }
-                    } catch(error) { console.error(error); alert("Error leyendo Excel."); }
-                    window.hideLoading(); e.target.value = ''; 
-                }; reader.readAsArrayBuffer(file);
-            });
-        }
-
-        const btnConfirmAction = document.getElementById('btnConfirmAction');
-        if(btnConfirmAction) {
-            btnConfirmAction.onclick = async () => {
-                const box = document.getElementById('m-extra-input'); const txtHTML = box.innerHTML; const f = document.getElementById('m-file-gestion'); let mensajeFinal = ""; let nEst = "";
-                if (tempAction === "Respuesta") { mensajeFinal = `<b>Respuesta del Usuario:</b><br>${txtHTML}`; nEst = "Respuesta Recibida"; } 
-                else { mensajeFinal = `<b>${tempAction}:</b><br>${txtHTML}`; if(tempAction === 'Reunión') { const fechaReunion = document.getElementById('m-date-meeting').value; if(!fechaReunion) return alert("Selecciona fecha"); mensajeFinal += `<br><br>📅 <b>Fecha Asignada:</b> ${fechaReunion.replace('T', ' ')}`; } nEst = tempAction === 'Rechazado' ? 'Rechazado' : `En ${tempAction}`; }
-                window.showLoading(); let fileUrl = null; if(f.files[0]) { fileUrl = await uploadToCloudinary(f.files[0]); if (!fileUrl) { window.hideLoading(); return alert("Error subiendo archivo."); } }
-                let chatPayload = {u: currentUser.nombre, m: mensajeFinal, t: new Date().toLocaleString()}; if (fileUrl) chatPayload.archivo = fileUrl;
-                await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { estado: nEst, chat: arrayUnion(chatPayload) });
-                const dest = await getDatosEnvio(selectedDocData); sendNotification(dest, `Actualización: ${selectedDocData.customId}`, mensajeFinal.replace(/<br>/g, "\n").replace(/<[^>]*>?/gm, '')); document.getElementById('m-input-area').style.display = 'none'; window.hideLoading(); window.closeModal();
-            };
-        }
-
-        const btnSendSol = document.getElementById('btnSendSol');
-        if (btnSendSol) {
-            btnSendSol.onclick = async () => {
-                const tit = document.getElementById('sol-tit').value; 
-                const gerTarget = document.getElementById('sol-ger').value; 
-                if(!tit) return alert("Título obligatorio"); 
-                window.showLoading(); 
-                const f = document.getElementById('sol-file');
-                
-                let fileName = f.files[0] ? f.files[0].name : ""; 
-                let url = null; 
-                if (f.files[0]) { url = await uploadToCloudinary(f.files[0]); if (!url) { window.hideLoading(); return alert("Error al subir archivo."); } }
-                
-                // Recopilar correos de las etiquetas visuales (badges)
-                const extraEmailsNodes = document.querySelectorAll('.involucrado-item'); 
-                const extraEmails = Array.from(extraEmailsNodes).map(el => el.dataset.email); 
-                
-                const fci = await getNextFCI(); 
-                const gerenteEmailVisible = document.getElementById('sol-email-gerente').value;
-                const now = new Date().toISOString();
-                
-                const data = { 
-                    customId: fci, 
-                    titulo: tit, 
-                    accion: document.getElementById('sol-accion').value, 
-                    tipoDoc: document.getElementById('sol-tipo-doc').value, 
-                    prioridad: document.getElementById('sol-prioridad').value,
-                    gerencia: gerTarget, 
-                    departamento: document.getElementById('sol-dep').value, 
-                    motivo: document.getElementById('sol-motivo').value, 
-                    cod_ref: document.getElementById('sol-cod-prev').value, 
-                    ver_ref: document.getElementById('sol-ver-prev').value, 
-                    fecha_ref: document.getElementById('sol-fecha-prev').value, 
-                    solicitante: currentUser.nombre, 
-                    solicitante_email: currentUser.email, 
-                    uid: currentUser.usuario, 
-                    involucrados: extraEmails, 
-                    idx: 0, 
-                    estado: "Pendiente Documentado", 
-                    fase_0_ini: now, 
-                    adjunto: url, 
-                    adjunto_nombre: fileName, 
-                    chat: [{u: "SISTEMA", m: "Solicitud creada exitosamente.", t: new Date().toLocaleString()}], 
-                    fecha: now 
-                };
-                
-                await addDoc(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), data); 
-                document.getElementById('lista-involucrados-tags').innerHTML = ""; // Limpiar lista
-                
-                const toEmails = new Set([EMAIL_ADMIN_SGC, EMAIL_GRUPO_SGC, currentUser.email, ...extraEmails]); 
-                const destinatarios = { to: Array.from(toEmails).join(','), cc: gerenteEmailVisible }; 
-                sendNotification(destinatarios, "Nueva Solicitud Creada", `El usuario ${currentUser.nombre} ha creado la solicitud ${fci} con prioridad ${data.prioridad}.`);
-                window.hideLoading(); alert("Solicitud Creada: " + fci); window.cambiarVista('sec-hist', document.getElementById('nav-hist'));
-            };
-        }
-
-        const btnSaveUser = document.getElementById('btnSaveUser');
-        if (btnSaveUser) {
-            btnSaveUser.onclick = async () => {
-                const nom = document.getElementById('u-nom').value.trim(); const usr = document.getElementById('u-usr').value.toLowerCase().trim(); const pas = document.getElementById('u-pas').value.trim(); const rol = document.getElementById('u-rol').value.trim(); const email = document.getElementById('u-email').value.trim().toLowerCase();
-                
-                // Recopilar múltiples gerencias
-                const gerenciasSel = [];
-                document.querySelectorAll('#u-ger-list input:checked').forEach(cb => {
-                    gerenciasSel.push(cb.value);
-                });
-
-                if(!nom || !usr || !pas || gerenciasSel.length === 0) return alert("Nombre, Usuario, Contraseña y al menos 1 Gerencia son obligatorios.");
-                
-                const permisos = { 
-                    can_solicit: document.getElementById('p-solicitar').checked, 
-                    p_ver_propias: document.getElementById('p-ver-propias').checked, 
-                    p_ver_ger: document.getElementById('p-ver-ger').checked, 
-                    p_gest_sgc: document.getElementById('p-gest-sgc').checked, 
-                    p_ger_apr: document.getElementById('p-ger-apr').checked, 
-                    p_users: document.getElementById('p-users').checked, 
-                    p_struct: document.getElementById('p-struct').checked, 
-                    p_ver_listado: document.getElementById('p-ver-listado').checked, 
-                    p_audit_ver: document.getElementById('p-audit-ver').checked, 
-                    p_audit_admin: document.getElementById('p-audit-admin').checked, 
-                    admin: document.getElementById('p-admin').checked 
-                };
-                window.showLoading();
-                const docRef = doc(db, "artifacts", appId, "public", "data", "Usuarios", usr); const snap = await getDoc(docRef);
-                if(snap.exists() && document.getElementById('user-form-title').innerText.includes("Registrar")) { window.hideLoading(); return alert("Ese ID de usuario ya existe. Elija otro o edítelo desde la tabla."); }
-                
-                // Guardo el campo gerencias como un array. Guardo gerencia (singular) como el primer elemento por compatibilidad temporal si es necesario.
-                await setDoc(docRef, { nombre: nom, usuario: usr, pass: pas, gerencias: gerenciasSel, gerencia: gerenciasSel[0], role: rol, email: email, permisos: permisos });
-                window.resetUserForm(); window.hideLoading(); alert("Usuario guardado exitosamente.");
-            };
-        }
-
-        // ==========================================
-        // 5. INICIALIZACIÓN DEL SISTEMA (AL FINAL)
-        // ==========================================
-        async function restaurarSesion() {
-            const savedUser = localStorage.getItem('sgc_session_user');
-            if(savedUser) {
-                window.showLoading();
-                try {
-                    const q = query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", savedUser));
-                    const snap = await getDocs(q);
-                    if(!snap.empty) {
-                        currentUser = snap.docs[0].data();
-                        window.completarLoginUI();
-                    } else {
-                        localStorage.removeItem('sgc_session_user');
-                    }
-                } catch(e) { console.error("Error restaurando sesión:", e); }
-                window.hideLoading();
-            }
-        }
-
-        // Llamar la restauración de sesión solo cuando todo el JS ha sido estructurado
-        restaurarSesion();
 
     </script>
 </body>
