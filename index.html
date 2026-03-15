@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documental System Coorp</title>
+    <title>SGC PRO SaaS</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -153,6 +153,9 @@
         .search-bar { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 15px; width: 100%; max-width: 350px; font-size: 13px; outline: none; margin-bottom: 0; }
         .search-bar:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1); }
 
+        /* =======================================
+           DISEÑO RESPONSIVO (MÓVILES Y TABLETS)
+           ======================================= */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow-y: auto; }
             .sidebar { position: fixed !important; left: -300px; top: 0; bottom: 0; z-index: 9000; transition: left 0.3s ease; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
@@ -171,6 +174,8 @@
             .card { padding: 15px; }
             .btn { width: 100%; justify-content: center; }
             .search-bar { max-width: 100%; margin-bottom: 10px; }
+            #sec-listado > div:first-child, #sec-hist > div:first-child, #sec-gest > div:first-child { flex-direction: column; align-items: stretch; }
+            #sec-listado > div:first-child > div, #sec-hist > .card > div:first-child, #sec-gest > .card > div:first-child { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -185,8 +190,8 @@
 
     <div id="login-screen" style="display:none;">
         <div class="auth-box">
-            <h1 style="color:var(--primary); margin-bottom: 10px; font-weight: 800;">Documental System Corp</h1>
-            <p style="color:#64748b; font-size:13px; margin-bottom:30px;">Gestiona tus documentos</p>
+            <h1 style="color:var(--primary); margin-bottom: 10px; font-weight: 800;">SGC PRO SAAS</h1>
+            <p style="color:#64748b; font-size:13px; margin-bottom:30px;">Gestión de Calidad, Auditorías y OEA</p>
             
             <button class="btn-google" id="btnGoogleLogin">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
@@ -420,7 +425,7 @@
             </div>
         </section>
 
-        <section id="sec-hist" class="section">
+        <section id="sec-hist" class="section active">
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px;">
                 <h1>Mis Solicitudes</h1>
             </div>
@@ -1128,8 +1133,11 @@
     </div>
 
     <script type="module">
+        // ==========================================
+        // 1. IMPORTACIONES Y CONFIGURACIÓN INICIAL
+        // ==========================================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, updateDoc, setDoc, query, where, getDocs, arrayUnion, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
         // CREDENCIALES
@@ -1159,7 +1167,7 @@
 
         // Variables SaaS
         let globalUserSession = null; 
-        let appId = null; // El corpId dinámico
+        let appId = null; 
         let corpInviteCodeLocal = null;
 
         // Variables Globales de Estado
@@ -1343,10 +1351,10 @@
             });
 
             // 3. Crear el perfil de administrador dentro de la corporación (Artifacts)
-            appId = newCorpId; // Setear contexto
+            appId = newCorpId; 
             await setDoc(doc(db, "artifacts", appId, "public", "data", "Usuarios", globalUserSession.uid), {
                 nombre: globalUserSession.displayName || 'Admin',
-                usuario: globalUserSession.uid, // Su UID será su username interno
+                usuario: globalUserSession.uid, 
                 email: globalUserSession.email,
                 gerencias: ["SGC"],
                 role: "Administrador Global",
@@ -1356,7 +1364,6 @@
             corpInviteCodeLocal = invCode;
             document.getElementById('app-corp-name').innerText = nom;
             
-            // Re-ejecutar login flow
             procesarUsuarioLogueado();
         };
 
@@ -1366,7 +1373,6 @@
             window.showLoading();
 
             try {
-                // Buscar la corp por código
                 const q = query(collection(db, "Corporaciones"), where("codigo_invitacion", "==", code));
                 const snap = await getDocs(q);
 
@@ -1378,20 +1384,18 @@
                 const corpDoc = snap.docs[0];
                 appId = corpDoc.id;
                 
-                // 1. Actualizar mapping global
                 await setDoc(doc(db, "GlobalUsers", globalUserSession.uid), {
                     email: globalUserSession.email,
                     corpId: appId
                 });
 
-                // 2. Crear perfil básico en la corporación
                 await setDoc(doc(db, "artifacts", appId, "public", "data", "Usuarios", globalUserSession.uid), {
                     nombre: globalUserSession.displayName || 'Usuario Nuevo',
                     usuario: globalUserSession.uid, 
                     email: globalUserSession.email,
                     gerencias: [],
                     role: "Usuario Básico",
-                    permisos: { can_solicit:true, p_ver_propias:true } // Permisos por defecto
+                    permisos: { can_solicit:true, p_ver_propias:true }
                 });
 
                 corpInviteCodeLocal = corpDoc.data().codigo_invitacion;
@@ -1414,14 +1418,12 @@
                 if(globalUserSnap.exists() && globalUserSnap.data().corpId) {
                     appId = globalUserSnap.data().corpId;
                     
-                    // Buscar detalles de la corporación para mostrar nombre y código
                     const corpSnap = await getDoc(doc(db, "Corporaciones", appId));
                     if(corpSnap.exists()) {
                         document.getElementById('app-corp-name').innerText = corpSnap.data().nombre;
                         corpInviteCodeLocal = corpSnap.data().codigo_invitacion;
                     }
 
-                    // Cargar perfil interno
                     const userRef = doc(db, "artifacts", appId, "public", "data", "Usuarios", globalUserSession.uid);
                     const userSnap = await getDoc(userRef);
                     
@@ -1430,7 +1432,6 @@
                         window.completarLoginUI();
                         window.hideLoading();
                     } else {
-                        // Raro: Tiene corp en global pero no existe el perfil. Lo creamos.
                         await setDoc(userRef, {
                             nombre: globalUserSession.displayName, usuario: globalUserSession.uid, email: globalUserSession.email, gerencias: [], permisos: { can_solicit:true, p_ver_propias:true }
                         });
@@ -1439,7 +1440,6 @@
                         window.hideLoading();
                     }
                 } else {
-                    // No tiene corporación. Mostrar Onboarding.
                     window.hideLoading();
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('corp-screen').style.display = 'flex';
@@ -1450,16 +1450,11 @@
             }
         }
 
-        // GOOGLE SIGN IN LOGIC
+        // GOOGLE SIGN IN LOGIC (Falla corregida)
         document.getElementById('btnGoogleLogin').onclick = () => {
             window.showLoading();
             const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider)
-                .catch((error) => {
-                    console.error("Error en Google Sign-In", error);
-                    window.hideLoading();
-                    alert("Error al iniciar sesión con Google.");
-                });
+            signInWithRedirect(auth, provider);
         };
 
         // Escucha cambios de estado de sesión automáticamente
@@ -2143,7 +2138,7 @@
 
         window.resetUserForm = () => {
             document.getElementById('user-form-title').innerText = "Registrar / Editar Usuario";
-            document.getElementById('u-nom').value = ""; document.getElementById('u-usr').value = ""; document.getElementById('u-usr').disabled = false; document.getElementById('u-pas').value = "123"; document.getElementById('u-ger-sel').value = ""; document.getElementById('u-rol').value = ""; document.getElementById('u-email').value = "";
+            document.getElementById('u-nom').value = ""; document.getElementById('u-usr').value = ""; document.getElementById('u-usr').disabled = false; document.getElementById('u-pas').value = "123"; document.getElementById('u-rol').value = ""; document.getElementById('u-email').value = "";
             document.querySelectorAll('#u-ger-list input[type="checkbox"]').forEach(cb => cb.checked = false);
 
             document.getElementById('p-solicitar').checked = false; document.getElementById('p-ver-propias').checked = true; document.getElementById('p-ver-ger').checked = false; document.getElementById('p-gest-sgc').checked = false; document.getElementById('p-ger-apr').checked = false; document.getElementById('p-users').checked = false; document.getElementById('p-struct').checked = false; document.getElementById('p-ver-listado').checked = false; document.getElementById('p-audit-ver').checked = false; document.getElementById('p-audit-admin').checked = false; document.getElementById('p-admin').checked = false;
@@ -2560,12 +2555,29 @@
                     let gestionar = false;
                     const activo = !isCancelado && !isAprobadoFinal;
                     
-                    // Modificación: El gestor SGC o Admin puede gestionar todo lo que esté activo (Pendiente)
-                    if((p.p_gest_sgc || p.admin) && activo) gestionar = true;
-                    // El gerente solo gestiona si está en su etapa (2) y le pertenece la gerencia
-                    if(p.p_ger_apr && sol.idx === 2 && currentUser.gerencias && currentUser.gerencias.includes(sol.gerencia) && activo) gestionar = true;
+                    if (activo) {
+                        if (sol.idx === 2) {
+                            if (p.p_ger_apr && currentUser.gerencias && currentUser.gerencias.includes(sol.gerencia)) {
+                                gestionar = true;
+                            } 
+                        } else {
+                            if (p.p_gest_sgc || p.admin) gestionar = true;
+                        }
+                    }
 
-                    if(gestionar) { gestHtml += `<tr><td>${sol.customId}</td><td>${sol.solicitante}</td><td>${sol.titulo}<br><span class="badge ${bPr}" style="margin-top:4px;">${pr.toUpperCase()}</span></td><td><span class="badge ${badgeClass}">${estadoMostrar}</span>${infoFase}</td><td><button class="btn btn-primary" onclick="verDetalle('${sol.docId}')">Gestionar</button></td></tr>`; }
+                    let mostrarFilaGestionSGC = (p.p_gest_sgc || p.admin) && activo;
+                    let mostrarFilaGerente = p.p_ger_apr && sol.idx === 2 && currentUser.gerencias && currentUser.gerencias.includes(sol.gerencia) && activo;
+
+                    if(mostrarFilaGestionSGC || mostrarFilaGerente) { 
+                        let btnHtml = "";
+                        if(gestionar) {
+                            btnHtml = `<button class="btn btn-primary" onclick="verDetalle('${sol.docId}')">Gestionar</button>`;
+                        } else {
+                            btnHtml = `<button class="btn btn-ghost" onclick="verDetalle('${sol.docId}')">Ver</button>`;
+                        }
+
+                        gestHtml += `<tr><td>${sol.customId}</td><td>${sol.solicitante}</td><td>${sol.titulo}<br><span class="badge ${bPr}" style="margin-top:4px;">${pr.toUpperCase()}</span></td><td><span class="badge ${badgeClass}">${estadoMostrar}</span>${infoFase}</td><td>${btnHtml}</td></tr>`; 
+                    }
                 });
                 
                 tbHist.innerHTML = histHtml; tbGest.innerHTML = gestHtml;
@@ -2747,52 +2759,9 @@
             };
         }
 
-        document.getElementById('login-pass').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') { document.getElementById('btnLogin').click(); }
-        });
-
-        document.getElementById('btnLogin').onclick = async () => {
-            const u = document.getElementById('login-user').value.toLowerCase().trim();
-            const p = document.getElementById('login-pass').value.trim();
-            
-            if (!u || !p) { alert("Por favor, ingresa tu usuario y contraseña."); return; }
-
-            window.showLoading();
-            try {
-                if(u === 'admin' && p === '1130') {
-                    const adminRef = doc(db, "artifacts", appId, "public", "data", "Usuarios", "admin");
-                    const snapAdmin = await getDoc(adminRef);
-                    if(!snapAdmin.exists()) {
-                        await setDoc(adminRef, {
-                            nombre: "Admin Maestro", usuario: "admin", pass: "1130", gerencias: ["SGC"], gerencia: "SGC", email: EMAIL_ADMIN_SGC,
-                            permisos: { can_solicit:true, p_gest_sgc:true, p_ger_apr:true, p_ver_propias:true, p_ver_ger:true, p_ver_all:true, p_users:true, p_struct:true, p_ver_listado:true, p_audit_admin:true, p_audit_ver:true, admin:true }
-                        });
-                    }
-                }
-                const q = query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", u), where("pass", "==", p));
-                const querySnapshot = await getDocs(q);
-
-                if(!querySnapshot.empty) {
-                    localStorage.setItem('sgc_session_user', u);
-                    currentUser = querySnapshot.docs[0].data();
-                    window.completarLoginUI();
-                } else { 
-                    alert("Credenciales incorrectas. Verifica tu usuario o contraseña."); 
-                }
-            } catch (error) {
-                console.error("Error al intentar iniciar sesión:", error);
-                alert("Hubo un problema al conectar con la base de datos.");
-            } finally {
-                window.hideLoading();
-            }
-        };
-
-        const btnSaveGer = document.getElementById('btnSaveGer');
-        if(btnSaveGer) { btnSaveGer.onclick = async () => { const nom = document.getElementById('g-nom').value.trim(); if(!nom) return alert("Escriba un nombre para la gerencia."); await addDoc(collection(db, "artifacts", appId, "public", "data", "Gerencias"), { nombre: nom }); document.getElementById('g-nom').value = ""; }; }
-        
-        const btnSaveDep = document.getElementById('btnSaveDep');
-        if(btnSaveDep) { btnSaveDep.onclick = async () => { const ger = document.getElementById('d-ger-sel').value; const nom = document.getElementById('d-nom').value.trim(); if(!ger || !nom) return alert("Seleccione Gerencia y escriba Departamento."); await addDoc(collection(db, "artifacts", appId, "public", "data", "Departamentos"), { nombre: nom, gerencia: ger }); document.getElementById('d-nom').value = ""; }; }
-
+        // ==========================================
+        // 5. INICIALIZACIÓN DEL SISTEMA (AL FINAL)
+        // ==========================================
         async function restaurarSesion() {
             const savedUser = localStorage.getItem('sgc_session_user');
             if(savedUser) {
@@ -2811,6 +2780,7 @@
             }
         }
 
+        // Llamar la restauración de sesión solo cuando todo el JS ha sido estructurado
         restaurarSesion();
 
     </script>
