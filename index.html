@@ -206,8 +206,8 @@
                 <input type="password" id="login-pass" placeholder="••••••" style="background:white;">
                 
                 <div style="display:flex; gap:10px; margin-top: 10px;">
-                    <button class="btn btn-primary" id="btnEmailLogin" style="flex:1; padding: 12px;">Iniciar Sesión</button>
-                    <button class="btn btn-ghost" id="btnEmailRegister" style="flex:1; padding: 12px; border:1px solid #cbd5e1;">Crear Cuenta</button>
+                    <button class="btn btn-primary" onclick="window.loginEmail()" style="flex:1; padding: 12px;">Iniciar Sesión</button>
+                    <button class="btn btn-ghost" onclick="window.registroEmail()" style="flex:1; padding: 12px; border:1px solid #cbd5e1;">Crear Cuenta</button>
                 </div>
             </div>
 
@@ -217,7 +217,7 @@
                 <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
             </div>
             
-            <button class="btn-google" id="btnGoogleLogin">
+            <button class="btn-google" onclick="window.loginGoogle()">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
                 Ingresar con Google
             </button>
@@ -445,7 +445,7 @@
                     <input type="file" id="sol-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.png" style="margin-bottom:0; background:white;">
                 </div>
 
-                <button class="btn btn-primary" id="btnSendSol" style="width:100%; padding: 15px;">ENVIAR A REVISIÓN</button>
+                <button class="btn btn-primary" onclick="window.enviarSolicitud()" style="width:100%; padding: 15px;">ENVIAR A REVISIÓN</button>
             </div>
         </section>
 
@@ -762,7 +762,7 @@
                     </div>
                     
                     <div style="display:flex; gap:10px;">
-                        <button class="btn btn-primary" id="btnSaveUser" style="flex:1; display:none;">ACTUALIZAR USUARIO</button>
+                        <button class="btn btn-primary" onclick="window.guardarUsuario()" id="btnSaveUser" style="flex:1; display:none;">ACTUALIZAR USUARIO</button>
                         <button class="btn btn-ghost" id="btnCancelEdit" style="flex:1; display:none;" onclick="window.resetUserForm()">CANCELAR EDICIÓN</button>
                     </div>
                     <p style="font-size:10px; color:#94a3b8; text-align:center; margin-top:10px;">En este entorno SaaS, los usuarios se registran automáticamente. Haz clic en "Editar" en la tabla para asignarles permisos.</p>
@@ -784,7 +784,7 @@
                     <p style="font-size:11px; color:#64748b; margin-bottom:10px;">Departamentos principales que evalúan solicitudes.</p>
                     <div style="display:flex; gap:0; margin-bottom:15px; flex-wrap:wrap;">
                         <input type="text" id="g-nom" placeholder="Nueva Gerencia..." style="margin:0; border-radius: 8px 0 0 8px; border-right:none; flex:1;">
-                        <button class="btn btn-success" id="btnSaveGer" style="border-radius: 0 8px 8px 0;"><span class="material-icons-round">add</span></button>
+                        <button class="btn btn-success" onclick="window.guardarGerencia()" style="border-radius: 0 8px 8px 0;"><span class="material-icons-round">add</span></button>
                     </div>
                     <div id="list-ger" class="settings-list"></div>
                 </div>
@@ -795,7 +795,7 @@
                     <div style="display:flex; gap:0; margin-bottom:15px; flex-wrap:wrap;">
                         <select id="d-ger-sel" style="margin:0; border-radius: 8px 0 0 8px; border-right:1px solid #cbd5e1; width:40%; padding:12px;"></select>
                         <input type="text" id="d-nom" placeholder="Nuevo Depto..." style="margin:0; border-radius: 0; border-right:none; width:60%; flex:1;">
-                        <button class="btn btn-success" id="btnSaveDep" style="border-radius: 0 8px 8px 0;"><span class="material-icons-round">add</span></button>
+                        <button class="btn btn-success" onclick="window.guardarDepartamento()" style="border-radius: 0 8px 8px 0;"><span class="material-icons-round">add</span></button>
                     </div>
                     <div id="list-dep" class="settings-list"></div>
                 </div>
@@ -984,8 +984,8 @@
                         </label>
                         <p id="m-involucrados-list" style="font-size:13px; font-weight:600; color:#0369a1; word-break:break-all; margin-bottom: 10px;"></p>
                         
-                        <div id="m-add-involucrado-section" style="display:flex; gap:10px; border-top: 1px dashed #cbd5e1; padding-top: 10px; flex-wrap:wrap;">
-                            <select id="m-new-involucrado-sel" style="margin:0; padding:8px; font-size:12px; flex:1; min-width:200px; background:white;">
+                        <div id="m-add-involucrado-section" style="display:flex; gap:10px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+                            <select id="m-new-involucrado-sel" style="margin:0; padding:8px; font-size:12px; flex:1; background:white;">
                                 <option value="">-- Seleccionar Usuario --</option>
                             </select>
                             <button class="btn btn-info" onclick="window.guardarNuevoInvolucrado()" style="padding:8px 12px; font-size:11px;">Añadir</button>
@@ -1011,11 +1011,11 @@
                 <div id="m-input-area" style="display:none; margin-top:15px;">
                     <div id="reunion-container" style="display:none; margin-bottom:10px;">
                         <label style="color:var(--warning)">Fecha y Hora de Reunión</label>
-                        <input type="datetime-local" id="m-date-meeting" style="width:100%; margin-bottom:10px; background:white;">
+                        <input type="datetime-local" id="m-date-meeting" style="margin-bottom:10px;">
                     </div>
                     
                     <div style="border:1px solid #cbd5e1; border-radius:8px; margin-bottom:10px; overflow:hidden; background:white;">
-                        <div style="background:#f8fafc; padding:5px; border-bottom:1px solid #cbd5e1; display:flex; gap:5px; flex-wrap:wrap;">
+                        <div style="background:#f8fafc; padding:5px; border-bottom:1px solid #cbd5e1; display:flex; gap:5px;">
                             <button type="button" class="rt-btn" onclick="document.execCommand('bold',false,null)"><b>B</b></button>
                             <button type="button" class="rt-btn" onclick="document.execCommand('italic',false,null)"><i>I</i></button>
                             <button type="button" class="rt-btn" onclick="document.execCommand('underline',false,null)"><u>U</u></button>
@@ -1026,9 +1026,9 @@
                     
                     <div style="background:#f0fdf4; padding:10px; border-radius:8px; border:1px solid #bbf7d0;">
                             <label style="color:#15803d; margin-bottom:5px;">Adjuntar Archivo / Corrección (Opcional)</label>
-                            <input type="file" id="m-file-gestion" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png" style="margin-bottom:0; background:white; width:100%;">
+                            <input type="file" id="m-file-gestion" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png" style="margin-bottom:0; background:white;">
                     </div>
-                    <button class="btn btn-success" id="btnConfirmAction" style="width:100%; margin-top:10px;">CONFIRMAR ESTADO</button>
+                    <button class="btn btn-success" onclick="window.confirmarAccion()" style="width:100%; margin-top:10px;">CONFIRMAR ESTADO</button>
                     <button class="btn btn-ghost" onclick="document.getElementById('m-input-area').style.display='none'" style="width:100%; margin-top:5px;">Cancelar</button>
                 </div>
 
@@ -1036,7 +1036,7 @@
                     <p style="font-weight:800; font-size:11px; color:#64748b; margin-bottom:10px;">DEJAR UN COMENTARIO EN LA BITÁCORA:</p>
                     
                     <div style="border:1px solid #cbd5e1; border-radius:8px; margin-bottom:10px; overflow:hidden; background:white;">
-                        <div style="background:#f8fafc; padding:5px; border-bottom:1px solid #cbd5e1; display:flex; gap:5px; flex-wrap:wrap;">
+                        <div style="background:#f8fafc; padding:5px; border-bottom:1px solid #cbd5e1; display:flex; gap:5px;">
                             <button type="button" class="rt-btn" onclick="document.execCommand('bold',false,null)"><b>B</b></button>
                             <button type="button" class="rt-btn" onclick="document.execCommand('italic',false,null)"><i>I</i></button>
                             <button type="button" class="rt-btn" onclick="document.execCommand('underline',false,null)"><u>U</u></button>
@@ -1045,12 +1045,12 @@
                         <div id="m-comentario-libre" contenteditable="true" data-placeholder="Escribe un comentario o consulta directa..." style="min-height:60px; padding:10px; outline:none; font-size:13px;"></div>
                     </div>
 
-                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                        <div style="flex:1; min-width:200px;">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <div style="flex:1;">
                             <label style="font-size:10px;">Adjuntar Referencia (Opcional)</label>
-                            <input type="file" id="m-file-comentario" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg" style="margin-bottom:0; padding:8px; width:100%; background:white;">
+                            <input type="file" id="m-file-comentario" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg" style="margin-bottom:0; padding:8px;">
                         </div>
-                        <button class="btn btn-success" onclick="window.enviarComentarioLibre()" style="height:40px; margin-top:14px; width:100%;">ENVIAR COMENTARIO</button>
+                        <button class="btn btn-success" onclick="window.enviarComentarioLibre()" style="height:40px; margin-top:14px;">ENVIAR COMENTARIO</button>
                     </div>
                 </div>
 
@@ -1159,14 +1159,11 @@
     </div>
 
     <script type="module">
-        // ==========================================
-        // 1. IMPORTAÇÕES E CONFIGURAÇÃO INICIAL
-        // ==========================================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, updateDoc, setDoc, query, where, getDocs, arrayUnion, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // CREDENCIAIS SAAS
+        // CREDENCIALES SAAS
         const firebaseConfig = {
           apiKey: "AIzaSyAe0m1_geL_U9Q3a9QR2qiWLHUfxPh18DM",
           authDomain: "saas-7dab1.firebaseapp.com",
@@ -1195,7 +1192,6 @@
         const CLOUD_NAME = "saas1223";
         const UPLOAD_PRESET = "fci_documentos";
 
-        // Variáveis SaaS e Estado Global
         let globalUserSession = null; 
         let appId = null; 
         let corpInviteCodeLocal = null;
@@ -1221,9 +1217,6 @@
         
         const PASOS_NOMBRES = ["Pendiente Documentado", "Pendiente Verificado", "Pendiente Aprobación Gerencia", "Pendiente Aprobación SGC"];
 
-        // ==========================================
-        // 2. FUNÇÕES GLOBAIS - Anexadas ao Window para resolver ReferenceError
-        // ==========================================
         window.showLoading = () => document.getElementById('loading-overlay').style.display = 'flex';
         window.hideLoading = () => document.getElementById('loading-overlay').style.display = 'none';
 
@@ -1288,14 +1281,13 @@
             const msg = `Has sido invitado a unirte a la plataforma SGC PRO.\n\nPor favor, ingresa con tu cuenta de Google y utiliza este CÓDIGO DE CORPORACIÓN para unirte al equipo:\n\nCÓDIGO: ${corpInviteCodeLocal}`;
             
             window.sendNotification({to: em, cc: ""}, "Invitación a SGC PRO SaaS", msg);
-            alert("Invitación enviada corretamente.");
+            alert("Invitación enviada correctamente.");
             document.getElementById('modal-invitar').style.display = 'none';
             document.getElementById('inv-email').value = "";
         };
 
-        // ====== FUNCIÓN PRINCIPAL PARA CARGAR DATOS DEL FIREBASE ======
         window.cargarDatos = () => {
-            if (!appId) return; // Seguridad
+            if (!appId) return; 
             const path = (c) => collection(db, "artifacts", appId, "public", "data", c);
 
             // CARGAR AUDITORIAS
@@ -1504,7 +1496,6 @@
             document.getElementById('btn-export-list').style.display = esSGC ? 'inline-flex' : 'none';
             document.getElementById('btn-export-admin').style.display = p.admin ? 'inline-flex' : 'none';
             
-            // CARGA DE DATOS DEL FIREBASE
             window.cargarDatos();
             
             if(verAuditoria && document.getElementById('aud-year-select')) {
@@ -1514,7 +1505,7 @@
             window.cambiarVista('sec-hist', document.getElementById('nav-hist'));
         };
 
-        window.cerrarSesionGoogle = () => {
+        window.cerrarSesion = () => {
             signOut(auth).then(() => {
                 currentUser = null; appId = null; globalUserSession = null;
                 document.getElementById('sidebar').style.display = 'none';
@@ -1536,14 +1527,14 @@
             alert("Atención: Hubo un problema al validar tu sesión de Google. Inténtalo nuevamente o usa Correo y Contraseña.");
         });
 
-        document.getElementById('btnEmailLogin').onclick = async () => {
+        window.loginEmail = async () => {
             const e = document.getElementById('login-email').value.trim(); const p = document.getElementById('login-pass').value.trim();
             if(!e || !p) return alert("Por favor, ingresa tu correo y contraseña.");
             window.showLoading();
             try { await signInWithEmailAndPassword(auth, e, p); } catch (err) { window.hideLoading(); alert("Error al iniciar sesión. Verifica tus credenciales."); }
         };
 
-        document.getElementById('btnEmailRegister').onclick = async () => {
+        window.registroEmail = async () => {
             const e = document.getElementById('login-email').value.trim(); const p = document.getElementById('login-pass').value.trim();
             if(!e || !p) return alert("Ingresa un correo y contraseña para crear la cuenta.");
             if(p.length < 6) return alert("La contraseña debe tener al menos 6 caracteres.");
@@ -1551,13 +1542,12 @@
             try { await createUserWithEmailAndPassword(auth, e, p); } catch (err) { window.hideLoading(); if(err.code === 'auth/email-already-in-use') alert("Este correo ya está registrado."); else alert("Error: " + err.message); }
         };
 
-        document.getElementById('btnGoogleLogin').onclick = async () => {
+        window.loginGoogle = async () => {
             window.showLoading();
             const provider = new GoogleAuthProvider();
             try { await signInWithPopup(auth, provider); } 
             catch (error) { console.warn("Popup bloqueado, cambiando a redirección..."); signInWithRedirect(auth, provider); }
         };
-
 
         // ==========================================
         // LOGICA SAAS (CORPORACIONES)
