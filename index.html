@@ -163,6 +163,7 @@
             .mobile-header { display: flex; }
             .main { padding: 15px; overflow-y: visible; }
             
+            /* Forzar a 1 columna en celulares */
             .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr !important; gap: 15px; }
             
             .modal-content { display: flex !important; flex-direction: column !important; height: 95vh; max-height: 95vh; overflow-y: auto; width: 100%; padding: 0; border-radius: 16px; }
@@ -400,7 +401,7 @@
                 <div class="grid-2">
                     <div>
                         <label>Gerencia (Selecciona para ver Gerente y filtrar Depto)</label>
-                        <select id="sol-ger"></select>
+                        <select id="sol-ger" onchange="window.actualizarDepartamentos()"></select>
                     </div>
                     <div>
                         <label>Departamento</label>
@@ -874,7 +875,7 @@
 
            <div style="text-align:left;">
                <label>Correo Electrónico a invitar</label>
-               <input type="email" id="inv-email" placeholder="ejemplo@empresa.com" style="background:white;">
+               <input type="email" id="inv-email" placeholder="ejemplo@fcipty.com" style="background:white;">
            </div>
            
            <div style="display:flex; gap:10px; margin-top:10px;">
@@ -1234,7 +1235,7 @@
         const PASOS_NOMBRES = ["Pendiente Documentado", "Pendiente Verificado", "Pendiente Aprobación Gerencia", "Pendiente Aprobación SGC"];
 
         // ==========================================
-        // 2. FUNÇÕES GLOBAIS - Anexadas al Window para resolver ReferenceError
+        // 2. FUNCIONES GLOBALES - Anexadas al Window
         // ==========================================
         window.showLoading = () => document.getElementById('loading-overlay').style.display = 'flex';
         window.hideLoading = () => document.getElementById('loading-overlay').style.display = 'none';
@@ -1300,7 +1301,7 @@
             const msg = `Has sido invitado a unirte a la plataforma Document System Corp.\n\nPor favor, ingresa con tu cuenta de Google y utiliza este CÓDIGO DE CORPORACIÓN para unirte al equipo:\n\nCÓDIGO: ${corpInviteCodeLocal}`;
             
             window.sendNotification({to: em, cc: ""}, "Invitación a Document System Corp", msg);
-            alert("Invitación enviada corretamente.");
+            alert("Invitación enviada correctamente.");
             document.getElementById('modal-invitar').style.display = 'none';
             document.getElementById('inv-email').value = "";
         };
@@ -1330,6 +1331,29 @@
             if(!ger || !nom) return alert("Seleccione Gerencia y escriba Departamento."); 
             await addDoc(collection(db, "artifacts", appId, "public", "data", "Departamentos"), { nombre: nom, gerencia: ger }); 
             document.getElementById('d-nom').value = ""; 
+        };
+
+        window.actualizarDepartamentos = () => {
+            const solGerEl = document.getElementById('sol-ger');
+            if(!solGerEl) return;
+            const gSelected = solGerEl.value;
+            
+            const gerentes = allUsers.filter(u => u.gerencias && u.gerencias.includes(gSelected) && u.permisos && u.permisos.p_ger_apr === true);
+            if (gerentes && gerentes.length > 0) { 
+                const nombres = gerentes.map(g => g.nombre).join(', ');
+                const emails = gerentes.map(g => g.email || '').filter(e=>e).join(', ');
+                document.getElementById('sol-gerente-display').value = nombres; 
+                document.getElementById('sol-email-gerente').value = emails || "Sin Email"; 
+            } else { 
+                document.getElementById('sol-gerente-display').value = "No asignado"; 
+                document.getElementById('sol-email-gerente').value = ""; 
+            }
+            
+            const depSelect = document.getElementById('sol-dep'); 
+            let depHtml = "<option value=''>-- Seleccionar Departamento --</option>";
+            const depsFiltrados = allDepartamentos.filter(d => d.gerencia === gSelected); 
+            depsFiltrados.forEach(d => { depHtml += `<option value="${d.nombre}">${d.nombre}</option>`; });
+            if(depSelect) depSelect.innerHTML = depHtml;
         };
 
         // ====== FUNCIÓN PRINCIPAL PARA CARGAR DATOS DEL FIREBASE ======
@@ -1386,6 +1410,8 @@
                 if(document.getElementById('aud-auditor-list')) document.getElementById('aud-auditor-list').innerHTML = checkboxHtml;
                 if(document.getElementById('sol-involucrado-sel')) document.getElementById('sol-involucrado-sel').innerHTML = involucradosOptions;
                 if(document.getElementById('m-new-involucrado-sel')) document.getElementById('m-new-involucrado-sel').innerHTML = involucradosOptions;
+                
+                if(document.getElementById('sol-ger')) window.actualizarDepartamentos();
             });
 
             // CARGAR GERENCIAS
@@ -1402,7 +1428,8 @@
                 if(document.getElementById('d-ger-sel')) document.getElementById('d-ger-sel').innerHTML = h; 
                 if(document.getElementById('list-ger')) document.getElementById('list-ger').innerHTML = l;
                 if(document.getElementById('u-ger-list')) document.getElementById('u-ger-list').innerHTML = checkGerHtml;
-                if(document.getElementById('sol-ger') && document.getElementById('sol-ger').value) { document.getElementById('sol-ger').dispatchEvent(new Event('change')); }
+                
+                if(document.getElementById('sol-ger')) window.actualizarDepartamentos();
             });
 
             // CARGAR DEPARTAMENTOS
@@ -1413,7 +1440,7 @@
                     l += `<div class="settings-item"><span>${dep.nombre} <small style="color:#94a3b8; margin-left:5px;">(${dep.gerencia || 'Sin Gerencia'})</small></span><button class="btn-icon-danger" onclick="window.del('Departamentos','${d.id}')"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`;
                 });
                 if(document.getElementById('list-dep')) document.getElementById('list-dep').innerHTML = l;
-                if(document.getElementById('sol-ger')) document.getElementById('sol-ger').dispatchEvent(new Event('change'));
+                if(document.getElementById('sol-ger')) window.actualizarDepartamentos();
             });
 
             // CARGAR CONFIGURACIÓN DINÁMICA
@@ -1530,55 +1557,8 @@
             });
         };
 
-        window.completarLoginUI = () => {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('corp-screen').style.display = 'none';
-            document.getElementById('sidebar').style.display = 'flex';
-            document.getElementById('main').style.display = 'block';
-            document.getElementById('curr-name').innerText = currentUser.nombre;
-            document.getElementById('curr-ger').innerText = (currentUser.gerencias && currentUser.gerencias.length > 0) ? currentUser.gerencias.join(', ') : (currentUser.gerencia || 'SGC Admin');
-            
-            const p = currentUser.permisos || {};
-            const esSGC = p.p_gest_sgc || p.admin;
-
-            if(p.admin) { document.getElementById('admin-only').style.display = 'block'; } else { document.getElementById('admin-only').style.display = 'none'; }
-
-            const verAuditoria = p.p_audit_ver || p.p_audit_admin || esSGC;
-            document.getElementById('nav-audit').style.display = verAuditoria ? 'flex' : 'none';
-            
-            const adminAuditoria = p.p_audit_admin || esSGC;
-            document.getElementById('btn-config-plan').style.display = adminAuditoria ? 'inline-flex' : 'none';
-            document.getElementById('audit-admin-panel').style.display = adminAuditoria ? 'block' : 'none';
-            
-            document.getElementById('nav-listado').style.display = (esSGC || p.p_ver_listado) ? 'flex' : 'none';
-            document.getElementById('btn-nuevo-maestro').style.display = esSGC ? 'inline-flex' : 'none';
-            document.getElementById('btn-import-maestro').style.display = esSGC ? 'inline-flex' : 'none';
-            document.getElementById('btn-export-list').style.display = esSGC ? 'inline-flex' : 'none';
-            document.getElementById('btn-export-admin').style.display = p.admin ? 'inline-flex' : 'none';
-            
-            window.cargarDatos();
-            
-            if(verAuditoria && document.getElementById('aud-year-select')) {
-                window.loadAuditPlan(document.getElementById('aud-year-select').value);
-            }
-            
-            window.cambiarVista('sec-hist', document.getElementById('nav-hist'));
-        };
-
-        window.cerrarSesion = () => {
-            signOut(auth).then(() => {
-                currentUser = null; appId = null; globalUserSession = null;
-                document.getElementById('sidebar').style.display = 'none';
-                document.getElementById('main').style.display = 'none';
-                document.getElementById('corp-screen').style.display = 'none';
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('login-email').value = ""; document.getElementById('login-pass').value = "";
-            }).catch((error) => { console.error("Error cerrando sesión: ", error); });
-        };
-
-
         // ==========================================
-        // LOGICA DE AUTENTICACION (GOOGLE Y EMAIL)
+        // LOGICA DE AUTENTICACION Y SAAS
         // ==========================================
         getRedirectResult(auth).then((result) => {
             if (result !== null && result.user) { console.log("Login por redirección exitoso."); }
@@ -1609,9 +1589,6 @@
             catch (error) { console.warn("Popup bloqueado, cambiando a redirección..."); signInWithRedirect(auth, provider); }
         };
 
-        // ==========================================
-        // LOGICA SAAS (CORPORACIONES)
-        // ==========================================
         window.crearCorporacion = async () => {
             const nom = document.getElementById('new-corp-name').value.trim();
             if(!nom) return alert("Ingresa un nombre para la corporación");
@@ -1691,7 +1668,6 @@
             } catch (e) { console.error("Error validando usuario global:", e); window.hideLoading(); }
         };
 
-        // Firebase Auth Listener principal
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 globalUserSession = user;
