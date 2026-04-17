@@ -533,8 +533,9 @@
                             <div><div class="custom-label">Fin Real</div><p id="ma-fin-real" style="font-weight:bold;">---</p></div>
                         </div>
                         <div><div class="custom-label">Duración Total</div><p id="ma-duracion" style="color:var(--success); font-weight:800; font-size:16px;">---</p></div>
-                        <div id="ma-controles-tiempo" style="display:flex; gap:10px; margin-top:20px;">
-                            <button id="btn-comenzar-auditoria" class="btn btn-primary" onclick="window.comenzarAuditoria()" style="display:none; padding:15px;">▶️ COMENZAR AUDITORÍA</button>
+                        <div id="ma-controles-tiempo" style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+                            <button id="btn-comenzar-auditoria" class="btn btn-primary" onclick="window.comenzarAuditoria()" style="display:none; padding:15px;"></button>
+                            <button id="btn-pausar-auditoria" class="btn btn-warning" onclick="window.pausarAuditoria()" style="display:none; padding:15px;">⏸️ PAUSAR (NUEVA RONDA)</button>
                             <button id="btn-finalizar-auditoria" class="btn btn-success" onclick="window.finalizarAuditoria()" style="display:none; padding:15px;">⏹️ FINALIZAR AUDITORÍA</button>
                         </div>
                     </div>
@@ -703,54 +704,6 @@
            <h2 style="color:var(--primary); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">edit_document</span> <span id="lm-modal-title">Agregar Registro al Listado Maestro</span></h2>
            <div class="resp-grid" id="dinamic-form-maestro"></div>
            <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-primary" onclick="window.guardarRegistroMaestro()" style="flex:1;">Guardar Documento</button><button class="btn btn-dark" onclick="document.getElementById('modal-form-listado').style.display='none'" style="flex:1;">Cancelar</button></div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal-usuario">
-        <div class="modal-content" style="max-width: 800px; display:block; padding: 0; height:auto; max-height:92vh; overflow-y:auto; border-top:6px solid var(--primary);">
-            <div style="display:flex; justify-content:space-between; align-items:center; padding: 20px 30px; border-bottom:1px solid var(--border); background:white; position:sticky; top:0; z-index:100;">
-                <h2 id="user-form-title" style="color:var(--primary); margin:0; font-size:20px; font-weight:800;"><span class="material-icons-round">person_add</span> Registrar / Editar Usuario</h2>
-                <button class="btn-icon-danger" onclick="window.cerrarModalUsuario()"><span class="material-icons-round">close</span></button>
-            </div>
-            <div style="padding:30px;">
-                <div class="resp-grid">
-                    <div><label for="u-nom">Nombre Completo</label><input type="text" id="u-nom"></div>
-                    <div><label for="u-email">Correo Electrónico</label><input type="email" id="u-email"></div>
-                    <div><label for="u-usr">ID Usuario (Login)</label><input type="text" id="u-usr"></div>
-                    <div><label for="u-pas">Contraseña</label><input type="text" id="u-pas"></div>
-                    <div><label for="u-rol">Rol / Puesto</label><input type="text" id="u-rol"></div>
-                </div>
-                <div style="margin-top:15px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border);">
-                    <label>Gerencias Asignadas</label>
-                    <div id="u-ger-list" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;"></div>
-                </div>
-                <div style="margin-top:20px;">
-                    <h4 style="color:var(--primary); margin-bottom:10px;">Permisos del Sistema</h4>
-                    <div class="resp-grid" style="background:#f1f5f9; padding:15px; border-radius:8px;">
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-solicitar"> Crear Solicitudes</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-ver-propias"> Ver Propias</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-ver-ger"> Ver de Gerencia</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-ver-todas"> Ver Todas (Lectura)</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-paso1"> Aprobar Fase 1</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-paso2"> Aprobar Fase 2</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-paso4"> Aprobar Fase 4 (SGC)</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-gest-sgc"> Gestor SGC Completo</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-ger-apr"> Aprobador (Fase 3)</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-users"> Gestionar Usuarios</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-struct"> Configuración Estructural</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-ver-listado"> Ver Listado Maestro</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-audit-ver"> Ver Auditorías</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-audit-admin"> Administrador Auditoría</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-audit-auditor"> Rol Auditor</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0;"><input type="checkbox" id="p-audit-dueno"> Dueño de Proceso</label></div>
-                        <div><label style="display:flex; gap:5px; margin:0; color:var(--danger); font-weight:bold;"><input type="checkbox" id="p-admin"> ADMIN GLOBAL</label></div>
-                    </div>
-                </div>
-                <div style="margin-top:20px; display:flex; gap:10px;">
-                    <button class="btn btn-primary" id="btnSaveUser" onclick="window.guardarUsuario()" style="flex:1;">GUARDAR USUARIO</button>
-                    <button class="btn btn-dark" onclick="window.cerrarModalUsuario()">CANCELAR</button>
-                </div>
-            </div>
         </div>
     </div>
 
