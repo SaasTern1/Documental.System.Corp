@@ -279,11 +279,6 @@ window.eliminarGerencia = async (idx) => { if(!confirm("¿Eliminar Gerencia?")) 
 window.agregarDepartamento = async () => { let ger = $('d-ger-sel').value; let nom = $('d-nom').value.trim(); if(!ger || !nom) return alert("Seleccione Gerencia y Depto."); window.showLoading(); let deps = []; const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); if(snap.exists() && snap.data().departamentos) deps = snap.data().departamentos; deps.push({ nombre: nom, gerencia: ger }); await setDoc(docRef, { departamentos: deps }, {merge: true}); setVal('d-nom', ''); window.hideLoading(); };
 window.eliminarDepartamento = async (idx) => { if(!confirm("¿Eliminar Departamento?")) return; window.showLoading(); const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); let deps = snap.data().departamentos; deps.splice(idx, 1); await setDoc(docRef, { departamentos: deps }, {merge: true}); window.hideLoading(); };
 
-window.actualizarSelectTiposDoc = () => {
-  let html = '<option value="">-- Seleccione --</option>'; tiposDocumento.forEach(t => html += `<option value="${t}">${t}</option>`);
-  setHtml('sol-tipo-doc', html); setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica / Ninguno --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join(''));
-};
-
 window.renderListasConfig = () => {
   let hCol = ""; columnasMaestro.forEach((c, idx) => { let cName = typeof c === 'string' ? c : c.nombre; let cType = typeof c === 'string' ? 'text' : c.tipo; hCol += `<div class="settings-item"><span>${cName} <small style="color:#94a3b8; font-size:10px;">(${cType})</small></span><button class="btn-icon-danger" onclick="window.eliminarColumna(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); setHtml('list-columnas', hCol);
   
@@ -291,7 +286,9 @@ window.renderListasConfig = () => {
   
   let hTipos = ""; tiposDocumento.forEach((t, idx) => { hTipos += `<div class="settings-item"><span>${t}</span><button class="btn-icon-danger" onclick="window.eliminarTipoDoc(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); setHtml('list-tipos-doc', hTipos);
   
-  window.actualizarSelectTiposDoc();
+  let htmlTiposSol = '<option value="">-- Seleccione --</option>'; tiposDocumento.forEach(t => htmlTiposSol += `<option value="${t}">${t}</option>`);
+  setHtml('sol-tipo-doc', htmlTiposSol); 
+  setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica / Ninguno --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join(''));
 };
 
 window.agregarTipoDoc = async () => { let val = $('doc-tipo-nom').value.trim(); if(!val) return; if(tiposDocumento.includes(val)) return alert("Ya existe."); tiposDocumento.push(val); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings"), { tiposDoc: tiposDocumento }, {merge: true}); setVal('doc-tipo-nom', ''); };
@@ -1012,34 +1009,83 @@ window.pausarAuditoria = async () => { await window.pausarAuditoriaDirecto(selec
 window.finalizarAuditoria = async () => { await window.finalizarAuditoriaDirecto(selectedAuditId); window.verModalAuditoria(selectedAuditId); };
 window.enviarComentarioAuditoria = async () => { const b = $('ma-comentario-libre'); const th = b.innerHTML; const f = $('ma-file-comentario'); if(!b.innerText.trim() && !f.files[0]) return; window.showLoading(); let u = null, fn = null; if(f.files[0]) { u = await window.uploadToCloudinary(f.files[0]); fn = f.files[0].name; } await updateDoc(doc(db,"artifacts",appId,"public","data","Auditorias",selectedAuditId), {bitacora: arrayUnion({u:currentUser.nombre, m:`💬 ${th}`, t:new Date().toLocaleString(), archivo:u, archivo_nombre:fn})}); b.innerHTML=""; f.value=""; window.hideLoading(); window.verModalAuditoria(selectedAuditId); };
 
-window.renderF020 = () => {
-if(!$('tbody-f020')) return; 
-let canEd = selectedAuditData && String(selectedAuditData.estado||"") !== 'Completada' && (currentUser.permisos.admin || currentUser.permisos.p_audit_admin || (selectedAuditData.auditor && selectedAuditData.auditor.includes(currentUser.nombre))); 
-let h = "";
-let rqs = selectedAuditData && selectedAuditData.requisitos ? selectedAuditData.requisitos.split(', ') : [];
-let aOps = `<option value="">-- Sel --</option>` + (selectedAuditData && selectedAuditData.auditado ? selectedAuditData.auditado.split(', ').map(a => `<option value="${a}">${a}</option>`).join('') : '');
-
-currentAuditF020.forEach((i, idx) => {
-    let dis = canEd ? '' : 'disabled';
-    let rOpt = `<option value="">-- Sel --</option>` + rqs.map(r => `<option value="${r}" ${i.requisito === r ? 'selected' : ''}>${r}</option>`).join('');
-    let aOpt = `<option value="${i.auditado || ''}" selected>${i.auditado || '-- Sel --'}</option>` + aOps;
-    let nOpt = `<option value="N/A" ${i.nc==='N/A'||!i.nc?'selected':''}>N/A</option><option value="NC Menor" ${i.nc==='NC Menor'?'selected':''}>NC Menor</option><option value="NC Mayor" ${i.nc==='NC Mayor'?'selected':''}>NC Mayor</option><option value="OM" ${i.nc==='OM'?'selected':''}>OM</option>`;
-    let fOpt = `<option value="N/A" ${i.fortaleza==='N/A'||!i.fortaleza?'selected':''}>N/A</option><option value="Sí" ${i.fortaleza==='Sí'?'selected':''}>Sí</option>`;
-    h += `<tr data-id="${i.id}"><td>${idx+1}</td><td><textarea class="table-input" rows="2" ${dis}>${i.pregunta||''}</textarea></td><td><select class="table-select" ${dis}>${rOpt}</select></td><td><textarea class="table-input" rows="2" ${dis}>${i.comentarios||''}</textarea></td><td><select class="table-select" ${dis}>${aOpt}</select></td><td><select class="table-select hallazgo-sel" ${dis}>${nOpt}</select></td><td><textarea class="table-input" rows="2" ${dis}>${i.observacion||''}</textarea></td><td><select class="table-select" ${dis}>${fOpt}</select></td><td class="f020-action-col">${canEd?`<button class="btn-icon-danger" onclick="window.eliminarF020('${i.id}')"><span class="material-icons-round">delete</span></button>`:''}</td></tr>`;
-}); 
-setHtml('tbody-f020', h); 
-$$('.f020-action-col').forEach(e => e.style.display = canEd ? '' : 'none');
+window.sincronizarF020DOM = () => {
+    let dA = [];
+    $$('#tbody-f020 tr').forEach(tr => {
+        let inps = tr.querySelectorAll('.table-input, .table-select');
+        if(inps.length >= 7) {
+            dA.push({
+                id: tr.dataset.id,
+                pregunta: inps[0].value,
+                requisito: inps[1].value,
+                comentarios: inps[2].value,
+                auditado: inps[3].value,
+                nc: inps[4].value,
+                observacion: inps[5].value,
+                fortaleza: inps[6].value
+            });
+        }
+    });
+    currentAuditF020 = dA;
 };
 
-window.agregarFilaF020 = () => { currentAuditF020.push({ id:'f020_'+Date.now(), pregunta:'', requisito:'', comentarios:'', auditado:'', nc:'N/A', observacion:'', fortaleza:'N/A' }); window.renderF020(); };
-window.eliminarF020 = (id) => { if(!confirm("?")) return; currentAuditF020 = currentAuditF020.filter(x => x.id !== id); window.renderF020(); };
+window.renderF020 = () => {
+    if(!$('tbody-f020')) return; 
+    let canEd = selectedAuditData && String(selectedAuditData.estado||"") !== 'Completada' && (currentUser.permisos.admin || currentUser.permisos.p_audit_admin || (selectedAuditData.auditor && selectedAuditData.auditor.includes(currentUser.nombre))); 
+    
+    let h = "";
+    let rqs = selectedAuditData && selectedAuditData.requisitos ? selectedAuditData.requisitos.split(', ') : [];
+    let aOps = `<option value="">-- Sel --</option>` + (selectedAuditData && selectedAuditData.auditado ? selectedAuditData.auditado.split(', ').map(a => `<option value="${a}">${a}</option>`).join('') : '');
+
+    currentAuditF020.forEach((i, idx) => {
+        let dis = canEd ? '' : 'disabled';
+        let rOpt = `<option value="">-- Sel --</option>` + rqs.map(r => `<option value="${r}" ${i.requisito === r ? 'selected' : ''}>${r}</option>`).join('');
+        let aOpt = `<option value="${i.auditado || ''}" selected>${i.auditado || '-- Sel --'}</option>` + aOps;
+        let nOpt = `<option value="N/A" ${i.nc==='N/A'||!i.nc?'selected':''}>N/A</option><option value="NC Menor" ${i.nc==='NC Menor'?'selected':''}>NC Menor</option><option value="NC Mayor" ${i.nc==='NC Mayor'?'selected':''}>NC Mayor</option><option value="OM" ${i.nc==='OM'?'selected':''}>OM</option>`;
+        let fOpt = `<option value="N/A" ${i.fortaleza==='N/A'||!i.fortaleza?'selected':''}>N/A</option><option value="Sí" ${i.fortaleza==='Sí'?'selected':''}>Sí</option>`;
+        
+        h += `<tr data-id="${i.id}">
+            <td>${idx+1}</td>
+            <td><textarea class="table-input" rows="2" ${dis}>${i.pregunta||''}</textarea></td>
+            <td><select class="table-select" ${dis}>${rOpt}</select></td>
+            <td><textarea class="table-input" rows="2" ${dis}>${i.comentarios||''}</textarea></td>
+            <td><select class="table-select" ${dis}>${aOpt}</select></td>
+            <td><select class="table-select hallazgo-sel" ${dis}>${nOpt}</select></td>
+            <td><textarea class="table-input" rows="2" ${dis}>${i.observacion||''}</textarea></td>
+            <td><select class="table-select" ${dis}>${fOpt}</select></td>
+            <td class="f020-action-col">${canEd ? `<button class="btn-icon-danger" onclick="window.eliminarF020('${i.id}')"><span class="material-icons-round">delete</span></button>` : ''}</td>
+        </tr>`;
+    }); 
+    
+    setHtml('tbody-f020', h); 
+    $$('.f020-action-col').forEach(e => e.style.display = canEd ? '' : 'none');
+};
+
+window.agregarFilaF020 = () => { 
+    window.sincronizarF020DOM(); 
+    currentAuditF020.push({ id:'f020_'+Date.now(), pregunta:'', requisito:'', comentarios:'', auditado:'', nc:'N/A', observacion:'', fortaleza:'N/A' }); 
+    window.renderF020(); 
+};
+
+window.eliminarF020 = (id) => { 
+    if(!confirm("¿Eliminar este ítem de la lista?")) return; 
+    window.sincronizarF020DOM(); 
+    currentAuditF020 = currentAuditF020.filter(x => x.id !== id); 
+    window.renderF020(); 
+};
+
 window.guardarF020 = async (notificar=false) => { 
-let dA = []; 
-$$('#tbody-f020 tr').forEach(tr => { let inps = tr.querySelectorAll('.table-input, .table-select'); dA.push({id: tr.dataset.id, pregunta: inps[0].value, requisito: inps[1].value, comentarios: inps[2].value, auditado: inps[3].value, nc: inps[4].value, observacion: inps[5].value, fortaleza: inps[6].value}); }); 
-window.showLoading(); 
-await updateDoc(doc(db,"artifacts",appId,"public","data","Auditorias",selectedAuditId), {lista_verificacion: dA}); 
-if(notificar) { window.sendNotification({to: EMAIL_ADMIN_SGC}, "F-020 Actualizado", `Auditor ${currentUser.nombre} subió F-020 para la auditoría ${selectedAuditData.audit_num}.`); alert("Guardado y Notificado a SGC"); } else { alert("F-020 Guardado."); } 
-window.hideLoading(); window.verModalAuditoria(selectedAuditId); 
+    window.sincronizarF020DOM(); 
+    window.showLoading(); 
+    await updateDoc(doc(db,"artifacts",appId,"public","data","Auditorias",selectedAuditId), {lista_verificacion: currentAuditF020}); 
+    if(notificar) { 
+        window.sendNotification({to: EMAIL_ADMIN_SGC}, "F-020 Actualizado", `Auditor ${currentUser.nombre} subió F-020 para la auditoría ${selectedAuditData.audit_num}.`); 
+        alert("Guardado y Notificado a SGC"); 
+    } else { 
+        alert("Lista de Verificación (F-020) Guardada exitosamente."); 
+    } 
+    window.hideLoading(); 
+    window.verModalAuditoria(selectedAuditId); 
 };
 window.enviarPreguntasSGC = () => window.guardarF020(true);
 
