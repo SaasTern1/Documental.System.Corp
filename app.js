@@ -381,7 +381,6 @@ let extraEmails = []; if(selectedDocData && selectedDocData.involucrados) extraE
 const data = { customId: fci, titulo: tit, accion: $('sol-accion').value, tipoDoc: $('sol-tipo-doc').value, prioridad: $('sol-prioridad').value, gerencia: gerTarget, departamento: $('sol-dep').value, motivo: $('sol-motivo').value, cod_ref: $('sol-cod-prev').value, ver_ref: $('sol-ver-prev').value, fecha_ref: $('sol-fecha-prev').value, solicitante: currentUser.nombre, solicitante_email: currentUser.email, uid: currentUser.usuario, involucrados: extraEmails, idx: 0, estado: "Pendiente Documentado", fase_0_ini: now, adjunto: url, adjunto_nombre: fileName, chat: [{u: "SISTEMA", m: "Solicitud creada exitosamente.", t: new Date().toLocaleString()}], fecha: now };
 await addDoc(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), data); 
 
-// Limpiar formulario y residuos
 if($('form-crear-solicitud')) $('form-crear-solicitud').reset();
 setHtml('lista-involucrados-tags', ""); 
 $('sol-gerente-display').value = ''; $('sol-email-gerente').value = ''; $('sol-dep').innerHTML = '<option value="">-- Seleccione Gerencia Primero --</option>';
@@ -554,9 +553,20 @@ window.guardarGestion = async () => {
     if(tempAction === 'Reunión') {
         const fR = $('m-date-meeting').value; if(!fR) {window.hideLoading(); return alert("Fecha y hora de reunión obligatoria.");}
         let dateFmt = new Date(fR).toLocaleString();
+        
         payload.m = `📅 <b>REUNIÓN AGENDADA:</b> ${dateFmt}<br><b>Tema:</b><br>${txtHTML}`;
         emTitle = `📅 Reunión Agendada: ${selectedDocData.customId}`;
-        emBody = `<b>${currentUser.nombre}</b> ha agendado una reunión oficial para revisar el expediente.<br><br><b>Fecha y Hora:</b> ${dateFmt}<br><br><div style="padding: 12px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px;"><b>Temas a tratar:</b><br>${txtHTML}</div>`;
+        
+        // --- NUEVO CORREO DETALLADO PARA REUNIONES ---
+        emBody = `Se ha agendado una reunión oficial para revisar el expediente <b>${selectedDocData.customId}</b>.<br><br>
+        <div style="padding: 15px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px; line-height: 1.6;">
+            <b>Fecha y Hora:</b> ${dateFmt}<br>
+            <b>Expediente:</b> ${selectedDocData.customId} - ${selectedDocData.titulo}<br>
+            <b>Convocado por:</b> ${currentUser.nombre}<br><br>
+            <b>Temas a tratar / Detalles:</b><br>${txtHTML}
+        </div>
+        <br><i>Por favor, verificar y confirmar la agenda en el sistema SGC.</i>`;
+        
     } else {
         payload.m = `🗣️ <b>${tempAction.toUpperCase()}:</b><br>${txtHTML}`;
         emTitle = `Nueva ${tempAction}: ${selectedDocData.customId}`;
@@ -793,7 +803,21 @@ try {
         if(globalAuditPlan && globalAuditPlan.correos) globalAuditPlan.correos.forEach(x => gM.push(x)); 
         gM.push(EMAIL_ADMIN_SGC);
         
-        window.sendNotification({to: gM.join(',')}, "Auditoría Programada", `Auditoría ${aNum} programada el ${window.formatearFechaAbreviada(f)}. Req: ${r}`);
+        // --- NUEVO FORMATO DE CORREO DE AUDITORÍA ---
+        let msgAuditoria = `Se ha programado una nueva Auditoría Interna (<b>${aNum}</b>). A continuación, los detalles:<br><br>
+        <div style="padding: 15px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px; line-height: 1.6;">
+            <b>Fecha:</b> ${window.formatearFechaAbreviada(f)}<br>
+            <b>Horario:</b> ${dt.hora_inicio || 'N/A'} - ${dt.hora_fin || 'N/A'}<br>
+            <b>Lugar:</b> ${dt.lugar || 'N/A'}<br>
+            <b>Proceso / Área:</b> ${r || 'N/A'}<br>
+            <b>Requisitos:</b> ${r || 'N/A'}<br>
+            <b>Auditado(s):</b> ${dt.auditado || 'N/A'}<br>
+            <b>Auditor(es):</b> ${dt.auditor || 'N/A'}<br>
+            <b>Observaciones:</b> ${dt.observacion || 'Ninguna'}
+        </div>
+        <br><i>Por favor, verificar y confirmar la agenda en el sistema SGC.</i>`;
+        
+        window.sendNotification({to: gM.join(',')}, `Auditoría Programada: ${aNum}`, msgAuditoria);
         alert(`Auditoría ${aNum} programada.`);
     }
     window.cancelarEdicionAuditoria(); 
