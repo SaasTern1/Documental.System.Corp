@@ -286,7 +286,11 @@ window.actualizarSelectTiposDoc = () => {
 
 window.renderListasConfig = () => {
   let hCol = ""; columnasMaestro.forEach((c, idx) => { let cName = typeof c === 'string' ? c : c.nombre; let cType = typeof c === 'string' ? 'text' : c.tipo; hCol += `<div class="settings-item"><span>${cName} <small style="color:#94a3b8; font-size:10px;">(${cType})</small></span><button class="btn-icon-danger" onclick="window.eliminarColumna(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); setHtml('list-columnas', hCol);
-  let hEst = ""; estatusMaestro.forEach((e, idx) => { hEst += `<div class="settings-item"><span>${e}</span><button class="btn-icon-danger" onclick="window.eliminarEstatus(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); setHtml('list-estatus', hTipos = ""); tiposDocumento.forEach((t, idx) => { hTipos += `<div class="settings-item"><span>${t}</span><button class="btn-icon-danger" onclick="window.eliminarTipoDoc(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); setHtml('list-tipos-doc', hTipos);
+  
+  let hEst = ""; estatusMaestro.forEach((e, idx) => { hEst += `<div class="settings-item"><span>${e}</span><button class="btn-icon-danger" onclick="window.eliminarEstatus(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); setHtml('list-estatus', hEst);
+  
+  let hTipos = ""; tiposDocumento.forEach((t, idx) => { hTipos += `<div class="settings-item"><span>${t}</span><button class="btn-icon-danger" onclick="window.eliminarTipoDoc(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); setHtml('list-tipos-doc', hTipos);
+  
   window.actualizarSelectTiposDoc();
 };
 
@@ -468,7 +472,7 @@ try {
     if ($('m-tiempos-panel')) {
         if(esAdminSGC) {
             setDisplay('m-tiempos-panel', 'block');
-            setHtml('m-tiempos-grid', `<div style="background:white; padding:10px; border-radius:8px; font-size:11px; text-align:center; border:1px solid #ccc;"><div class="custom-label" style="color:var(--primary);">Fase 1 (Doc)</div><br>${fDiff(s.fase_0_ini, s.fase_0_fin)}</div><div style="background:white; padding:10px; border-radius:8px; font-size:11px; text-align:center; border:1px solid #ccc;"><div class="custom-label" style="color:var(--primary);">Fase 2 (Verif)</div><br>${fDiff(s.fase_1_ini, s.fase_1_fin)}</div><div style="background:white; padding:10px; border-radius:8px; font-size:11px; text-align:center; border:1px solid #ccc;"><div class="custom-label" style="color:var(--primary);">Fase 3 (Gerencia)</div><br>${fDiff(s.fase_2_ini, s.fase_2_fin)}</div><div style="background:white; padding:10px; border-radius:8px; font-size:11px; text-align:center; border:1px solid #ccc;"><div class="custom-label" style="color:var(--primary);">Fase 4 (SGC Final)</div><br>${fDiff(s.fase_3_ini, s.fecha_final || s.fase_3_fin)}</div>`);
+            setHtml('m-tiempos-grid', `<div><div class="custom-label" style="color:var(--primary);">Fase 1 (Doc)</div><span style="font-size:11px;">${fDiff(s.fase_0_ini, s.fase_0_fin)}</span></div><div><div class="custom-label" style="color:var(--primary);">Fase 2 (Verif)</div><span style="font-size:11px;">${fDiff(s.fase_1_ini, s.fase_1_fin)}</span></div><div><div class="custom-label" style="color:var(--primary);">Fase 3 (Gerencia)</div><span style="font-size:11px;">${fDiff(s.fase_2_ini, s.fase_2_fin)}</span></div><div><div class="custom-label" style="color:var(--primary);">Fase 4 (SGC Final)</div><span style="font-size:11px;">${fDiff(s.fase_3_ini, s.fecha_final || s.fase_3_fin)}</span></div>`);
         } else { setDisplay('m-tiempos-panel', 'none'); }
     }
 
@@ -515,6 +519,7 @@ try {
                 let d1 = new Date(c.fR);
                 let start = d1.toISOString().replace(/-|:|\.\d+/g, '').substring(0, 15) + 'Z';
                 let d2 = new Date(d1.getTime() + 3600000); 
+                let end = d2.toISOString().replace(/-|:|\.\d+/g, '').substring(0, 15) + 'Z';
                 let text = encodeURIComponent(`Reunión SGC: ${s.customId} - ${s.titulo}`);
                 let details = encodeURIComponent(`Tema / Detalles:\n${c.tema}\n\nConvocado por: ${c.u}`);
                 calBtn = `<br><a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${end}&details=${details}" target="_blank" class="btn btn-info" style="padding:6px 10px; font-size:10px; margin-top:8px; display:inline-flex; background:#ea4335;"><span class="material-icons-round" style="font-size:14px; margin-right:4px;">event</span> Agendar en Google Calendar</a>`;
@@ -697,22 +702,39 @@ for (let i = 0; i < trs.length; i++) { let rowText = trs[i].textContent || trs[i
 };
 
 window.descargarExcelFiltrado = (origen = 'hist') => {
-let desde = $(`${origen}-f-desde`).value; let hasta = $(`${origen}-f-hasta`).value; let estado = $(`${origen}-f-estado`).value; let esAdminSGC = currentUser.permisos.admin || currentUser.permisos.p_gest_sgc;
+let elDesde = $(`${origen}-f-desde`), elHasta = $(`${origen}-f-hasta`), elEstado = $(`${origen}-f-estado`);
+let desde = elDesde ? elDesde.value : ""; 
+let hasta = elHasta ? elHasta.value : ""; 
+let estado = elEstado ? elEstado.value : ""; 
+let esAdminSGC = currentUser.permisos.admin || currentUser.permisos.p_gest_sgc;
+
 let datosFiltrados = globalSolicitudes.filter(s => {
     if (origen !== 'all' && !esAdminSGC) { let isMine = (s.uid === currentUser.usuario) || (s.involucrados && currentUser.email && s.involucrados.includes(currentUser.email.toLowerCase())); if (origen === 'hist' && !isMine) return false; if (origen === 'gest') { const p = currentUser.permisos; let ver = p.p_ver_all || (p.p_ver_ger && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia)) || isMine; if(!ver) return false; } }
     if (desde && s.fecha < desde) return false; if (hasta && s.fecha > hasta + "T23:59:59") return false;
     if (estado) { let eStr = (s.estado || "").toUpperCase(); if (estado === 'Pendiente' && (eStr.includes('APROBADO FINAL') || eStr === 'ANULADO' || eStr === 'RECHAZADO')) return false; if (estado === 'Aprobado Final' && !eStr.includes('APROBADO FINAL')) return false; if (estado === 'Cancelado' && eStr !== 'ANULADO' && eStr !== 'RECHAZADO') return false; }
     return true;
 });
-if(datosFiltrados.length === 0) return alert("No hay datos que coincidan con estos filtros.");
+
+if(datosFiltrados.length === 0) return alert("No hay datos que coincidan con estos filtros para exportar.");
+
 const formatearDiferencia = (ini, fin) => { if(!ini || !fin) return "N/A"; const ms = new Date(fin) - new Date(ini); if(ms < 0) return "N/A"; const d = Math.floor(ms / 86400000); const h = Math.floor((ms % 86400000) / 3600000); const m = Math.floor((ms % 3600000) / 60000); if (d > 0) return `${d}d ${h}h ${m}m`; if (h > 0) return `${h}h ${m}m`; return `${m}m`; };
+
 let dataExport = datosFiltrados.map(s => {
     let p = PASOS_NOMBRES[s.idx] || ''; let estadoFormat = s.estado === 'Aprobado Final' ? 'Aprobado Final' : (s.estado === 'Anulado' || s.estado === 'Rechazado' ? s.estado : `${s.estado} (${p})`);
     let baseObj = { "ID Solicitud": s.customId, "Solicitante": s.solicitante || '', "Email Solicitante": s.solicitante_email || '', "Gerencia": s.gerencia || '', "Departamento": s.departamento || '', "Acción": s.accion || '', "Prioridad": s.prioridad || 'Normal', "Tipo Documento": s.tipoDoc || '', "Título Documento": s.titulo || '', "Estado Actual": estadoFormat, "Fecha Límite (SLA)": s.fecha_esperada_cierre || 'No definida', "Fecha de Creación": s.fecha ? new Date(s.fecha).toLocaleString() : '', "Código Ref. Original": s.cod_ref || '', "Versión Original": s.ver_ref || '', "Código Final Asignado": s.codigo_final || '', "Versión Final Asignada": s.version_final || '', "Fecha Final": s.fecha_final || '' };
-    if (esAdminSGC) { baseObj["Tiempo Fase 1 (Documentado)"] = formatearDiferencia(s.fase_0_ini, s.fase_0_fin); baseObj["Tiempo Fase 2 (Verificado)"] = formatearDiferencia(s.fase_1_ini, s.fase_1_fin); baseObj["Tiempo Fase 3 (Aprob. Gerencia)"] = formatearDiferencia(s.fase_2_ini, s.fase_2_fin); baseObj["Tiempo Fase 4 (Aprob. SGC)"] = formatearDiferencia(s.fase_3_ini, s.fase_3_fin); baseObj["TIEMPO TOTAL DEL FLUJO"] = formatearDiferencia(s.fase_0_ini, s.fecha_final || s.fase_3_fin || s.fase_2_fin || s.fase_1_fin || s.fase_0_fin); }
+    
+    if (esAdminSGC) { 
+        baseObj["Tiempo Fase 1 (Documentado)"] = formatearDiferencia(s.fase_0_ini, s.fase_0_fin); 
+        baseObj["Tiempo Fase 2 (Verificado)"] = formatearDiferencia(s.fase_1_ini, s.fase_1_fin); 
+        baseObj["Tiempo Fase 3 (Aprob. Gerencia)"] = formatearDiferencia(s.fase_2_ini, s.fase_2_fin); 
+        baseObj["Tiempo Fase 4 (Aprob. SGC)"] = formatearDiferencia(s.fase_3_ini, s.fase_3_fin); 
+        baseObj["TIEMPO TOTAL DEL FLUJO"] = formatearDiferencia(s.fase_0_ini, s.fecha_final || s.fase_3_fin || s.fase_2_fin || s.fase_1_fin || s.fase_0_fin); 
+    }
     return baseObj;
 });
-let nameF = esAdminSGC ? "Reporte_SGC_Completo_Con_Tiempos" : "Reporte_Solicitudes"; let wb = XLSX.utils.book_new(); let ws = XLSX.utils.json_to_sheet(dataExport); XLSX.utils.book_append_sheet(wb, ws, "Datos_Filtrados"); XLSX.writeFile(wb, `${nameF}.xlsx`);
+
+let nameF = esAdminSGC ? "Reporte_SGC_Completo_Con_Tiempos" : "Reporte_Solicitudes"; 
+let wb = XLSX.utils.book_new(); let ws = XLSX.utils.json_to_sheet(dataExport); XLSX.utils.book_append_sheet(wb, ws, "Datos_Exportados"); XLSX.writeFile(wb, `${nameF}.xlsx`);
 };
 
 window.switchAuditTab = (id) => { $$('.tab-btn').forEach(b=>b.classList.remove('active')); $$('.tab-content').forEach(c=>c.classList.remove('active')); if($(`btn-tab-${id}`)) $(`btn-tab-${id}`).classList.add('active'); if($(`tab-${id}`)) $(`tab-${id}`).classList.add('active'); };
