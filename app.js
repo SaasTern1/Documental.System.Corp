@@ -53,6 +53,14 @@ window.abrirDocumento = async (url, nombreOriginal) => {
   }
 };
 
+window.descargarFicha = () => {
+    const w = window.open('', '_blank');
+    const content = document.getElementById('m-original-data').innerHTML;
+    w.document.write(`<html><head><title>Ficha ${selectedDocData.customId}</title><link rel="stylesheet" href="styles.css"></head><body style="padding:40px; background:white;"><h2>Expediente: ${selectedDocData.customId} - ${selectedDocData.titulo}</h2>${content}</body></html>`);
+    w.document.close();
+    setTimeout(() => { w.print(); }, 1000);
+};
+
 window.del = async (c, id) => { if(confirm("¿Eliminar este registro?")) { window.showLoading(); await deleteDoc(doc(db, "artifacts", appId, "public", "data", c, id)); window.hideLoading(); } };
 window.getDownloadUrl = (url) => url ? url : "#";
 window.formatearFechaAbreviada = (fISO) => { if(!fISO) return ''; let f = fISO; if(f.length===10) f+='T12:00:00'; const d = new Date(f); if(isNaN(d)) return fISO; const m = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]; return `${d.getDate()}-${m[d.getMonth()]}-${d.getFullYear()}`; };
@@ -91,7 +99,7 @@ window.cargarDatosCentrales = () => {
     allUsers = []; let hU = "", cbU = "", oU = "", oI = '<option value="">-- Seleccionar --</option>';
     sn.forEach(d => { 
       let u = d.data(); allUsers.push(u); let gs = u.gerencias ? u.gerencias.join(', ') : (u.gerencia || 'N/A');
-      hU += `<tr><td>${u.nombre} (${u.usuario})</td><td>${u.email||''}</td><td>${u.role||''} / <small>${gs}</small></td><td class="no-export"><button class="btn btn-info" style="padding:4px 8px; font-size:10px;" onclick="window.cargarUsuarioParaEditar('${u.usuario}')">Editar</button></td></tr>`;
+      hU += `<tr><td>${u.nombre} (${u.usuario})</td><td>${u.email||''}</td><td>${u.role||''} / <small>${gs}</small></td><td class="no-export"><button class="btn btn-info" style="padding:4px 8px; font-size:10px;" onclick="window.cargarUsuarioParaEditar('${u.usuario}')">Editar</button> <button class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="window.eliminarUsuario('${u.usuario}')">Eliminar</button></td></tr>`;
       cbU += `<label style="display:flex; gap:8px; font-size:13px; margin-bottom:6px;"><input type="checkbox" value="${u.nombre}" data-email="${u.email}" style="margin:0; width:16px;"> ${u.nombre} (${gs})</label>`;
       oU += `<option value="${u.nombre}" data-email="${u.email}">${u.nombre} (${gs})</option>`; if(u.email) oI += `<option value="${u.email}">${u.nombre} (${gs})</option>`;
     });
@@ -226,6 +234,14 @@ window.cargarUsuarioParaEditar = (id) => {
   const p = u.permisos || {};
   ['p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno'].forEach(i => { let k = i.replace(/-/g,'_'); if(k==='p_solicitar')k='can_solicit'; if($(i)) $(i).checked = p[k]||false; });
   if($('p-admin')) $('p-admin').checked = p.admin||false; setTxt('btnSaveUser', "ACTUALIZAR USUARIO"); setDisplay('modal-usuario', 'flex');
+};
+
+window.eliminarUsuario = async (uid) => {
+    if(!confirm(`¿Estás seguro de ELIMINAR el acceso al usuario ${uid}? Esta acción es irreversible.`)) return;
+    window.showLoading();
+    try { await deleteDoc(doc(db, "artifacts", appId, "public", "data", "Usuarios", uid)); alert("Usuario eliminado correctamente del sistema."); }
+    catch(e) { alert("Error al eliminar el usuario."); console.error(e); }
+    window.hideLoading();
 };
 
 window.resetUserForm = () => {
@@ -487,7 +503,21 @@ try {
     
     if(activo && stepIdx !== 3) setTxt('btn-firma-next', `Aprobar Etapa (${PASOS_NOMBRES[stepIdx]})`);
     
-    setHtml('chat-box', s.chat ? s.chat.map(c => `<div class="chat-msg" style="border-left-color:${c.u===currentUser.nombre?'var(--primary)':'#cbd5e1'}"><b style="font-size:10px">${c.u}</b> <span style="font-size:9px;color:#94a3b8">${c.t}</span><br>${c.m}${c.archivo ? `<br><a href="#" onclick="window.abrirDocumento('${window.getDownloadUrl(c.archivo)}', '${c.archivo_nombre || 'Evidencia_Adjunta'}'); return false;" style="font-size:10px;color:blue;font-weight:600;text-decoration:none;">📎 ${c.archivo_nombre || 'Ver Adjunto'}</a>` : ''}</div>`).join('') : '');
+    setHtml('chat-box', s.chat ? s.chat.map(c => {
+        let calBtn = "";
+        if(c.fR) {
+            try {
+                let d1 = new Date(c.fR);
+                let start = d1.toISOString().replace(/-|:|\.\d+/g, '').substring(0, 15) + 'Z';
+                let d2 = new Date(d1.getTime() + 3600000); // +1 Hora por defecto
+                let end = d2.toISOString().replace(/-|:|\.\d+/g, '').substring(0, 15) + 'Z';
+                let text = encodeURIComponent(`Reunión SGC: ${s.customId} - ${s.titulo}`);
+                let details = encodeURIComponent(`Tema / Detalles:\n${c.tema}\n\nConvocado por: ${c.u}`);
+                calBtn = `<br><a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${end}&details=${details}" target="_blank" class="btn btn-info" style="padding:6px 10px; font-size:10px; margin-top:8px; display:inline-flex; background:#ea4335;"><span class="material-icons-round" style="font-size:14px; margin-right:4px;">event</span> Agendar en Google Calendar</a>`;
+            }catch(e){}
+        }
+        return `<div class="chat-msg" style="border-left-color:${c.u===currentUser.nombre?'var(--primary)':'#cbd5e1'}"><b style="font-size:10px">${c.u}</b> <span style="font-size:9px;color:#94a3b8">${c.t}</span><br>${c.m}${c.archivo ? `<br><a href="#" onclick="window.abrirDocumento('${window.getDownloadUrl(c.archivo)}', '${c.archivo_nombre || 'Evidencia_Adjunta'}'); return false;" style="font-size:10px;color:blue;font-weight:600;text-decoration:none;">📎 ${c.archivo_nombre || 'Ver Adjunto'}</a>` : ''}${calBtn}</div>`;
+    }).join('') : '');
     
     setDisplay('modal', 'flex');
 } catch(e) { console.error("Error abriendo detalle:", e); alert("Hubo un error al abrir la solicitud."); } finally { window.hideLoading(); }
@@ -554,10 +584,11 @@ window.guardarGestion = async () => {
         const fR = $('m-date-meeting').value; if(!fR) {window.hideLoading(); return alert("Fecha y hora de reunión obligatoria.");}
         let dateFmt = new Date(fR).toLocaleString();
         
+        payload.fR = fR;
+        payload.tema = txtPlain;
         payload.m = `📅 <b>REUNIÓN AGENDADA:</b> ${dateFmt}<br><b>Tema:</b><br>${txtHTML}`;
         emTitle = `📅 Reunión Agendada: ${selectedDocData.customId}`;
         
-        // --- NUEVO CORREO DETALLADO PARA REUNIONES ---
         emBody = `Se ha agendado una reunión oficial para revisar el expediente <b>${selectedDocData.customId}</b>.<br><br>
         <div style="padding: 15px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px; line-height: 1.6;">
             <b>Fecha y Hora:</b> ${dateFmt}<br>
@@ -803,7 +834,6 @@ try {
         if(globalAuditPlan && globalAuditPlan.correos) globalAuditPlan.correos.forEach(x => gM.push(x)); 
         gM.push(EMAIL_ADMIN_SGC);
         
-        // --- NUEVO FORMATO DE CORREO DE AUDITORÍA ---
         let msgAuditoria = `Se ha programado una nueva Auditoría Interna (<b>${aNum}</b>). A continuación, los detalles:<br><br>
         <div style="padding: 15px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px; line-height: 1.6;">
             <b>Fecha:</b> ${window.formatearFechaAbreviada(f)}<br>
@@ -911,8 +941,8 @@ try {
     setDisplay('btn-finalizar-auditoria', (isAdm || isAud) && e === 'En Progreso' ? 'inline-block' : 'none');
     
     if($('chat-box-audit')) $('chat-box-audit').innerHTML = a.bitacora ? a.bitacora.map(c => `<div class="chat-msg"><b style="font-size:10px">${c.u}</b> <span style="font-size:9px;color:#94a3b8">${c.t}</span><br>${c.m}${c.archivo ? `<br><a href="#" onclick="window.abrirDocumento('${c.archivo}','${c.archivo_nombre}');return false;" style="font-size:10px;color:blue;">📎 Ver</a>` : ''}</div>`).join('') : '';
-    
-    currentAuditF020 = a.lista_verificacion || []; window.renderF020();
+ 
+  currentAuditF020 = a.lista_verificacion || []; window.renderF020();
     
     ['f003-conclusiones','f003-n-proceso','f003-n-personal','f003-n-cargo','f003-n-req','f003-n-doc','f003-n-evidencia'].forEach(i => { if($(i)) $(i).disabled = !canEd; });
     if(a.reporte_auditoria) { ['conclusiones','n_proceso','n_personal','n_cargo','n_req','n_doc','n_evidencia'].forEach(k => { if($('f003-'+k)) $('f003-'+k).value = a.reporte_auditoria[k] || ""; }); }
