@@ -707,6 +707,53 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="modal-usuario">
+        <div class="modal-content" style="max-width: 650px; display:block; padding: 30px; height:auto; max-height:90vh; overflow-y:auto; border-top: 5px solid var(--primary);">
+            <h2 id="user-form-title" style="color:var(--primary); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">person_add</span> Registrar / Editar Usuario</h2>
+            
+            <div class="resp-grid" style="margin-bottom:15px;">
+                <div><label for="u-nom">Nombre Completo</label><input type="text" id="u-nom" placeholder="Ej: Juan Pérez"></div>
+                <div><label for="u-usr">Usuario ID</label><input type="text" id="u-usr" placeholder="Ej: jperez"></div>
+                <div><label for="u-email">Correo Electrónico</label><input type="email" id="u-email" placeholder="Ej: jperez@fcilogistic.com"></div>
+                <div><label for="u-pas">Contraseña</label><input type="password" id="u-pas" value="123"></div>
+                <div><label for="u-rol">Cargo / Rol</label><input type="text" id="u-rol" placeholder="Ej: Analista de Calidad"></div>
+            </div>
+            
+            <div class="card" style="margin-bottom:15px; padding:15px; border:1px solid var(--border); box-shadow:none;">
+                <label style="color:var(--primary); margin-bottom:10px; display:block;">Gerencia(s) Asignada(s)</label>
+                <div id="u-ger-list" class="checkbox-list" style="max-height:100px; display:grid; grid-template-columns:1fr 1fr; gap:5px;"></div>
+            </div>
+
+            <div class="card" style="margin-bottom:20px; padding:15px; border:1px solid var(--border); box-shadow:none;">
+                <label style="color:var(--primary); margin-bottom:10px; display:block;">Permisos y Roles de Acceso</label>
+                <div class="resp-grid" style="gap:10px; grid-template-columns:1fr 1fr;">
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-solicitar" style="margin:0;"> Crear Solicitudes (FCI-SOL)</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-propias" style="margin:0;"> Ver sus Solicitudes</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-ger" style="margin:0;"> Ver solicitudes de su Gerencia</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-todas" style="margin:0;"> Ver TODAS las Solicitudes</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-paso1" style="margin:0;"> Aprobar Paso 1 (Doc)</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-paso2" style="margin:0;"> Aprobar Paso 2 (Verif)</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-paso4" style="margin:0;"> Aprobar Paso 4 (SGC Final)</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--success); font-weight:bold;"><input type="checkbox" id="p-gest-sgc" style="margin:0;"> Gestor SGC (Avanzado)</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--warning); font-weight:bold;"><input type="checkbox" id="p-ger-apr" style="margin:0;"> Aprobador Gerencia (Paso 3)</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-listado" style="margin:0;"> Ver Listado Maestro</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-users" style="margin:0;"> Administrar Usuarios</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-struct" style="margin:0;"> Configurar Estructura</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-ver" style="margin:0;"> Ver Auditorías</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-auditor" style="margin:0;"> Es Auditor / Lider</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-dueno" style="margin:0;"> Dueño de Proceso (Auditado)</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--danger); font-weight:bold;"><input type="checkbox" id="p-audit-admin" style="margin:0;"> Admin de Auditorías / OEA</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--primary); font-weight:bold;"><input type="checkbox" id="p-admin" style="margin:0;"> Super Administrador</label>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" id="btnSaveUser" onclick="window.guardarUsuario()" style="flex:1; padding:15px; font-size:15px;">GUARDAR USUARIO</button>
+                <button class="btn btn-dark" onclick="window.cerrarModalUsuario()" style="flex:1;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="modal-form-listado">
         <div class="modal-content" style="max-width: 800px; display:block; padding: 30px; height:auto; max-height:90vh; overflow-y:auto;">
            <h2 style="color:var(--primary); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">edit_document</span> <span id="lm-modal-title">Agregar Registro al Listado Maestro</span></h2>
