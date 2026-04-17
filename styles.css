@@ -94,9 +94,26 @@ tr:hover td{background-color:#f8fafc}
 .search-bar{background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:12px 18px;width:100%;max-width:350px;font-size:13px;}
 .file-link{color:var(--accent);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;background:#eff6ff;padding:8px 12px;border-radius:8px;border:1px solid #bfdbfe;transition:.2s; word-break:break-all;}
 .file-link:hover{background:var(--accent);color:#fff}
-.locked-data{opacity:.7; pointer-events:none; background-color:#f8fafc; border-radius:16px; padding:20px; border:1px dashed #94a3b8; filter:grayscale(30%)}
-[contenteditable=true]:empty:before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none;display:block;font-style:italic}
 
+/* MEJORA: El cuadro de Datos Originales bloqueados */
+.locked-data {
+    opacity: 0.85; 
+    background-color: #f8fafc; 
+    border-radius: 16px; 
+    padding: 20px; 
+    border: 1px dashed #94a3b8; 
+    filter: grayscale(100%);
+    transition: all 0.3s ease;
+}
+/* Al pasar el mouse recupera el color y se resalta para poder interactuar */
+.locked-data:hover {
+    opacity: 1;
+    filter: grayscale(0%);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    background-color: #ffffff;
+}
+
+[contenteditable=true]:empty:before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none;display:block;font-style:italic}
 .section-title{color:var(--primary); font-size:14px; font-weight:800; border-bottom:2px solid var(--border); padding-bottom:8px; margin:25px 0 15px 0;}
 
 #loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;backdrop-filter:blur(2px)}
