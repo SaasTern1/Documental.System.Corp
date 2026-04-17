@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión</title>
+    <title>Sistema de Gestión de Seguridad</title>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: wss: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -344,7 +344,7 @@
                 <div class="step-container" style="margin-bottom:25px;"><div class="step" id="s1"><div class="step-dot">1</div><div class="custom-label">Creación Doc</div></div><div class="step" id="s2"><div class="step-dot">2</div><div class="custom-label">Verificación</div></div><div class="step" id="s3"><div class="step-dot">3</div><div class="custom-label">Aprobación</div></div><div class="step" id="s4"><div class="step-dot">4</div><div class="custom-label">Publicación SGC</div></div></div>
                 
                 <div id="m-admin-sla" style="display:none; margin-bottom:20px; background:#fffbeb; padding:15px; border-radius:12px; border: 1px dashed var(--warning);">
-                    <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;"><label style="margin:0; width:120px;">Fecha Límite (SLA)</label><input type="date" id="m-sla-date" style="margin:0; width:auto; flex:1;"><button class="btn btn-warning" id="btn-save-sla" onclick="window.guardarSLA()">Guardar SLA</button></div>
+                    <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;"><label for="m-sla-date" style="margin:0; width:120px;">Fecha Límite (SLA)</label><input type="date" id="m-sla-date" style="margin:0; width:auto; flex:1;"><button class="btn btn-warning" id="btn-save-sla" onclick="window.guardarSLA()">Guardar SLA</button></div>
                 </div>
                 
                 <div id="m-tiempos-panel" style="margin-bottom:20px; background:#f0fdf4; padding:15px; border-radius:12px; border:1px solid #bbf7d0; display:none;">
@@ -720,12 +720,12 @@
             </div>
             
             <div class="card" style="margin-bottom:15px; padding:15px; border:1px solid var(--border); box-shadow:none;">
-                <label style="color:var(--primary); margin-bottom:10px; display:block;">Gerencia(s) Asignada(s)</label>
+                <div class="custom-label" style="color:var(--primary); margin-bottom:10px; display:block;">Gerencia(s) Asignada(s)</div>
                 <div id="u-ger-list" class="checkbox-list" style="max-height:100px; display:grid; grid-template-columns:1fr 1fr; gap:5px;"></div>
             </div>
 
             <div class="card" style="margin-bottom:20px; padding:15px; border:1px solid var(--border); box-shadow:none;">
-                <label style="color:var(--primary); margin-bottom:10px; display:block;">Permisos y Roles de Acceso</label>
+                <div class="custom-label" style="color:var(--primary); margin-bottom:10px; display:block;">Permisos y Roles de Acceso</div>
                 <div class="resp-grid" style="gap:10px; grid-template-columns:1fr 1fr;">
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-solicitar" style="margin:0;"> Crear Solicitudes (FCI-SOL)</label>
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-propias" style="margin:0;"> Ver sus Solicitudes</label>
