@@ -8,10 +8,10 @@ const auth = getAuth(app);
 const db = getFirestore(app); 
 const appId = 'sgc-final-v6';
 
-const EMAIL_SERVICE_ID = "service_vumxptj", EMAIL_TEMPLATE_ID = "template_z27y5yk", EMAIL_PUBLIC_KEY = "kWsovOfdi7dBqLMw2", EMAIL_ADMIN_SGC = "sistemadegestion@empresa.com"; 
+const EMAIL_SERVICE_ID = "service_vumxptj", EMAIL_TEMPLATE_ID = "template_z27y5yk", EMAIL_PUBLIC_KEY = "kWsovOfdi7dBqLMw2", EMAIL_ADMIN_SGC = "sistemadegestion@fcipty.com"; 
 (function() { emailjs.init(EMAIL_PUBLIC_KEY); })();
 
-const CLOUD_NAME = "df79cjklp", UPLOAD_PRESET = "sgc_documentos", PASOS_NOMBRES = ["Pendiente Documentado", "Pendiente Verificado", "Pendiente Aprobación Gerencia", "Pendiente Aprobación SGC"];
+const CLOUD_NAME = "df79cjklp", UPLOAD_PRESET = "fci_documentos", PASOS_NOMBRES = ["Pendiente Documentado", "Pendiente Verificado", "Pendiente Aprobación Gerencia", "Pendiente Aprobación SGC"];
 
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
@@ -86,7 +86,7 @@ window.getDatosEnvio = async (sol) => {
 };
 
 window.uploadToCloudinary = async (f) => { const fd = new FormData(); fd.append("file", f); fd.append("upload_preset", UPLOAD_PRESET); try { const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, { method: "POST", body: fd }); const d = await r.json(); return d.secure_url; } catch(e){return null;} };
-window.getNextFCI = async () => { const r = doc(db, "artifacts", appId, "public", "data", "Contadores", "solicitudes"); let id = ""; await runTransaction(db, async (t) => { const sn = await t.get(r); let c = 1; if(sn.exists()) c = sn.data().count + 1; t.set(r, {count:c}); id = `SGC-SOL-${String(c).padStart(4, '0')}`; }); return id; };
+window.getNextFCI = async () => { const r = doc(db, "artifacts", appId, "public", "data", "Contadores", "solicitudes"); let id = ""; await runTransaction(db, async (t) => { const sn = await t.get(r); let c = 1; if(sn.exists()) c = sn.data().count + 1; t.set(r, {count:c}); id = `FCI-SOL-${String(c).padStart(4, '0')}`; }); return id; };
 
 window.checkDailyAlerts = async () => {
   if(!currentUser || (!currentUser.permisos.p_gest_sgc && !currentUser.permisos.admin)) return;
@@ -108,7 +108,9 @@ window.verificarAlertasAuditoria = (arr) => {
 };
 
 window.actualizarConteoPersonal = () => {
-    if($('aud-personal')) { $('aud-personal').value = $$('#aud-auditado-list input:checked').length; }
+    if($('aud-personal')) {
+        $('aud-personal').value = $$('#aud-auditado-list input:checked').length;
+    }
 };
 
 window.cargarDatosCentrales = () => {
@@ -261,7 +263,7 @@ window.guardarUsuario = async () => {
   window.showLoading(); 
   
   try {
-      await setDoc(doc(db, "artifacts", appId, "public", "data", "Usuarios", u), { nombre: n, usuario: u, gerencias: gs, gerencia: gs[0], role: r, email: e, permisos: pm }, { merge: true });
+      await setDoc(doc(db, "artifacts", appId, "public", "data", "Usuarios", e), { nombre: n, usuario: u, gerencias: gs, gerencia: gs[0], role: r, email: e, permisos: pm }, { merge: true });
       window.cerrarModalUsuario(); alert("Usuario configurado y autorizado para Google Login exitosamente.");
   } catch(err) { alert("Error al guardar usuario."); }
   finally { window.hideLoading(); }
@@ -1095,8 +1097,10 @@ return `<div style="border:1px solid #ccc;font-size:12px;margin-bottom:15px;" cl
 
 window.actualizarMetricasF003 = (canEd) => {
 let nM = 0, nm = 0, om = 0, hM = "", hm = "", ho = ""; 
-currentAuditF020.forEach(i => { if(i.nc === 'NC Mayor'){nM++; hM += window.generarBloqueNCDinamico(i,nM,'NC Mayor',canEd);} if(i.nc === 'NC Menor'){nm++; hm += window.generarBloqueNCDinamico(i,nm,'NC Menor',canEd);} ho += window.generarBloqueNCDinamico(i,om,'OM',canEd);
-    } 
+currentAuditF020.forEach(i => { 
+    if(i.nc === 'NC Mayor'){nM++; hM += window.generarBloqueNCDinamico(i,nM,'NC Mayor',canEd);} 
+    if(i.nc === 'NC Menor'){nm++; hm += window.generarBloqueNCDinamico(i,nm,'NC Menor',canEd);} 
+    if(i.nc === 'OM'){om++; ho += window.generarBloqueNCDinamico(i,om,'OM',canEd);} 
 });
 
 if($('f003-nc-mayor')) $('f003-nc-mayor').innerText = nM; 
@@ -1279,53 +1283,38 @@ let wb = XLSX.utils.book_new(); let ws = XLSX.utils.json_to_sheet(dE); XLSX.util
 };
 
 // ==========================================
-// FUNCIÓN DE DESCANSO VISUAL (MODO OSCURO)
+// INICIALIZACIÓN DE LA APLICACIÓN
 // ==========================================
-window.toggleDarkMode = () => {
-    const body = document.body;
-    body.classList.toggle('dark-theme');
-    
-    // Guardar preferencia para futuras sesiones
-    const isDark = body.classList.contains('dark-theme');
-    localStorage.setItem('sgc_dark_mode', isDark);
-    
-    // Actualizar el icono y texto del botón
-    const icon = document.getElementById('dark-mode-icon');
-    const text = document.getElementById('dark-mode-text');
-    if (icon && text) {
-        icon.innerText = isDark ? 'light_mode' : 'dark_mode';
-        text.innerText = isDark ? 'Claro' : 'Descanso';
-    }
-};
-// ==========================================
-
 const inicializarApp = async () => {
     window.hideLoading(); 
     
-    // Cargar Modo Oscuro guardado
+    // Cargar preferencia de Modo Oscuro
     if (localStorage.getItem('sgc_dark_mode') === 'true') {
         document.body.classList.add('dark-theme');
-        if($('dark-mode-icon')) $('dark-mode-icon').innerText = 'light_mode';
-        if($('dark-mode-text')) $('dark-mode-text').innerText = 'Claro';
+        const icon = document.getElementById('dark-mode-icon');
+        const text = document.getElementById('dark-mode-text');
+        if (icon && text) { icon.innerText = 'light_mode'; text.innerText = 'Claro'; }
     }
 
-    // El sistema usa Google Auth (OnAuthStateChanged)
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            window.showLoading();
-            const email = user.email.toLowerCase();
-            const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("email", "==", email)));
-            if (!qs.empty) {
-                currentUser = qs.docs[0].data();
-                window.completarLoginUI();
+    // Verificar sesión (Usuario / Contraseña manual)
+    const su = localStorage.getItem('sgc_session_user');
+    if (su) {
+        window.showLoading();
+        try { 
+            const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", su)));
+            if (!qs.empty) { 
+                currentUser = qs.docs[0].data(); 
+                window.completarLoginUI(); 
             } else {
                 window.logout();
             }
-            window.hideLoading();
-        } else {
-            setDisplay('login-screen', 'flex');
-        }
-    });
+        } catch(e) { 
+            window.logout(); 
+        } 
+        window.hideLoading();
+    } else { 
+        setDisplay('login-screen', 'flex'); 
+    }
 };
 
 document.addEventListener("DOMContentLoaded", inicializarApp);
