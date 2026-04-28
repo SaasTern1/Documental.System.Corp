@@ -1095,4 +1095,237 @@ return `<div style="border:1px solid #ccc;font-size:12px;margin-bottom:15px;" cl
 
 window.actualizarMetricasF003 = (canEd) => {
 let nM = 0, nm = 0, om = 0, hM = "", hm = "", ho = ""; 
-currentAuditF020.forEach(i => { if(i.nc === 'NC Mayor'){nM++; hM += window.generarBloqueNCDinamico(i,nM,'NC Mayor',canEd);} if(i.nc === 'NC Menor'){nm++; hm += window.generarBloqueNCDinamico(i,nm,'NC Menor',canEd);} if(i.nc === 'OM'){om++;
+currentAuditF020.forEach(i => { if(i.nc === 'NC Mayor'){nM++; hM += window.generarBloqueNCDinamico(i,nM,'NC Mayor',canEd);} if(i.nc === 'NC Menor'){nm++; hm += window.generarBloqueNCDinamico(i,nm,'NC Menor',canEd);} ho += window.generarBloqueNCDinamico(i,om,'OM',canEd);
+    } 
+});
+
+if($('f003-nc-mayor')) $('f003-nc-mayor').innerText = nM; 
+if($('f003-nc-menor')) $('f003-nc-menor').innerText = nm; 
+if($('f003-om')) $('f003-om').innerText = om;
+
+if($('container-nc-menor')) $('container-nc-menor').innerHTML = hm || "<p style='font-size:11px;color:#94a3b8;'>Ninguna.</p>"; 
+if($('container-nc-mayor')) $('container-nc-mayor').innerHTML = hM || "<p style='font-size:11px;color:#94a3b8;'>Ninguna.</p>"; 
+if($('container-om')) $('container-om').innerHTML = ho || "<p style='font-size:11px;color:#94a3b8;'>Ninguna.</p>";
+};
+
+window.guardarF003 = async () => { 
+window.showLoading(); let dN = {}; 
+$$('.f003-hallazgo-block').forEach(b => dN[b.dataset.id] = {departamento:b.querySelector('.h-dep').value, doc_ref:b.querySelector('.h-doc').value, requisito:b.querySelector('.h-req').value, detalle:b.querySelector('.h-det').value}); 
+let rD = { conclusiones:$('f003-conclusiones').value, n_proceso:$('f003-n-proceso').value, n_personal:$('f003-n-personal').value, n_cargo:$('f003-n-cargo').value, n_req:$('f003-n-req').value, n_doc:$('f003-n-doc').value, n_evidencia:$('f003-n-evidencia').value, detalles_nc:dN }; 
+await updateDoc(doc(db,"artifacts",appId,"public","data","Auditorias",selectedAuditId),{reporte_auditoria:rD}); 
+window.hideLoading(); alert("Reporte F-003 guardado."); 
+};
+
+window.renderAuditSACs = () => {
+const tb = $('tbody-audit-sacs'); if(!tb) return; 
+let hs = currentAuditF020.filter(i => i.nc === 'NC Mayor' || i.nc === 'NC Menor' || i.nc === 'OM');
+if(hs.length === 0) { tb.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No hay NC/OM.</td></tr>"; return; } let ht = "";
+hs.forEach((h, idx) => {
+    let sac = globalAllSacs.find(s => s.f020_id === h.id), bd = '', es = 'SIN GENERAR', btn = '', cb = h.nc === 'NC Mayor' ? 'badge-danger' : (h.nc === 'NC Menor' ? 'badge-warning' : 'badge-info');
+    if(sac) { 
+        es = String(sac.estado || ''); let bs = es.includes('Abierta') ? 'badge-danger' : (es === 'En Seguimiento' ? 'badge-warning' : 'badge-success'); 
+        bd = `<span class="badge ${bs}">${es.toUpperCase()}</span><br><small>${sac.sac_num}</small>`; btn = `<button class="btn btn-primary" style="padding:4px;font-size:10px;" onclick="window.verSAC('${sac.sac_id}')">VER</button>`; 
+    } else { 
+        bd = `<span class="badge badge-dark">NO CREADA</span>`; 
+        if(currentUser.permisos.p_audit_auditor || currentUser.permisos.admin || (selectedAuditData && selectedAuditData.auditor && selectedAuditData.auditor.includes(currentUser.nombre))) btn = `<button class="btn btn-info" style="padding:4px;font-size:10px;" onclick="window.abrirCrearSAC('${h.id}')">CREAR SAC</button>`; 
+    }
+    ht += `<tr><td><b>Ref. ${idx+1}</b><br><small>${(h.pregunta || "").substring(0,30)}...</small></td><td>${h.comentarios || ""}</td><td><span class="badge ${cb}">${h.nc}</span></td><td>${bd}</td><td>${btn}</td></tr>`;
+}); tb.innerHTML = ht;
+};
+
+window.addPlanRow = (d="", r="", i="", f="") => { const tb = $('tbody-plan-accion'); let tr = document.createElement('tr'); tr.innerHTML = `<td style="border:1px solid #ccc;">${tb.children.length+1}</td><td style="padding:0;"><input type="text" value="${d}" style="width:100%;border:none;margin:0;"></td><td style="padding:0;"><input type="text" value="${r}" style="width:100%;border:none;margin:0;"></td><td style="padding:0;"><input type="date" value="${i}" style="width:100%;border:none;margin:0;"></td><td style="padding:0;"><input type="date" value="${f}" style="width:100%;border:none;margin:0;"></td><td style="text-align:center;"><button class="btn-icon-danger" onclick="this.parentElement.parentElement.remove()"><span class="material-icons-round">delete</span></button></td>`; tb.appendChild(tr); };
+window.addSeguimientoRow = (res="", r="", f="") => { const tb = $('tbody-seguimiento'); let tr = document.createElement('tr'); tr.innerHTML = `<td style="border:1px solid #ccc;">${tb.children.length+1}</td><td style="padding:0;"><input type="text" value="${res}" style="width:100%;border:none;margin:0;"></td><td style="padding:0;"><input type="text" value="${r}" style="width:100%;border:none;margin:0;"></td><td style="padding:0;"><input type="date" value="${f}" style="width:100%;border:none;margin:0;"></td><td style="text-align:center;"><button class="btn-icon-danger" onclick="this.parentElement.parentElement.remove()"><span class="material-icons-round">delete</span></button></td>`; tb.appendChild(tr); };
+
+window.abrirCrearSAC = (id) => {
+let h = currentAuditF020.find(i => i.id === id); if(!h) return; currentEditingSacId = null; currentEditingF020Ref = h;
+if($('sac-num')) $('sac-num').innerText = "POR ASIGNAR"; 
+if($('sac-estado-badge')) { $('sac-estado-badge').innerText = "NUEVA"; $('sac-estado-badge').className = "badge badge-info"; }
+if($('sac-fecha')) $('sac-fecha').value = new Date().toISOString().split('T')[0];
+if($('sac-proceso')) $('sac-proceso').value = h.requisito || ""; 
+if($('sac-tipo')) $('sac-tipo').value = h.nc || "";
+
+if($('sac-tipo-doc-afectado')) { $('sac-tipo-doc-afectado').innerHTML = '<option value="">-- No aplica --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join(''); $('sac-tipo-doc-afectado').value = ""; }
+if($('sac-fuente')) $('sac-fuente').value = "Auditoría Interna"; if($('sac-fuente-otro')) $('sac-fuente-otro').value = ""; if($('sac-detalle')) $('sac-detalle').value = h.comentarios || h.pregunta || ""; if($('sac-beneficio')) $('sac-beneficio').value = ""; if($('sac-causa')) $('sac-causa').value = ""; if($('sac-accion')) $('sac-accion').value = "";
+if($('tbody-plan-accion')) $('tbody-plan-accion').innerHTML = ""; if($('sac-fecha-aprob-plan')) $('sac-fecha-aprob-plan').value = ""; if($('tbody-seguimiento')) $('tbody-seguimiento').innerHTML = ""; if($('sac-resp-cierre')) $('sac-resp-cierre').value = ""; if($('sac-fecha-cierre')) $('sac-fecha-cierre').value = ""; if($('sac-check-cerrar')) $('sac-check-cerrar').checked = false;
+
+let auds = selectedAuditData?.auditado ? selectedAuditData.auditado.split(', ') : []; 
+let op = '<option value="">-- Responsable --</option>';
+allUsers.forEach(u => { op += `<option value="${u.usuario}">${auds.includes(u.nombre) ? '⭐ ' : ''}${u.nombre}</option>`; }); 
+if($('sac-dueno')) $('sac-dueno').innerHTML = op; 
+
+setDisplay('modal-sac', 'flex');
+};
+
+window.abrirCrearSACManual = () => {
+currentEditingSacId = null; currentEditingF020Ref = null;
+if($('sac-num')) $('sac-num').innerText = "POR ASIGNAR"; 
+if($('sac-estado-badge')) { $('sac-estado-badge').innerText = "NUEVA"; $('sac-estado-badge').className = "badge badge-info"; }
+if($('sac-fecha')) $('sac-fecha').value = new Date().toISOString().split('T')[0];
+if($('sac-proceso')) $('sac-proceso').value = selectedAuditData?.requisitos || ""; 
+if($('sac-tipo')) $('sac-tipo').value = "OM";
+
+if($('sac-tipo-doc-afectado')) { $('sac-tipo-doc-afectado').innerHTML = '<option value="">-- No aplica --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join(''); $('sac-tipo-doc-afectado').value = ""; }
+if($('sac-fuente')) $('sac-fuente').value = "Auditoría Interna"; if($('sac-fuente-otro')) $('sac-fuente-otro').value = ""; if($('sac-detalle')) $('sac-detalle').value = ""; if($('sac-beneficio')) $('sac-beneficio').value = ""; if($('sac-causa')) $('sac-causa').value = ""; if($('sac-accion')) $('sac-accion').value = "";
+if($('tbody-plan-accion')) $('tbody-plan-accion').innerHTML = ""; if($('sac-fecha-aprob-plan')) $('sac-fecha-aprob-plan').value = ""; if($('tbody-seguimiento')) $('tbody-seguimiento').innerHTML = ""; if($('sac-resp-cierre')) $('sac-resp-cierre').value = ""; if($('sac-fecha-cierre')) $('sac-fecha-cierre').value = ""; if($('sac-check-cerrar')) $('sac-check-cerrar').checked = false;
+
+let auds = selectedAuditData?.auditado ? selectedAuditData.auditado.split(', ') : []; 
+let op = '<option value="">-- Responsable --</option>';
+allUsers.forEach(u => { op += `<option value="${u.usuario}">${auds.includes(u.nombre) ? '⭐ ' : ''}${u.nombre}</option>`; }); 
+if($('sac-dueno')) $('sac-dueno').innerHTML = op; 
+
+setDisplay('modal-sac', 'flex');
+};
+
+window.verSAC = (id) => {
+let sac = globalAllSacs.find(s => s.sac_id === id); if(!sac) return; currentEditingSacId = id;
+if($('sac-num')) $('sac-num').innerText = sac.sac_num || ""; 
+let es = String(sac.estado || ""); let bs = es.includes('Abierta') ? 'badge-danger' : (es === 'En Seguimiento' ? 'badge-warning' : 'badge-success'); 
+if($('sac-estado-badge')) { $('sac-estado-badge').innerText = es.toUpperCase(); $('sac-estado-badge').className = `badge ${bs}`; }
+
+if($('sac-fecha')) $('sac-fecha').value = sac.fecha_registro || (sac.fecha_apertura ? sac.fecha_apertura.split('T')[0] : ""); 
+if($('sac-proceso')) $('sac-proceso').value = sac.proceso || ""; 
+if($('sac-tipo')) $('sac-tipo').value = sac.tipo_hallazgo || "";
+
+if($('sac-tipo-doc-afectado')) { $('sac-tipo-doc-afectado').innerHTML = '<option value="">-- No aplica --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join(''); $('sac-tipo-doc-afectado').value = sac.tipo_doc_afectado || ""; }
+
+if($('sac-fuente')) $('sac-fuente').value = sac.fuente_nc || "Auditoría Interna"; if($('sac-fuente-otro')) $('sac-fuente-otro').value = sac.fuente_otro || ""; if($('sac-detalle')) $('sac-detalle').value = sac.detalle_nc || ""; if($('sac-beneficio')) $('sac-beneficio').value = sac.beneficio_esperado || ""; if($('sac-causa')) $('sac-causa').value = sac.causa_raiz || ""; if($('sac-accion')) $('sac-accion').value = sac.accion_implementar || "";
+
+let auds = selectedAuditData?.auditado ? selectedAuditData.auditado.split(', ') : []; 
+let op = '<option value="">-- Responsable --</option>';
+allUsers.forEach(u => { op += `<option value="${u.usuario}" ${sac.dueno_uid === u.usuario ? 'selected' : ''}>${auds.includes(u.nombre) ? '⭐ ' : ''}${u.nombre}</option>`; }); 
+if($('sac-dueno')) $('sac-dueno').innerHTML = op;
+
+if($('tbody-plan-accion')) { $('tbody-plan-accion').innerHTML = ""; if(sac.plan_accion) sac.plan_accion.forEach(p => window.addPlanRow(p.detalle, p.resp, p.inicio, p.fin)); }
+if($('sac-fecha-aprob-plan')) $('sac-fecha-aprob-plan').value = sac.fecha_aprobacion_plan || "";
+if($('tbody-seguimiento')) { $('tbody-seguimiento').innerHTML = ""; if(sac.seguimiento) sac.seguimiento.forEach(s => window.addSeguimientoRow(s.resultado, s.resp, s.fecha)); }
+
+if($('sac-resp-cierre')) $('sac-resp-cierre').value = sac.cerrado_por || ""; 
+if($('sac-fecha-cierre')) $('sac-fecha-cierre').value = sac.fecha_cierre ? sac.fecha_cierre.split('T')[0] : ""; 
+if($('sac-check-cerrar')) $('sac-check-cerrar').checked = es === 'Cerrada'; 
+
+setDisplay('modal-sac', 'flex');
+};
+
+window.guardarSAC = async () => {
+window.showLoading(); let pA = [], sA = []; 
+$$('#tbody-plan-accion tr').forEach(tr => { let i = tr.querySelectorAll('input'); if(i[0].value.trim()) pA.push({detalle: i[0].value, resp: i[1].value, inicio: i[2].value, fin: i[3].value}); });
+$$('#tbody-seguimiento tr').forEach(tr => { let i = tr.querySelectorAll('input'); if(i[0].value.trim()) sA.push({resultado: i[0].value, resp: i[1].value, fecha: i[2].value}); });
+
+let es = "Abierta (En Plan)"; if($('sac-fecha-aprob-plan') && $('sac-fecha-aprob-plan').value) es = "En Seguimiento"; if($('sac-check-cerrar') && $('sac-check-cerrar').checked) es = "Cerrada";
+let tipoDocAfectado = $('sac-tipo-doc-afectado') ? $('sac-tipo-doc-afectado').value : "";
+
+let dt = { fecha_registro: $('sac-fecha')?$('sac-fecha').value:'', proceso: $('sac-proceso')?$('sac-proceso').value:'', tipo_doc_afectado: tipoDocAfectado, fuente_nc: $('sac-fuente')?$('sac-fuente').value:'', fuente_otro: $('sac-fuente-otro')?$('sac-fuente-otro').value:'', beneficio_esperado: $('sac-beneficio')?$('sac-beneficio').value:'', causa_raiz: $('sac-causa')?$('sac-causa').value:'', accion_implementar: $('sac-accion')?$('sac-accion').value:'', dueno_uid: $('sac-dueno')?$('sac-dueno').value:'', plan_accion: pA, fecha_aprobacion_plan: $('sac-fecha-aprob-plan')?$('sac-fecha-aprob-plan').value:'', seguimiento: sA, fecha_cierre: $('sac-fecha-cierre')?$('sac-fecha-cierre').value:'', cerrado_por: $('sac-check-cerrar')&&$('sac-check-cerrar').checked ? currentUser.nombre : "", estado: es };
+
+try {
+    if(!currentEditingSacId) {
+        let nS = ""; 
+        await runTransaction(db, async(t) => { 
+            const sn = await t.get(doc(db,"artifacts",appId,"public","data","Contadores","sacs")); 
+            let c = 1; if(sn.exists()) c = sn.data().count + 1; 
+            t.set(doc(db,"artifacts",appId,"public","data","Contadores","sacs"), {count: c}); 
+            nS = `SAC-${new Date().getFullYear()}-${String(c).padStart(3,'0')}`; 
+        });
+        dt.sac_num = nS; dt.audit_id = selectedAuditId || "N/A"; dt.f020_id = currentEditingF020Ref ? currentEditingF020Ref.id : "MANUAL"; dt.tipo_hallazgo = currentEditingF020Ref ? currentEditingF020Ref.nc : ($('sac-tipo')?$('sac-tipo').value:''); dt.detalle_nc = $('sac-detalle')?$('sac-detalle').value:''; dt.fecha_apertura = new Date().toISOString(); dt.auditor_nombre = currentUser.nombre;
+        await addDoc(collection(db, "artifacts", appId, "public", "data", "AccionesCorrectivas"), dt); 
+        alert(`SAC ${nS} Generada.`);
+    } else { 
+        await updateDoc(doc(db, "artifacts", appId, "public", "data", "AccionesCorrectivas", currentEditingSacId), dt); 
+        alert("SAC Actualizada."); 
+    }
+    setDisplay('modal-sac', 'none'); 
+    if(selectedAuditId) window.verModalAuditoria(selectedAuditId);
+} catch(e) {
+    console.error(e);
+    alert("Error al guardar SAC.");
+} finally {
+    window.hideLoading();
+}
+};
+
+window.renderF023Global = () => {
+const tb = $('tbody-noconf'); if(!tb) return; 
+let hs = "", fs = [...globalAllSacs], sE = $('filter-noconf-estado'); 
+if(sE && sE.value) fs = fs.filter(s => s.estado === sE.value);
+if(!currentUser.permisos.admin && !currentUser.permisos.p_gest_sgc && !currentUser.permisos.p_audit_admin) fs = fs.filter(s => s.dueno_uid === currentUser.usuario || s.auditor_nombre === currentUser.nombre);
+fs.sort((a,b) => b.sac_num > a.sac_num ? -1 : 1);
+fs.forEach(s => {
+    let es = String(s.estado || ''), bs = es.includes('Abierta') ? 'badge-danger' : (es === 'En Seguimiento' ? 'badge-warning' : 'badge-success'); 
+    let uD = allUsers.find(u => u.usuario === s.dueno_uid);
+    hs += `<tr><td><b>${s.sac_num}</b></td><td>${s.proceso}</td><td><b style="${s.tipo_hallazgo === 'NC Mayor' ? 'color:var(--danger)' : 'color:var(--warning)'}">${s.tipo_hallazgo}</b></td><td>${uD ? uD.nombre : s.dueno_uid}</td><td><div style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.detalle_nc}">${s.detalle_nc}</div></td><td>${window.formatearFechaAbreviada(s.fecha_registro || s.fecha_apertura)}</td><td><span class="badge ${bs}">${es}</span></td><td>${s.fecha_cierre ? window.formatearFechaAbreviada(s.fecha_cierre) : '-'}</td><td class="no-export"><button class="btn btn-primary" style="padding:4px;font-size:10px;" onclick="window.verSACGlobal('${s.sac_id}', '${s.audit_id || 'N/A'}')">Revisar</button></td></tr>`;
+}); 
+if($('tbody-noconf')) $('tbody-noconf').innerHTML = hs;
+};
+
+window.setFilterGestNC = () => window.renderF023Global();
+
+window.verSACGlobal = async (sId, aId) => { 
+selectedAuditData = null; selectedAuditId = null; 
+if(aId && aId !== "N/A" && aId !== "undefined") { 
+    try { 
+        const sn = await getDoc(doc(db,"artifacts",appId,"public","data","Auditorias",aId)); 
+        if(sn.exists()) { selectedAuditData = sn.data(); selectedAuditId = aId; } 
+    } catch(e) {} 
+} 
+window.verSAC(sId); 
+};
+
+window.exportarExcelNoConf = () => {
+if(globalAllSacs.length === 0) return alert("No hay registros SAC para exportar."); 
+let dE = globalAllSacs.map(s => { 
+    let u = allUsers.find(x => x.usuario === s.dueno_uid); 
+    return { "N° SAC": s.sac_num, "Req": s.proceso, "Tipo Doc": s.tipo_doc_afectado || 'N/A', "Tipo": s.tipo_hallazgo, "Resp": u ? u.nombre : s.dueno_uid, "Detalle": s.detalle_nc, "Apertura": s.fecha_apertura ? new Date(s.fecha_apertura).toLocaleString() : '', "Causa": s.causa_raiz || '', "Acción": s.accion_implementar || '', "Estado": s.estado, "Cierre": s.fecha_cierre ? new Date(s.fecha_cierre).toLocaleString() : '', "Cerrado Por": s.cerrado_por || '' }; 
+});
+let wb = XLSX.utils.book_new(); let ws = XLSX.utils.json_to_sheet(dE); XLSX.utils.book_append_sheet(wb, ws, "F-023"); XLSX.writeFile(wb, "F-023_Control_NC.xlsx");
+};
+
+// ==========================================
+// FUNCIÓN DE DESCANSO VISUAL (MODO OSCURO)
+// ==========================================
+window.toggleDarkMode = () => {
+    const body = document.body;
+    body.classList.toggle('dark-theme');
+    
+    // Guardar preferencia para futuras sesiones
+    const isDark = body.classList.contains('dark-theme');
+    localStorage.setItem('sgc_dark_mode', isDark);
+    
+    // Actualizar el icono y texto del botón
+    const icon = document.getElementById('dark-mode-icon');
+    const text = document.getElementById('dark-mode-text');
+    if (icon && text) {
+        icon.innerText = isDark ? 'light_mode' : 'dark_mode';
+        text.innerText = isDark ? 'Claro' : 'Descanso';
+    }
+};
+// ==========================================
+
+const inicializarApp = async () => {
+    window.hideLoading(); 
+    
+    // Cargar Modo Oscuro guardado
+    if (localStorage.getItem('sgc_dark_mode') === 'true') {
+        document.body.classList.add('dark-theme');
+        if($('dark-mode-icon')) $('dark-mode-icon').innerText = 'light_mode';
+        if($('dark-mode-text')) $('dark-mode-text').innerText = 'Claro';
+    }
+
+    // El sistema usa Google Auth (OnAuthStateChanged)
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            window.showLoading();
+            const email = user.email.toLowerCase();
+            const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("email", "==", email)));
+            if (!qs.empty) {
+                currentUser = qs.docs[0].data();
+                window.completarLoginUI();
+            } else {
+                window.logout();
+            }
+            window.hideLoading();
+        } else {
+            setDisplay('login-screen', 'flex');
+        }
+    });
+};
+
+document.addEventListener("DOMContentLoaded", inicializarApp);
