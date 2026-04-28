@@ -1,767 +1,1098 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Seguridad</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: wss: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, updateDoc, setDoc, query, where, getDocs, arrayUnion, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-    <div id="loading-overlay"><div class="spinner" style="margin-bottom: 15px;"></div><h4 style="color:var(--primary)">Procesando...</h4></div>
-    <div class="sidebar-overlay" id="sidebar-overlay" onclick="window.toggleMenu()"></div>
+const firebaseConfig = { apiKey: "AIzaSyDdzCiachuhbE9jATz-TesPI2vUVIJrHjM", authDomain: "sistemadegestion-7400d.firebaseapp.com", projectId: "sistemadegestion-7400d", storageBucket: "sistemadegestion-7400d.firebasestorage.app", messagingSenderId: "709030283072", appId: "1:709030283072:web:5997837b36a448e9515ca5" };
+const app = initializeApp(firebaseConfig); 
+const auth = getAuth(app); 
+const db = getFirestore(app); 
+const appId = 'sgc-final-v6';
 
-    <div id="login-screen">
-        <div class="login-box" style="text-align: center;">
-            <span class="material-icons-round" style="color:var(--primary); font-size:48px; margin-bottom:15px;">verified_user</span>
-            <h1 style="color:var(--primary); margin-bottom: 10px; font-weight: 800; font-size:24px;">SISTEMA DE GESTIÓN DE SEGURIDAD</h1>
-            <p style="color:#64748b; font-size:13px; margin-bottom:30px;">Acceso corporativo vía Google</p>
-            
-            <button class="btn btn-primary" id="btnLogin" onclick="window.iniciarSesion()" style="width: 100%; padding: 15px; font-size: 15px; display:flex; justify-content:center; align-items:center; gap:10px; background:white; color:var(--text-main); border:1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor:pointer;">
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width:20px; height:20px;">
-                INGRESAR CON GOOGLE
-            </button>
-        </div>
-    </div>
+const EMAIL_SERVICE_ID = "service_vumxptj", EMAIL_TEMPLATE_ID = "template_z27y5yk", EMAIL_PUBLIC_KEY = "kWsovOfdi7dBqLMw2", EMAIL_ADMIN_SGC = "sistemadegestion@empresa.com"; 
+(function() { emailjs.init(EMAIL_PUBLIC_KEY); })();
 
-    <aside class="sidebar" id="sidebar">
-        <div style="padding: 10px 0 20px; display:flex; align-items:center; gap:10px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px;">
-            <span class="material-icons-round" style="color: var(--accent); font-size: 32px;">verified_user</span>
-            <h2 style="font-weight: 800; font-size: 14px; line-height: 1.2; color: #fff;">SISTEMA DE GESTIÓN<br><span style="color:var(--accent); font-size:11px;">DE SEGURIDAD</span></h2>
-        </div>
+const CLOUD_NAME = "df79cjklp", UPLOAD_PRESET = "sgc_documentos", PASOS_NOMBRES = ["Pendiente Documentado", "Pendiente Verificado", "Pendiente Aprobación Gerencia", "Pendiente Aprobación SGC"];
+
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+const setDisplay = (id, val) => { if($(id)) $(id).style.display = val; };
+const setTxt = (id, txt) => { if($(id)) $(id).innerText = txt; };
+const setVal = (id, val) => { if($(id)) $(id).value = val; };
+const setHtml = (id, html) => { if($(id)) $(id).innerHTML = html; };
+
+let currentUser = null, selectedId = null, selectedDocData = null, tempAction = "";
+let allUsers = [], allDepartamentos = [], tiposDocumento = [], columnasMaestro = [], estatusMaestro = [], dataMaestro = [], editandoMaestroId = null;
+let globalSolicitudes = [], globalAuditPlan = null, globalAllAuditorias = [], globalAuditorias = [], selectedAuditId = null, selectedAuditData = null, editandoAuditoriaId = null;
+let currentAuditF020 = [], globalAllSacs = [], currentEditingSacId = null, currentEditingF020Ref = null;
+let requisitosOEA = []; let manualOEA = { url: "", nombre: "" };
+
+window.showLoading = () => setDisplay('loading-overlay', 'flex'); 
+window.hideLoading = () => setDisplay('loading-overlay', 'none');
+window.closeModal = () => setDisplay('modal', 'none'); 
+window.cerrarModalAuditoria = () => setDisplay('modal-auditoria', 'none');
+window.cerrarModalUsuario = () => setDisplay('modal-usuario', 'none');
+window.abrirModalUsuario = () => { window.resetUserForm(); setDisplay('modal-usuario', 'flex'); };
+window.toggleModPanel = v => setDisplay('panel-mod', v === 'Creación' ? 'none' : 'grid');
+
+window.cambiarVista = (id, btn) => {
+  $$('.section').forEach(s => s.classList.remove('active')); $$('.nav-link').forEach(l => l.classList.remove('active'));
+  if($(id)) $(id).classList.add('active'); if(btn) btn.classList.add('active');
+  if(window.innerWidth <= 768) { if($('sidebar')) $('sidebar').classList.remove('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.remove('active'); }
+};
+window.toggleMenu = () => { if($('sidebar')) $('sidebar').classList.toggle('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.toggle('active'); };
+
+window.toggleDarkMode = () => {
+    const body = document.body;
+    body.classList.toggle('dark-theme');
+    const isDark = body.classList.contains('dark-theme');
+    localStorage.setItem('sgc_dark_mode', isDark);
+    const icon = document.getElementById('dark-mode-icon');
+    const text = document.getElementById('dark-mode-text');
+    if (icon && text) { icon.innerText = isDark ? 'light_mode' : 'dark_mode'; text.innerText = isDark ? 'Claro' : 'Descanso'; }
+};
+
+window.abrirDocumento = async (url, nombreOriginal) => {
+  if (!url || url === "#") return;
+  let safeName = nombreOriginal ? nombreOriginal.replace(/[^a-zA-Z0-9.\-_ ]/g, '_') : 'Documento';
+  if (!safeName.includes('.')) { let extMatch = url.match(/\.([a-zA-Z0-9]+)(\?|$)/); if(extMatch) safeName += "." + extMatch[1]; }
+  if (url.toLowerCase().match(/\.(pdf|jpg|jpeg|png|gif)(\?|$)/)) {
+    const win = window.open('', '_blank'); if (!win) return alert("Bloqueado.");
+    win.document.write(`<html style="display:flex;justify-content:center;align-items:center;height:100vh;background:#f8fafc;"><head><title>${safeName}</title></head><body><h2>Cargando documento...</h2></body></html>`);
+    try { const r = await fetch(url); if(!r.ok) throw new Error(); const blob = await r.blob(); const bUrl = window.URL.createObjectURL(new File([blob], safeName, { type: blob.type })); win.location.href = bUrl; setTimeout(() => window.URL.revokeObjectURL(bUrl), 60000); } catch (e) { win.close(); alert("⚠️ Archivo no disponible."); }
+  } else {
+    window.showLoading();
+    try { const r = await fetch(url); if(!r.ok) throw new Error(); const bUrl = window.URL.createObjectURL(await r.blob()); const a = document.createElement('a'); a.style.display = 'none'; a.href = bUrl; a.download = safeName; document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(bUrl); document.body.removeChild(a); } catch (e) { alert("⚠️ Archivo no disponible."); }
+    window.hideLoading();
+  }
+};
+
+window.descargarFicha = () => {
+    const w = window.open('', '_blank');
+    const content = document.getElementById('m-original-data').innerHTML;
+    w.document.write(`<html><head><title>Ficha ${selectedDocData.customId}</title><link rel="stylesheet" href="styles.css"></head><body style="padding:40px; background:white;"><h2>Expediente: ${selectedDocData.customId} - ${selectedDocData.titulo}</h2>${content}</body></html>`);
+    w.document.close();
+    setTimeout(() => { w.print(); }, 1000);
+};
+
+window.del = async (c, id) => { if(confirm("¿Eliminar este registro?")) { window.showLoading(); await deleteDoc(doc(db, "artifacts", appId, "public", "data", c, id)); window.hideLoading(); } };
+window.getDownloadUrl = (url) => url ? url : "#";
+window.formatearFechaAbreviada = (fISO) => { if(!fISO) return ''; let f = fISO; if(f.length===10) f+='T12:00:00'; const d = new Date(f); if(isNaN(d)) return fISO; const m = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]; return `${d.getDate()}-${m[d.getMonth()]}-${d.getFullYear()}`; };
+window.sendNotification = (dest, sub, msg) => { if(dest.to || dest.cc) emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, {to_email: dest.to, cc_email: dest.cc || "", subject: sub, message: msg}).catch(e => console.error(e)); };
+
+window.getDatosEnvio = async (sol) => {
+  let cc = ""; if(sol.gerencia) { try { const q = query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("gerencias", "array-contains", sol.gerencia), where("permisos.p_ger_apr", "==", true)); const sn = await getDocs(q); if(!sn.empty) cc = sn.docs[0].data().email || ""; } catch(e){} }
+  const to = new Set([EMAIL_ADMIN_SGC, sol.solicitante_email]); if(sol.involucrados) sol.involucrados.forEach(e => to.add(e));
+  return { to: Array.from(to).join(','), cc: cc };
+};
+
+window.uploadToCloudinary = async (f) => { const fd = new FormData(); fd.append("file", f); fd.append("upload_preset", UPLOAD_PRESET); try { const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, { method: "POST", body: fd }); const d = await r.json(); return d.secure_url; } catch(e){return null;} };
+window.getNextFCI = async () => { const r = doc(db, "artifacts", appId, "public", "data", "Contadores", "solicitudes"); let id = ""; await runTransaction(db, async (t) => { const sn = await t.get(r); let c = 1; if(sn.exists()) c = sn.data().count + 1; t.set(r, {count:c}); id = `SGC-SOL-${String(c).padStart(4, '0')}`; }); return id; };
+
+window.checkDailyAlerts = async () => {
+  if(!currentUser || (!currentUser.permisos.p_gest_sgc && !currentUser.permisos.admin)) return;
+  const ref = doc(db, "artifacts", appId, "public", "data", "Configuracion", "EstadoAlertas"); const sn = await getDoc(ref); const today = new Date().toISOString().split('T')[0];
+  if(!sn.exists() || sn.data().ultimaAlerta !== today) {
+    let p = globalSolicitudes.filter(s => { let e = String(s.estado||"").toUpperCase(); return !e.includes('FINAL') && e !== 'ANULADO' && e !== 'RECHAZADO'; });
+    if(p.length > 0) { window.sendNotification({to:EMAIL_ADMIN_SGC}, "🔔 Alerta SGC", `Hay ${p.length} solicitudes pendientes.`); if(!sn.exists()) await setDoc(ref, {ultimaAlerta:today}); else await updateDoc(ref, {ultimaAlerta:today}); }
+  }
+};
+
+window.verificarAlertasAuditoria = (arr) => {
+  if(!globalAuditPlan || !globalAuditPlan.correos || globalAuditPlan.correos.length === 0) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  arr.forEach(a => {
+    if(a.estado === "Completada" || !a.fecha) return; let f = a.fecha; if(f.length === 10) f += 'T12:00:00'; const d = new Date(f); d.setHours(0,0,0,0);
+    const diff = Math.ceil((d - today) / 86400000); let sub = diff === 30 ? "🚨 1 Mes para Auditoría" : (diff === 14 ? "⚠️ 2 Semanas para Auditoría" : "");
+    if(sub) window.sendNotification({to: globalAuditPlan.correos.join(',')}, sub, `Auditoría el ${window.formatearFechaAbreviada(a.fecha)} en ${a.lugar}. Req: ${a.requisitos}`);
+  });
+};
+
+window.actualizarConteoPersonal = () => {
+    if($('aud-personal')) { $('aud-personal').value = $$('#aud-auditado-list input:checked').length; }
+};
+
+window.cargarDatosCentrales = () => {
+  onSnapshot(collection(db, "artifacts", appId, "public", "data", "Usuarios"), (sn) => {
+    allUsers = []; let hU = "", cbU = "", oU = "", oI = '<option value="">-- Seleccionar --</option>';
+    sn.forEach(d => { 
+      let u = d.data(); allUsers.push(u); let gs = u.gerencias ? u.gerencias.join(', ') : (u.gerencia || 'N/A');
+      hU += `<tr><td>${u.nombre} (${u.usuario})</td><td>${u.email||''}</td><td>${u.role||''} / <small>${gs}</small></td><td class="no-export"><button class="btn btn-info" style="padding:4px 8px; font-size:10px;" onclick="window.cargarUsuarioParaEditar('${u.usuario}')">Editar</button> <button class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="window.eliminarUsuario('${u.usuario}')">Eliminar</button></td></tr>`;
+      cbU += `<label style="display:flex; gap:8px; font-size:13px; margin-bottom:6px;"><input type="checkbox" value="${u.nombre}" data-email="${u.email}" style="margin:0; width:16px;" onchange="window.actualizarConteoPersonal()"> ${u.nombre} (${gs})</label>`;
+      oU += `<option value="${u.nombre}" data-email="${u.email}">${u.nombre} (${gs})</option>`; if(u.email) oI += `<option value="${u.email}">${u.nombre} (${gs})</option>`;
+    });
+    setHtml('tbody-users', hU); setHtml('aud-auditado-list', cbU); setHtml('aud-auditor-list', cbU); setHtml('aud-formacion-list', cbU); setHtml('ah-auditor-list', cbU); 
+    setHtml('ah-lider', '<option value="">-- Lider --</option>' + oU); setHtml('sol-involucrado-sel', oI); setHtml('m-new-involucrado-sel', oI);
+  });
+
+  onSnapshot(doc(db, "artifacts", appId, "public", "data", "Configuracion", "NormaOEA"), (sn) => {
+    if(sn.exists()) { const d = sn.data(); requisitosOEA = d.requisitos || []; manualOEA = { url: d.manual_url || "", nombre: d.manual_nombre || "" }; } else { requisitosOEA = []; manualOEA = { url: "", nombre: "" }; } window.renderNormaOEA();
+  });
+
+  onSnapshot(doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings"), (sn) => {
+    if(sn.exists()) { const d = sn.data(); tiposDocumento = d.tiposDoc || []; columnasMaestro = d.columnas || []; estatusMaestro = d.estatus || []; window.renderListasConfig(); }
+  });
+
+  onSnapshot(doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"), (sn) => {
+    let dp = [], gr = []; if(sn.exists()) { const d = sn.data(); dp = d.departamentos || []; gr = d.gerencias || []; } allDepartamentos = dp;
+    let gH = ""; gr.forEach(g => gH += `<option value="${g}">${g}</option>`);
+    setHtml('d-ger-sel', gH); setHtml('sol-ger', '<option value="">-- Seleccionar --</option>' + gH);
+    setHtml('list-ger', gr.map((g, i) => `<div class="settings-item"><span>${g}</span><button class="btn-icon-danger" onclick="window.eliminarGerencia(${i})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`).join(''));
+    setHtml('list-dep', dp.map((d, i) => `<div class="settings-item"><span>${d.nombre} <small>(${d.gerencia})</small></span><button class="btn-icon-danger" onclick="window.eliminarDepartamento(${i})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`).join(''));
+    setHtml('u-ger-list', gr.map(g => `<label style="display:flex; gap:8px; font-size:13px; margin-bottom:6px;"><input type="checkbox" value="${g}" style="margin:0; width:16px;"> ${g}</label>`).join(''));
+  });
+
+  onSnapshot(collection(db, "artifacts", appId, "public", "data", "ListadoMaestro"), (sn) => { dataMaestro = []; sn.forEach(d => { let obj = d.data(); obj.docId = d.id; dataMaestro.push(obj); }); window.renderTablaMaestro(); });
+  onSnapshot(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), (sn) => { globalSolicitudes = []; sn.forEach(d => { let obj = d.data(); obj.docId = d.id; globalSolicitudes.push(obj); }); window.renderTablasSolicitudes(); window.checkDailyAlerts(); });
+  onSnapshot(collection(db, "artifacts", appId, "public", "data", "Auditorias"), (sn) => {
+    globalAllAuditorias = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalAllAuditorias.push(obj); });
+    let cy = new Date().getFullYear().toString(); let ys = $('aud-year-select'); if(ys && ys.options.length === 0) ys.innerHTML = `<option value="${cy}">${cy}</option><option value="nuevo">+ Añadir Año</option>`;
+    window.loadAuditPlan(ys ? ys.value : cy); window.renderTablaAuditorias(ys ? ys.value : cy);
+  });
+  onSnapshot(collection(db, "artifacts", appId, "public", "data", "AccionesCorrectivas"), (sn) => { globalAllSacs = []; sn.forEach(d => { let obj = d.data(); obj.sac_id = d.id; globalAllSacs.push(obj); }); window.renderF023Global(); });
+};
+
+window.renderDashTable = (t) => {
+  setDisplay('dash-table-container', 'block'); let d = globalSolicitudes;
+  if(t==='pendientes') d = d.filter(s=>!String(s.estado||"").includes('Aprobado Final')&&s.estado!=='Anulado'&&s.estado!=='Rechazado'); else d = d.filter(s=>String(s.estado||"").includes('Aprobado Final')||s.estado==='Anulado'||s.estado==='Rechazado');
+  d.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)); let h="";
+  d.forEach(s=>{ 
+      let bc=String(s.estado||"").includes('Aprobado')?'badge-success':(s.estado==='Anulado'||s.estado==='Rechazado'?'badge-danger':'badge-warning'); 
+      let docIcon = s.documento_final ? `<span title="Documento Publicado">📄 Sí</span>` : '<span style="color:#94a3b8">No</span>';
+      h+=`<tr><td><b>${s.customId}</b></td><td>${s.solicitante}</td><td>${s.titulo}</td><td><span class="badge ${bc}">${s.estado}</span></td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Detalle</button></td></tr>`; 
+  });
+  setHtml('tbody-dash', h || "<tr><td colspan='6' style='text-align:center;'>No hay registros</td></tr>");
+};
+
+window.renderTablasSolicitudes = () => {
+  let hH = "", hA = "", hG = "", sort = [...globalSolicitudes].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+  let totalCerradas = 0, cerradasATiempo = 0;
+
+  sort.forEach(s => {
+    let es = s.estado || "Pendiente", c = es==='Anulado'||es==='Rechazado', apr = es.includes('Aprobado Final');
+    let bc = apr ? 'badge-success' : (c ? 'badge-danger' : 'badge-warning'), ps = s.prioridad || "Normal", bp = ps==='Alta'?'badge-danger':(ps==='Básica'?'badge-info':'badge-dark'), et = PASOS_NOMBRES[s.idx] || '';
+    let isM = (s.uid === currentUser.usuario) || (s.involucrados && currentUser.email && s.involucrados.includes(currentUser.email.toLowerCase()));
+    
+    let slaVisual = s.fecha_esperada_cierre ? window.formatearFechaAbreviada(s.fecha_esperada_cierre) : '<span style="color:#cbd5e1">-</span>';
+    let docIcon = s.documento_final ? `<span title="Documento Publicado" style="font-size:16px;">📄</span>` : '<span style="color:#cbd5e1">-</span>';
+
+    if(apr && s.fecha_esperada_cierre && s.fecha_final) {
+        totalCerradas++; if(s.fecha_final <= s.fecha_esperada_cierre) cerradasATiempo++;
+    }
+
+    if(isM) hH += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}</td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bc}">${es}</span></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver / Gestionar</button></td></tr>`;
+    hA += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}</td><td><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bc}">${es}</span><br><small>${et}</small></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver Detalle</button></td></tr>`;
+
+    let act = !apr && !c, p = currentUser.permisos, esAdm = p.admin || p.p_gest_sgc;
+    let pgS = act && ((s.idx===0 && (esAdm||p.p_paso1)) || (s.idx===1 && (esAdm||p.p_paso2)) || (s.idx===3 && (esAdm||p.p_paso4)));
+    let pgG = act && s.idx===2 && p.p_ger_apr && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia);
+    if(pgS || pgG) hG += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td><span class="badge badge-info">${et}</span></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button class="btn btn-warning" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Revisar / Firmar</button></td></tr>`;
+  });
+
+  setHtml('tbody-historial', hH); setHtml('tbody-all', hA); setHtml('tbody-gestionar', hG);
+
+  if($('dash-mis-tot')) {
+    let ms = sort.filter(s => s.uid === currentUser.usuario || (s.involucrados && currentUser.email && s.involucrados.includes(currentUser.email.toLowerCase())));
+    setTxt('dash-mis-tot', ms.length); setTxt('dash-mis-pend', ms.filter(s => !String(s.estado||"").includes('Aprobado Final') && s.estado !== 'Anulado' && s.estado !== 'Rechazado').length);
+    setTxt('dash-mis-ok', ms.filter(s => String(s.estado||"").includes('Aprobado Final')).length); setTxt('dash-mis-rech', ms.filter(s => s.estado === 'Anulado' || s.estado === 'Rechazado').length);
+  }
+  
+  if($('dash-glob-tot') && currentUser.permisos && (currentUser.permisos.admin || currentUser.permisos.p_gest_sgc)) {
+    setDisplay('dash-admin-section', 'block'); setTxt('dash-glob-tot', sort.length);
+    setTxt('dash-glob-pend', sort.filter(s => !String(s.estado||"").includes('Aprobado Final') && s.estado !== 'Anulado' && s.estado !== 'Rechazado').length);
+    setTxt('dash-glob-ok', sort.filter(s => String(s.estado||"").includes('Aprobado Final')).length); 
+    
+    let slaPer = totalCerradas > 0 ? Math.round((cerradasATiempo / totalCerradas) * 100) : 0;
+    setTxt('dash-sla-percent', `${slaPer}%`);
+  }
+};
+
+window.completarLoginUI = () => {
+  setDisplay('login-screen', 'none'); setDisplay('sidebar', 'flex'); setDisplay('main', 'block');
+  setTxt('curr-name', currentUser.nombre || 'Usuario'); setTxt('curr-ger', currentUser.gerencias ? currentUser.gerencias.join(', ') : (currentUser.gerencia || 'Sin Gerencia'));
+
+  const p = currentUser.permisos || {}; const isAdm = p.admin || false;
+  const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
+  setDisplay('nav-dash', canDash ? 'flex' : 'none'); setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || isAdm) ? 'flex' : 'none'); setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none');
+  
+  const canAud = p.p_audit_ver || p.p_audit_admin || p.p_audit_auditor || p.p_audit_dueno || isAdm; 
+  setDisplay('nav-audit-group', canAud ? 'block' : 'none'); setDisplay('nav-norma', canAud ? 'flex' : 'none'); setDisplay('nav-audit', canAud ? 'flex' : 'none'); setDisplay('nav-noconf', (p.p_audit_admin || p.p_gest_sgc || p.p_audit_auditor || p.p_audit_dueno || isAdm) ? 'flex' : 'none');
+  
+  const canRoot = p.p_users || p.p_struct || isAdm; 
+  setDisplay('admin-only', canRoot ? 'block' : 'none'); setDisplay('nav-users', (p.p_users || isAdm) ? 'flex' : 'none'); setDisplay('nav-struct', (p.p_struct || isAdm) ? 'flex' : 'none');
+  
+  let isAdAud = p.p_audit_admin || p.p_gest_sgc || isAdm;
+  setDisplay('btn-config-plan', isAdAud ? 'inline-flex' : 'none'); setDisplay('btn-nueva-aud', isAdAud ? 'inline-flex' : 'none');
+  
+  window.cargarDatosCentrales();
+  
+  if (p.p_gest_sgc || isAdm) window.cambiarVista('sec-all', $('nav-all')); else if (p.can_solicit) window.cambiarVista('sec-crear', $('nav-crear')); else if (p.p_ver_propias) window.cambiarVista('sec-hist', $('nav-hist')); else if (canDash) window.cambiarVista('sec-dash', $('nav-dash')); else if (canAud) window.cambiarVista('sec-audit', $('nav-audit'));
+};
+
+window.cargarUsuarioParaEditar = (id) => {
+  const u = allUsers.find(x => x.usuario === id); if(!u) return;
+  setHtml('user-form-title', `<span class="material-icons-round">edit</span> Editando Usuario: ${u.usuario}`);
+  setVal('u-nom', u.nombre || ''); setVal('u-usr', u.usuario || ''); if($('u-usr')) $('u-usr').disabled = true; setVal('u-rol', u.role || ''); setVal('u-email', u.email || '');
+  let gs = u.gerencias || []; if(!u.gerencias && u.gerencia) gs = [u.gerencia]; $$('#u-ger-list input[type="checkbox"]').forEach(cb => { cb.checked = gs.includes(cb.value); });
+  const p = u.permisos || {};
+  ['p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno'].forEach(i => { let k = i.replace(/-/g,'_'); if(k==='p_solicitar')k='can_solicit'; if($(i)) $(i).checked = p[k]||false; });
+  if($('p-admin')) $('p-admin').checked = p.admin||false; setTxt('btnSaveUser', "ACTUALIZAR USUARIO"); setDisplay('modal-usuario', 'flex');
+};
+
+window.eliminarUsuario = async (uid) => {
+    if(!confirm(`¿Estás seguro de ELIMINAR el acceso al usuario ${uid}? Esta acción es irreversible.`)) return;
+    window.showLoading();
+    try { await deleteDoc(doc(db, "artifacts", appId, "public", "data", "Usuarios", uid)); alert("Usuario eliminado correctamente del sistema."); }
+    catch(e) { alert("Error al eliminar el usuario."); console.error(e); }
+    window.hideLoading();
+};
+
+window.resetUserForm = () => {
+  setHtml('user-form-title', `<span class="material-icons-round">person_add</span> Registrar / Editar Usuario`);
+  setVal('u-nom', ''); setVal('u-usr', ''); if($('u-usr')) $('u-usr').disabled = false; setVal('u-rol', ''); setVal('u-email', '');
+  $$('#u-ger-list input[type="checkbox"]').forEach(cb => cb.checked = false);
+  ['p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-admin'].forEach(i => { if($(i)) $(i).checked=false; });
+  if($('btnSaveUser')) $('btnSaveUser').innerText = "GUARDAR USUARIO"; 
+};
+
+window.guardarUsuario = async () => {
+  const n = $('u-nom').value.trim(), u = $('u-usr').value.toLowerCase().trim(), r = $('u-rol').value.trim(), e = $('u-email').value.trim().toLowerCase(), gs = []; $$('#u-ger-list input:checked').forEach(cb => { gs.push(cb.value); });
+  if(!n || !u || !e || gs.length === 0) return alert("Nombre, Usuario ID, Correo y al menos 1 Gerencia son obligatorios.");
+  const pm = { can_solicit: $('p-solicitar').checked, p_ver_propias: $('p-ver-propias').checked, p_ver_ger: $('p-ver-ger').checked, p_ver_todas: $('p-ver-todas').checked, p_paso1: $('p-paso1').checked, p_paso2: $('p-paso2').checked, p_paso4: $('p-paso4').checked, p_gest_sgc: $('p-gest-sgc').checked, p_ger_apr: $('p-ger-apr').checked, p_users: $('p-users').checked, p_struct: $('p-struct').checked, p_ver_listado: $('p-ver-listado').checked, p_audit_ver: $('p-audit-ver').checked, p_audit_admin: $('p-audit-admin').checked, p_audit_auditor: $('p-audit-auditor').checked, p_audit_dueno: $('p-audit-dueno').checked, admin: $('p-admin').checked };
+  window.showLoading(); 
+  
+  try {
+      await setDoc(doc(db, "artifacts", appId, "public", "data", "Usuarios", u), { nombre: n, usuario: u, gerencias: gs, gerencia: gs[0], role: r, email: e, permisos: pm }, { merge: true });
+      window.cerrarModalUsuario(); alert("Usuario configurado y autorizado para Google Login exitosamente.");
+  } catch(err) { alert("Error al guardar usuario."); }
+  finally { window.hideLoading(); }
+};
+
+window.exportarExcelUsuarios = () => {
+  if(allUsers.length === 0) return;
+  let dE = allUsers.map(u => ({ "Nombre": u.nombre, "Usuario ID": u.usuario, "Email": u.email || '', "Rol": u.role || '', "Gerencias": u.gerencias ? u.gerencias.join(', ') : (u.gerencia || ''), "Admin": u.permisos.admin ? 'Sí' : 'No', "Gestor SGC": u.permisos.p_gest_sgc ? 'Sí' : 'No', "Auditor": u.permisos.p_audit_auditor ? 'Sí' : 'No' }));
+  let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dE), "Usuarios_Registrados"); XLSX.writeFile(wb, "Reporte_Usuarios_SGC.xlsx");
+};
+
+window.agregarGerencia = async () => { let val = $('g-nom').value.trim().toUpperCase(); if(!val) return; window.showLoading(); let gers = []; const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); if(snap.exists() && snap.data().gerencias) gers = snap.data().gerencias; if(gers.includes(val)) { window.hideLoading(); return alert("Esa Gerencia ya existe."); } gers.push(val); await setDoc(docRef, { gerencias: gers }, {merge: true}); setVal('g-nom', ''); window.hideLoading(); };
+window.eliminarGerencia = async (idx) => { if(!confirm("¿Eliminar Gerencia?")) return; window.showLoading(); const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); let gers = snap.data().gerencias; gers.splice(idx, 1); await setDoc(docRef, { gerencias: gers }, {merge: true}); window.hideLoading(); };
+window.agregarDepartamento = async () => { let ger = $('d-ger-sel').value; let nom = $('d-nom').value.trim(); if(!ger || !nom) return alert("Seleccione Gerencia y Depto."); window.showLoading(); let deps = []; const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); if(snap.exists() && snap.data().departamentos) deps = snap.data().departamentos; deps.push({ nombre: nom, gerencia: ger }); await setDoc(docRef, { departamentos: deps }, {merge: true}); setVal('d-nom', ''); window.hideLoading(); };
+window.eliminarDepartamento = async (idx) => { if(!confirm("¿Eliminar Departamento?")) return; window.showLoading(); const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); let deps = snap.data().departamentos; deps.splice(idx, 1); await setDoc(docRef, { departamentos: deps }, {merge: true}); window.hideLoading(); };
+
+window.renderListasConfig = () => {
+  let hCol = ""; columnasMaestro.forEach((c, idx) => { let cName = typeof c === 'string' ? c : c.nombre; let cType = typeof c === 'string' ? 'text' : c.tipo; hCol += `<div class="settings-item"><span>${cName} <small style="color:#94a3b8; font-size:10px;">(${cType})</small></span><button class="btn-icon-danger" onclick="window.eliminarColumna(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); setHtml('list-columnas', hCol);
+  
+  let hEst = ""; estatusMaestro.forEach((e, idx) => { hEst += `<div class="settings-item"><span>${e}</span><button class="btn-icon-danger" onclick="window.eliminarEstatus(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); setHtml('list-estatus', hEst);
+  
+  let hTipos = ""; tiposDocumento.forEach((t, idx) => { hTipos += `<div class="settings-item"><span>${t}</span><button class="btn-icon-danger" onclick="window.eliminarTipoDoc(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); setHtml('list-tipos-doc', hTipos);
+  
+  let htmlTiposSol = '<option value="">-- Seleccione --</option>'; tiposDocumento.forEach(t => htmlTiposSol += `<option value="${t}">${t}</option>`);
+  setHtml('sol-tipo-doc', htmlTiposSol); 
+  setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica / Ninguno --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join(''));
+};
+
+window.agregarTipoDoc = async () => { let val = $('doc-tipo-nom').value.trim(); if(!val) return; if(tiposDocumento.includes(val)) return alert("Ya existe."); tiposDocumento.push(val); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings"), { tiposDoc: tiposDocumento }, {merge: true}); setVal('doc-tipo-nom', ''); };
+window.eliminarTipoDoc = async (idx) => { if(!confirm("¿Eliminar?")) return; tiposDocumento.splice(idx, 1); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings"), { tiposDoc: tiposDocumento }, {merge: true}); };
+window.agregarColumna = async () => { let val = $('col-nom').value.trim(); let tipo = $('col-tipo').value; if(!val) return; if (columnasMaestro.some(c => (typeof c === 'string' ? c : c.nombre) === val)) return alert("Ya existe."); columnasMaestro.push({nombre: val, tipo: tipo}); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings"), { columnas: columnasMaestro }, {merge: true}); setVal('col-nom', ''); };
+window.eliminarColumna = async (idx) => { if(!confirm("¿Eliminar columna?")) return; columnasMaestro.splice(idx, 1); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings"), { columnas: columnasMaestro }, {merge: true}); };
+window.agregarEstatus = async () => { let val = $('est-nom').value.trim(); if(!val) return; if (estatusMaestro.includes(val)) return alert("Ya existe."); estatusMaestro.push(val); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings"), { estatus: estatusMaestro }, {merge: true}); setVal('est-nom', ''); };
+window.eliminarEstatus = async (idx) => { if(!confirm("¿Eliminar?")) return; estatusMaestro.splice(idx, 1); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings"), { estatus: estatusMaestro }, {merge: true}); };
+
+window.renderNormaOEA = () => {
+  const p = currentUser ? currentUser.permisos || {} : {}; let isAdm = p.admin || p.p_audit_admin || p.p_gest_sgc;
+  if($('oea-manual-link')) $('oea-manual-link').innerHTML = manualOEA.url ? `<a href="#" onclick="window.abrirDocumento('${manualOEA.url}', '${manualOEA.nombre}'); return false;" class="btn btn-info" style="font-size:14px; text-decoration:none;"><span class="material-icons-round" style="font-size:16px; margin-right:5px;">visibility</span> Ver ${manualOEA.nombre}</a>` : "No hay manual subido.";
+  setDisplay('oea-manual-upload-box', isAdm ? 'flex' : 'none'); setDisplay('oea-req-upload-box', isAdm ? 'flex' : 'none');
+  
+  if($('oea-req-list-container')) {
+      $('oea-req-list-container').innerHTML = requisitosOEA.map((r, idx) => {
+          let nom = typeof r === 'string' ? r : r.nombre; let desc = typeof r === 'string' ? '' : (r.descripcion || '');
+          return `<div class="settings-item" style="flex-direction:column; align-items:flex-start; cursor:pointer;" onclick="window.abrirPuntoOEA(${idx})">
+              <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                  <span style="font-weight:700; color:var(--primary);"><span class="material-icons-round" style="font-size:14px; vertical-align:middle; margin-right:5px;">touch_app</span> ${nom}</span>
+                  ${isAdm ? `<button class="btn-icon-danger" onclick="event.stopPropagation(); window.eliminarRequisitoOEA(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button>` : ''}
+              </div>
+              ${desc ? `<div style="font-size:11px; color:var(--text-muted); margin-top:5px;">${desc.substring(0, 60)}...</div>` : ''}
+          </div>`;
+      }).join('');
+  }
+  
+  let htmlOpts = requisitosOEA.map(r => { let n = typeof r === 'string' ? r : r.nombre; return `<label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:6px; cursor:pointer;"><input type="checkbox" value="${n}" style="margin:0; width:auto; flex-shrink:0;"> ${n}</label>`; }).join('');
+  setHtml('aud-req-list', htmlOpts); setHtml('oea-req-list-dl', requisitosOEA.map(r => `<option value="${typeof r === 'string' ? r : r.nombre}">`).join(''));
+};
+
+window.abrirPuntoOEA = (idx) => {
+  const req = requisitosOEA[idx]; if(!req) return;
+  let nom = typeof req === 'string' ? req : req.nombre; let desc = typeof req === 'string' ? '' : req.descripcion; let link = typeof req === 'string' ? '' : req.link;
+  let msg = `PUNTO: ${nom}\n\n`; if(desc) msg += `DESCRIPCIÓN:\n${desc}\n\n`;
+  if(link && manualOEA.url) { if(confirm(msg + `¿Abrir el manual de referencia (Ref: ${link})?`)) { let url = manualOEA.url; if(!isNaN(link)) url += `#page=${link}`; else if(link.startsWith('http')) url = link; window.open(url, '_blank'); }
+  } else { alert(msg + "(No hay enlace directo configurado para este punto)."); }
+};
+
+window.subirManualOEA = async () => { const f = $('oea-file').files[0]; if(!f) return alert("Selecciona el documento."); window.showLoading(); let url = await window.uploadToCloudinary(f); if(!url) { window.hideLoading(); return alert("Error al subir."); } await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "NormaOEA"), { manual_url: url, manual_nombre: f.name }, {merge: true}); setVal('oea-file', ''); window.hideLoading(); alert("Manual Oficial actualizado."); };
+
+window.agregarRequisitoOEA = async () => { 
+  const n = $('oea-req-input').value.trim(); const d = $('oea-req-desc').value.trim(); const l = $('oea-req-link').value.trim();
+  if(!n) return alert("El nombre del punto es obligatorio."); 
+  if(requisitosOEA.some(r => (typeof r === 'string' ? r : r.nombre) === n)) return alert("Ese requisito ya está en la lista."); 
+  requisitosOEA.push({ nombre: n, descripcion: d, link: l }); 
+  await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "NormaOEA"), { requisitos: requisitosOEA }, {merge: true}); 
+  setVal('oea-req-input', ''); setVal('oea-req-desc', ''); setVal('oea-req-link', ''); 
+};
+
+window.eliminarRequisitoOEA = async (idx) => { if(!confirm("¿Eliminar este requisito?")) return; requisitosOEA.splice(idx, 1); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "NormaOEA"), { requisitos: requisitosOEA }, {merge: true}); };
+
+window.renderTablaMaestro = () => {
+if(!$('thead-listado-maestro')) return;
+let headHTML = "<tr>"; columnasMaestro.forEach(col => { let cName = typeof col === 'string' ? col : col.nombre; headHTML += `<th>${cName}</th>`; }); 
+if(currentUser && currentUser.permisos && (currentUser.permisos.p_gest_sgc || currentUser.permisos.admin)) { headHTML += `<th class="no-export">Acción</th>`; } headHTML += "</tr>"; setHtml('thead-listado-maestro', headHTML);
+let dataSort = [...dataMaestro]; if(columnasMaestro.length > 0) { let firstCol = typeof columnasMaestro[0] === 'string' ? columnasMaestro[0] : columnasMaestro[0].nombre; dataSort.sort((a,b) => (a[firstCol]||"").toString().localeCompare((b[firstCol]||"").toString())); }
+let tbodyHtml = "";
+dataSort.forEach(item => {
+  let rowHTML = "<tr>";
+  columnasMaestro.forEach(col => {
+    let cName = typeof col === 'string' ? col : col.nombre; let cType = typeof col === 'string' ? 'text' : col.tipo; let val = item[cName] || "";
+    if(cType === 'url' || val.toString().startsWith("http")) { let dUrl = window.getDownloadUrl(val); let fName = item['Nombre del documento'] || item['Título'] || "Documento_Maestro"; rowHTML += `<td><a href="#" onclick="window.abrirDocumento('${dUrl}', '${fName}'); return false;" class="file-link">📁 ${fName}</a></td>`; } 
+    else if(cName.toLowerCase().includes('estatus') || cName.toLowerCase().includes('estado')) { let badge = val.toLowerCase().includes('vigente') || val.toLowerCase().includes('activo') ? 'badge-success' : (val.toLowerCase().includes('obsoleto') || val.toLowerCase().includes('inactivo') ? 'badge-danger' : 'badge-warning'); rowHTML += `<td><span class="badge ${badge}">${val}</span></td>`; } 
+    else if(cType === 'date' || cName.toLowerCase().includes('fecha')) { rowHTML += `<td>${window.formatearFechaAbreviada(val)}</td>`; } else { rowHTML += `<td>${val}</td>`; }
+  });
+  if(currentUser && currentUser.permisos && (currentUser.permisos.p_gest_sgc || currentUser.permisos.admin)) { let btnAcciones = `<button class="btn btn-info" style="padding:5px; font-size:10px; margin-right:5px;" onclick="window.abrirModalListadoMaestro('${item.docId}')">EDITAR</button>`; btnAcciones += `<button class="btn btn-danger" style="padding:5px 8px; font-size:10px;" onclick="window.del('ListadoMaestro','${item.docId}')">X</button>`; rowHTML += `<td class="no-export">${btnAcciones}</td>`; }
+  rowHTML += "</tr>"; tbodyHtml += rowHTML;
+});
+setHtml('tbody-listado-maestro', tbodyHtml);
+};
+
+window.abrirModalListadoMaestro = (docId = null) => {
+editandoMaestroId = docId; setTxt('lm-modal-title', docId ? "Editar Documento Maestro" : "Nuevo Documento Maestro");
+let datosEdit = {}; if(docId) { const item = dataMaestro.find(x => x.docId === docId); if(item) datosEdit = item; }
+let formHtml = "";
+columnasMaestro.forEach(col => {
+  let cName = typeof col === 'string' ? col : col.nombre; let cType = typeof col === 'string' ? 'text' : col.tipo; let val = datosEdit[cName] || ""; let html = `<div><label for="in_dyn_${cName}">${cName}</label>`;
+  if(cName.toLowerCase().includes('estatus') || cName.toLowerCase().includes('estado')) { html += `<select id="in_dyn_${cName}"><option value="">-- Seleccionar --</option>`; estatusMaestro.forEach(est => { html += `<option value="${est}" ${val===est?'selected':''}>${est}</option>`; }); html += `</select>`; } 
+  else if(cType === 'date' || cName.toLowerCase().includes('fecha')) { html += `<input type="date" id="in_dyn_${cName}" value="${val}">`; } 
+  else if(cType === 'number') { html += `<input type="number" id="in_dyn_${cName}" value="${val}" placeholder="0">`; } else { html += `<input type="text" id="in_dyn_${cName}" value="${val}" placeholder="Escribe aquí...">`; }
+  html += `</div>`; formHtml += html;
+});
+setHtml('dinamic-form-maestro', formHtml); setDisplay('modal-form-listado', 'flex');
+};
+
+window.guardarRegistroMaestro = async () => {
+let data = {}; columnasMaestro.forEach(col => { let cName = typeof col === 'string' ? col : col.nombre; let inEl = $(`in_dyn_${cName}`); if(inEl) data[cName] = inEl.value; }); window.showLoading();
+if(editandoMaestroId) { await updateDoc(doc(db, "artifacts", appId, "public", "data", "ListadoMaestro", editandoMaestroId), data); } 
+else { data.registrado_por = currentUser.nombre; data.fecha_registro = new Date().toISOString(); await addDoc(collection(db, "artifacts", appId, "public", "data", "ListadoMaestro"), data); }
+window.hideLoading(); setDisplay('modal-form-listado', 'none');
+};
+
+window.exportarExcelListado = () => {
+if(dataMaestro.length === 0) return alert("No hay registros en el Listado Maestro para exportar.");
+let dataExport = dataMaestro.map(item => { let rowObj = {}; columnasMaestro.forEach(col => { let cName = typeof col === 'string' ? col : col.nombre; rowObj[cName] = item[cName] || ""; }); return rowObj; });
+let wb = XLSX.utils.book_new(); let ws = XLSX.utils.json_to_sheet(dataExport); XLSX.utils.book_append_sheet(wb, ws, "Listado_Maestro"); XLSX.writeFile(wb, "Listado_Maestro_SGC.xlsx");
+};
+
+window.actualizarGerenteSelect = (gSelected) => {
+const gerentes = allUsers.filter(u => u.gerencias && u.gerencias.includes(gSelected) && u.permisos && u.permisos.p_ger_apr === true);
+if (gerentes && gerentes.length > 0) { setVal('sol-gerente-display', gerentes.map(g => g.nombre).join(', ')); setVal('sol-email-gerente', gerentes.map(g => g.email || '').filter(e=>e).join(', ') || "Sin Email"); } 
+else { setVal('sol-gerente-display', "No asignado"); setVal('sol-email-gerente', ""); }
+const depSelect = $('sol-dep'); let depHtml = "<option value=''>-- Seleccionar Departamento --</option>";
+const depsFiltrados = allDepartamentos.filter(d => d.gerencia === gSelected); depsFiltrados.forEach(d => { depHtml += `<option value="${d.nombre}">${d.nombre}</option>`; }); depSelect.innerHTML = depHtml;
+};
+
+window.crearSolicitud = async () => {
+const tit = $('sol-tit').value; const gerTarget = $('sol-ger').value; if(!tit) return alert("Título obligatorio"); window.showLoading(); const f = $('sol-file'); let fileName = f.files[0] ? f.files[0].name : ""; let url = null; 
+if (f.files[0]) { url = await window.uploadToCloudinary(f.files[0]); if (!url) { window.hideLoading(); return alert("Error al subir archivo."); } }
+let extraEmails = []; if(selectedDocData && selectedDocData.involucrados) extraEmails = selectedDocData.involucrados; const fci = await window.getNextFCI(); const gerenteEmailVisible = $('sol-email-gerente').value; const now = new Date().toISOString();
+const data = { customId: fci, titulo: tit, accion: $('sol-accion').value, tipoDoc: $('sol-tipo-doc').value, prioridad: $('sol-prioridad').value, gerencia: gerTarget, departamento: $('sol-dep').value, motivo: $('sol-motivo').value, cod_ref: $('sol-cod-prev').value, ver_ref: $('sol-ver-prev').value, fecha_ref: $('sol-fecha-prev').value, solicitante: currentUser.nombre, solicitante_email: currentUser.email, uid: currentUser.usuario, involucrados: extraEmails, idx: 0, estado: "Pendiente Documentado", fase_0_ini: now, adjunto: url, adjunto_nombre: fileName, chat: [{u: "SISTEMA", m: "Solicitud creada exitosamente.", t: new Date().toLocaleString()}], fecha: now };
+await addDoc(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), data); 
+
+if($('form-crear-solicitud')) $('form-crear-solicitud').reset();
+setHtml('lista-involucrados-tags', ""); 
+$('sol-gerente-display').value = ''; $('sol-email-gerente').value = ''; $('sol-dep').innerHTML = '<option value="">-- Seleccione Gerencia Primero --</option>';
+
+const toEmails = new Set([EMAIL_ADMIN_SGC, currentUser.email, ...extraEmails]); const destinatarios = { to: Array.from(toEmails).join(','), cc: gerenteEmailVisible }; 
+window.sendNotification(destinatarios, "Nueva Solicitud Creada", `El usuario ${currentUser.nombre} ha creado la solicitud ${fci} con prioridad ${data.prioridad}.`);
+window.hideLoading(); alert("Solicitud Creada: " + fci); window.cambiarVista('sec-hist', $('nav-hist'));
+};
+
+window.verDetalle = async (id) => {
+try {
+    window.showLoading();
+    selectedId = id; setHtml('m-extra-input', ""); setHtml('m-comentario-libre', "");
+    
+    const docSnap = await getDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", id)); 
+    if(!docSnap.exists()) { window.hideLoading(); return alert("La solicitud ya no existe."); }
+    
+    selectedDocData = docSnap.data(); const s = selectedDocData || {}; const p = currentUser.permisos || {};
+    
+    setTxt('m-id', s.customId || "N/A"); setTxt('m-tit', s.titulo || "N/A"); setTxt('m-sol', s.solicitante || "N/A");
+    
+    let est = String(s.estado || "Pendiente").toUpperCase(); let apr = est.includes('APROBADO FINAL'); let cnc = est === 'ANULADO' || est === 'RECHAZADO';
+    if($('m-est')) { $('m-est').innerText = apr ? 'APROBADO FINAL' : (s.estado || 'PENDIENTE'); $('m-est').className = `badge ${apr ? 'badge-success' : (cnc ? 'badge-danger' : 'badge-warning')}`; }
+    
+    setTxt('m-ger', s.gerencia || "N/A"); setTxt('m-tipo', s.tipoDoc || "N/A"); 
+    setTxt('m-accion', s.accion || "N/A"); setTxt('m-jus', s.motivo || s.justificacion || "Sin justificación");
+    
+    const esAdminSGC = p.admin || p.p_gest_sgc; let gerenciasUsuario = currentUser.gerencias || [];
+    let userEmailLowerCase = (currentUser.email || "").toLowerCase(); let isInv = s.involucrados && s.involucrados.some(e => e.toLowerCase() === userEmailLowerCase); 
+    const esDuenio = s.uid === currentUser.usuario || isInv;
+    let stepIdx = parseInt(s.idx) || 0; const activo = !apr && !cnc;
+
+    let pr = String(s.prioridad || "Normal"); 
+    if(esAdminSGC && activo) {
+        setHtml('m-prioridad-container', `<select onchange="window.cambiarPrioridad(this.value)" style="padding:4px 8px; font-size:12px; border-radius:6px; background:#fff; font-weight:bold; border:1px solid var(--border); color:var(--text-main);"><option value="Normal" ${pr==='Normal'?'selected':''}>NORMAL</option><option value="Básica" ${pr==='Básica'?'selected':''}>BÁSICA</option><option value="Alta" ${pr==='Alta'?'selected':''}>ALTA (URGENTE)</option></select>`);
+    } else {
+        setHtml('m-prioridad-container', `<span class="badge ${pr === 'Alta' ? 'badge-danger' : (pr === 'Básica' ? 'badge-info' : 'badge-dark')}">${pr.toUpperCase()}</span>`);
+    }
+
+    let adjOrigName = s.adjunto_nombre || "Archivo Adjunto"; let dlUrl = s.adjunto ? window.getDownloadUrl(s.adjunto) : "#"; 
+    if (stepIdx >= 2 && !esDuenio && !esAdminSGC) { 
+        setHtml('m-file-link', `<span style="color:#64748b; font-size:13px; font-style:italic;"><span class="material-icons-round" style="font-size:14px; vertical-align:middle;">lock</span> Documento original bloqueado por confidencialidad.</span>`);
+    } else {
+        setHtml('m-file-link', s.adjunto ? `<a href="#" onclick="window.abrirDocumento('${dlUrl}', '${adjOrigName}'); return false;" class="file-link">📎 ${adjOrigName}</a>` : "Sin archivo");
+    }
+    
+    if(s.accion !== 'Creación') { setDisplay('m-extra-panel', 'block'); setTxt('m-cod', s.cod_ref || "N/A"); setTxt('m-ver', s.ver_ref || "N/A"); setTxt('m-fecha-ult', window.formatearFechaAbreviada(s.fecha_ref)); } else { setDisplay('m-extra-panel', 'none'); }
+
+    for(let i=1; i<=4; i++) { const st = $('s'+i); if(st) { st.className = 'step'; if(cnc) continue; if(i <= stepIdx) st.classList.add('completed'); if(i === stepIdx + 1 && !apr) st.classList.add('active'); } }
+
+    const esGer = p.p_ger_apr && gerenciasUsuario.includes(s.gerencia); 
+    
+    let invHTML = "No hay personas extras añadidas.";
+    if(s.involucrados && s.involucrados.length > 0) { 
+        invHTML = s.involucrados.map(email => { 
+            let userFound = allUsers.find(u => (u.email || "").toLowerCase() === email.toLowerCase()); let dispName = userFound ? `${userFound.nombre} (${email})` : email; 
+            let btnDel = (activo && (esAdminSGC || esDuenio)) ? ` <span class="material-icons-round" style="font-size:14px; cursor:pointer; color:var(--danger); vertical-align:middle; margin-left:5px;" onclick="window.eliminarInvolucrado('${email}')" title="Quitar">close</span>` : '';
+            return `<div style="display:inline-flex; align-items:center; background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:10px; font-size:11px; margin-right:5px; margin-bottom:5px;"><b>${dispName}</b> ${btnDel}</div>`;
+        }).join(''); 
+    }
+    setHtml('m-involucrados-list', invHTML);
+
+    const fDiff = (ini, fin) => { if(!ini || !fin) return "-"; let ms = new Date(fin) - new Date(ini); if(ms < 0) return "-"; let d = Math.floor(ms / 86400000); let h = Math.floor((ms % 86400000) / 3600000); return `${d}d ${h}h`; };
+    if ($('m-tiempos-panel')) {
+        if(esAdminSGC) {
+            setDisplay('m-tiempos-panel', 'block');
+            setHtml('m-tiempos-grid', `<div><div class="custom-label" style="color:var(--primary);">Fase 1 (Doc)</div><span style="font-size:11px;">${fDiff(s.fase_0_ini, s.fase_0_fin)}</span></div><div><div class="custom-label" style="color:var(--primary);">Fase 2 (Verif)</div><span style="font-size:11px;">${fDiff(s.fase_1_ini, s.fase_1_fin)}</span></div><div><div class="custom-label" style="color:var(--primary);">Fase 3 (Gerencia)</div><span style="font-size:11px;">${fDiff(s.fase_2_ini, s.fase_2_fin)}</span></div><div><div class="custom-label" style="color:var(--primary);">Fase 4 (SGC Final)</div><span style="font-size:11px;">${fDiff(s.fase_3_ini, s.fecha_final || s.fase_3_fin)}</span></div>`);
+        } else { setDisplay('m-tiempos-panel', 'none'); }
+    }
+
+    let puedeGestionarSGC = false; 
+    if(activo) { if (stepIdx === 0 && (p.p_gest_sgc || p.p_paso1 || p.admin)) puedeGestionarSGC = true; if (stepIdx === 1 && (p.p_gest_sgc || p.p_paso2 || p.admin)) puedeGestionarSGC = true; if (stepIdx === 3 && (p.p_gest_sgc || p.p_paso4 || p.admin)) puedeGestionarSGC = true; }
+    let puedeGestionarGerente = esGer && stepIdx === 2 && activo; 
+
+    setDisplay('btn-reabrir', (esAdminSGC && !activo) ? 'inline-flex' : 'none'); setDisplay('m-add-involucrado-section', activo ? 'flex' : 'none'); setDisplay('m-actions', (puedeGestionarSGC || puedeGestionarGerente) ? 'block' : 'none'); setDisplay('applicant-actions', (esDuenio && activo) ? 'block' : 'none'); setDisplay('m-input-area', 'none');
+    
+    const puedeDevolver = (puedeGestionarSGC || puedeGestionarGerente) && stepIdx > 0 && activo; 
+    setDisplay('btn-devolver-paso', puedeDevolver ? 'inline-block' : 'none'); setDisplay('btn-anular', ((puedeGestionarSGC || esDuenio) && activo) ? 'inline-block' : 'none'); 
+
+    if(s.fecha_esperada_cierre) { setDisplay('m-admin-sla', 'block'); setVal('m-sla-date', s.fecha_esperada_cierre); if($('m-sla-date')) $('m-sla-date').disabled = !esAdminSGC; setDisplay('btn-save-sla', esAdminSGC ? 'inline-block' : 'none'); } 
+    else if (esAdminSGC && activo) { setDisplay('m-admin-sla', 'block'); setVal('m-sla-date', ''); if($('m-sla-date')) $('m-sla-date').disabled = false; setDisplay('btn-save-sla', 'inline-block'); } 
+    else { setDisplay('m-admin-sla', 'none'); }
+    
+    setDisplay('m-panel-final-sgc', 'none'); setDisplay('m-panel-update-sgc', 'none'); setDisplay('m-display-final', 'none'); 
+    setDisplay('btn-firma-next', 'inline-block');
+    if($('m-original-data')) $('m-original-data').classList.remove('locked-data'); 
+
+    if ((esAdminSGC || p.p_paso2) && stepIdx === 1 && activo) { setDisplay('m-panel-update-sgc', 'block'); setVal('m-upd-tit', s.titulo || ''); setVal('m-upd-cod', s.cod_ref || ''); setVal('m-upd-ver', s.ver_ref || ''); }
+    
+    if (stepIdx === 3 && puedeGestionarSGC && activo) {
+        setDisplay('m-panel-final-sgc', 'block'); setVal('m-final-cod', s.cod_ref || "");
+        setDisplay('m-actions', 'none'); 
+    }
+
+    if (apr) {
+        if (s.version_final) {
+            if($('m-original-data')) $('m-original-data').classList.add('locked-data'); setDisplay('m-display-final', 'block');
+            setTxt('m-disp-cod', s.codigo_final || s.cod_ref || "N/A"); setTxt('m-disp-ver', s.version_final); setTxt('m-disp-fecha', s.fecha_final ? window.formatearFechaAbreviada(s.fecha_final) : "N/A"); 
+            let finName = s.documento_final_nombre || "Documento Oficial"; let finUrl = s.documento_final ? window.getDownloadUrl(s.documento_final) : "#"; 
+            setHtml('m-disp-file', s.documento_final ? `<a href="#" onclick="window.abrirDocumento('${finUrl}', '${finName}'); return false;" class="btn btn-success" style="padding:10px 15px; border-radius:8px;">⬇️ Descargar Oficial</a>` : "N/A");
+            if(esAdminSGC) setDisplay('btn-edit-final', 'inline-block');
+        }
+    }
+    
+    if(activo && stepIdx !== 3) setTxt('btn-firma-next', `Aprobar Etapa (${PASOS_NOMBRES[stepIdx]})`);
+    
+    setHtml('chat-box', s.chat ? s.chat.map(c => {
+        let calBtn = "";
+        if(c.fR) {
+            try {
+                let d1 = new Date(c.fR);
+                let start = d1.toISOString().replace(/-|:|\.\d+/g, '').substring(0, 15) + 'Z';
+                let d2 = new Date(d1.getTime() + 3600000); 
+                let end = d2.toISOString().replace(/-|:|\.\d+/g, '').substring(0, 15) + 'Z';
+                let text = encodeURIComponent(`Reunión SGC: ${s.customId} - ${s.titulo}`);
+                let details = encodeURIComponent(`Tema / Detalles:\n${c.tema}\n\nConvocado por: ${c.u}`);
+                calBtn = `<br><a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${end}&details=${details}" target="_blank" class="btn btn-info" style="padding:6px 10px; font-size:10px; margin-top:8px; display:inline-flex; background:#ea4335;"><span class="material-icons-round" style="font-size:14px; margin-right:4px;">event</span> Agendar en Google Calendar</a>`;
+            }catch(e){}
+        }
+        return `<div class="chat-msg" style="border-left-color:${c.u===currentUser.nombre?'var(--primary)':'#cbd5e1'}"><b style="font-size:10px">${c.u}</b> <span style="font-size:9px;color:#94a3b8">${c.t}</span><br>${c.m}${c.archivo ? `<br><a href="#" onclick="window.abrirDocumento('${window.getDownloadUrl(c.archivo)}', '${c.archivo_nombre || 'Evidencia_Adjunta'}'); return false;" style="font-size:10px;color:blue;font-weight:600;text-decoration:none;">📎 ${c.archivo_nombre || 'Ver Adjunto'}</a>` : ''}${calBtn}</div>`;
+    }).join('') : '');
+    
+    setDisplay('modal', 'flex');
+} catch(e) { console.error("Error abriendo detalle:", e); alert("Hubo un error al abrir la solicitud."); } finally { window.hideLoading(); }
+};
+
+window.cambiarPrioridad = async (nuevaPrioridad) => {
+    if(!confirm(`¿Cambiar la prioridad a ${nuevaPrioridad}?`)) return window.verDetalle(selectedId);
+    window.showLoading();
+    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { prioridad: nuevaPrioridad, chat: arrayUnion({u: currentUser.nombre, m: `⚙️ <b>Cambio de Prioridad:</b> a ${nuevaPrioridad}`, t: new Date().toLocaleString()}) });
+    window.hideLoading(); window.verDetalle(selectedId);
+};
+
+window.habilitarEdicionFinal = () => {
+    setDisplay('m-panel-final-sgc', 'block');
+    $('m-final-cod').value = selectedDocData.codigo_final || '';
+    $('m-final-ver').value = selectedDocData.version_final || '';
+    $('m-final-fecha').value = selectedDocData.fecha_final || '';
+};
+
+window.actualizarDatosSGC = async () => {
+const tit = $('m-upd-tit').value; const cod = $('m-upd-cod').value; const ver = $('m-upd-ver').value; const f = $('m-upd-file'); if(!tit) return alert("El título es obligatorio."); window.showLoading();
+let updateData = { titulo: tit, cod_ref: cod, ver_ref: ver }; let msjChat = `SGC actualizó los datos pre-aprobación. Título: ${tit}, Cód: ${cod}, Ver: ${ver}.`;
+if(f.files[0]) { let fileUrl = await window.uploadToCloudinary(f.files[0]); if(!fileUrl) { window.hideLoading(); return alert("Error subiendo archivo."); } updateData.adjunto = fileUrl; updateData.adjunto_nombre = f.files[0].name; msjChat += ` (Nuevo adjunto subido: ${f.files[0].name})`; }
+await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { ...updateData, chat: arrayUnion({u: currentUser.nombre, m: `✏️ ${msjChat}`, t: new Date().toLocaleString()}) });
+window.hideLoading(); alert("Datos actualizados correctamente."); window.closeModal();
+};
+
+window.guardarSLA = async () => {
+const dateSLA = $('m-sla-date').value; if(!dateSLA) return alert("Selecciona una fecha válida."); window.showLoading();
+await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { fecha_esperada_cierre: dateSLA, chat: arrayUnion({u: currentUser.nombre, m: `⏱️ <b>FECHA LÍMITE (SLA) ESTABLECIDA:</b> ${window.formatearFechaAbreviada(dateSLA)}`, t: new Date().toLocaleString()}) }); window.hideLoading(); alert("Fecha límite actualizada."); window.verDetalle(selectedId);
+};
+
+window.devolverPaso = async () => {
+if(!selectedDocData || selectedDocData.idx <= 0) return; if(!confirm("¿Estás seguro de devolver esta solicitud a la etapa anterior?")) return;
+let motivo = prompt("Motivo para devolver la solicitud:"); if(!motivo) return alert("El motivo es obligatorio."); window.showLoading();
+const nIdx = selectedDocData.idx - 1; const nEst = PASOS_NOMBRES[nIdx]; const faseActual = PASOS_NOMBRES[selectedDocData.idx]; const now = new Date().toISOString();
+let updates = { idx: nIdx, estado: nEst, [`fase_${selectedDocData.idx}_fin`]: now, [`fase_${nIdx}_ini`]: now, chat: arrayUnion({u: currentUser.nombre, m: `⏪ <b>DEVUELTO A ETAPA ANTERIOR</b><br>De: ${faseActual} -> A: ${nEst}<br><b>Motivo:</b> ${motivo}`, t: new Date().toLocaleString()}) };
+await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), updates);
+const dest = await window.getDatosEnvio(selectedDocData); window.sendNotification(dest, `Retroceso de Etapa: ${selectedDocData.customId}`, `La solicitud ha sido devuelta a: ${nEst}.\nMotivo: ${motivo}`); window.hideLoading(); window.closeModal();
+};
+
+window.reabrirSolicitud = async () => {
+if(!confirm("⚠️ ¿Estás seguro de REABRIR esta solicitud?")) return; let motivo = prompt("Describe el motivo de la reapertura:"); if(!motivo) return alert("Se requiere un motivo."); window.showLoading();
+const now = new Date().toISOString(); await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { estado: "Pendiente Documentado", idx: 0, fase_0_ini: now, chat: arrayUnion({u: currentUser.nombre, m: `<b style="color:var(--danger);">⚠️ REAPERTURA DE SOLICITUD POR ADMINISTRACIÓN</b><br><b>Motivo:</b> ${motivo}`, t: new Date().toLocaleString()}) });
+const dest = await window.getDatosEnvio(selectedDocData); window.sendNotification(dest, `Solicitud Reabierta: ${selectedDocData.customId}`, `Motivo: ${motivo}`); window.hideLoading(); alert("Solicitud reabierta."); window.closeModal();
+};
+
+window.gestionar = (tipo) => { tempAction = tipo; setDisplay('m-input-area', 'block'); if(tipo === 'Reunión') { setDisplay('reunion-container', 'block'); if($('m-extra-input')) $('m-extra-input').setAttribute('data-placeholder', 'Tema de la reunión...'); } else { setDisplay('reunion-container', 'none'); if($('m-extra-input')) $('m-extra-input').setAttribute('data-placeholder', 'Motivo / Consulta / Detalle...'); } };
+window.responderSolicitante = () => { tempAction = "Respuesta"; setDisplay('m-input-area', 'block'); if($('m-extra-input')) $('m-extra-input').setAttribute('data-placeholder', 'Detalla tu corrección...'); setDisplay('reunion-container', 'none'); };
+window.rechazar = () => { tempAction = 'Rechazado'; setDisplay('m-input-area', 'block'); setDisplay('reunion-container', 'none'); };
+
+window.guardarGestion = async () => {
+    const f = $('m-file-gestion'); let fileUrl=null, fileName=null;
+    if(f.files[0]) { window.showLoading(); fileUrl = await window.uploadToCloudinary(f.files[0]); fileName = f.files[0].name; if(!fileUrl){ window.hideLoading(); return alert("Error de subida");} }
+    
+    const txtHTML = $('m-extra-input').innerHTML; const txtPlain = $('m-extra-input').innerText.trim();
+    if(!txtPlain && !fileUrl) return alert("Escribe un detalle o adjunta un archivo.");
+    window.showLoading();
+    
+    let payload = {u: currentUser.nombre, t: new Date().toLocaleString()};
+    let emTitle = "", emBody = "";
+    
+    if(tempAction === 'Reunión') {
+        const fR = $('m-date-meeting').value; if(!fR) {window.hideLoading(); return alert("Fecha y hora de reunión obligatoria.");}
+        let dateFmt = new Date(fR).toLocaleString();
         
-        <nav style="flex:1">
-            <p style="font-size:10px; color:#475569; font-weight:800; margin-left:16px; margin-bottom:8px; margin-top:5px;">MÓDULO DOCUMENTAL</p>
-            <button class="nav-link" id="nav-hist" onclick="window.cambiarVista('sec-hist', this)"><span class="material-icons-round">history</span> Mis Solicitudes</button>
-            <button class="nav-link" id="nav-all" onclick="window.cambiarVista('sec-all', this)" style="display:none;"><span class="material-icons-round">all_inbox</span> Todas las Solicitudes</button>
-            <button class="nav-link" id="nav-dash" onclick="window.cambiarVista('sec-dash', this)"><span class="material-icons-round">dashboard</span> Panel Analítico</button>
-            <button class="nav-link" id="nav-crear" onclick="window.cambiarVista('sec-crear', this)"><span class="material-icons-round">add_box</span> Crear Solicitud</button>
-            <button class="nav-link" id="nav-gest" onclick="window.cambiarVista('sec-gest', this)" style="display:none;"><span class="material-icons-round">fact_check</span> Bandeja de Gestión</button>
-            <button class="nav-link" id="nav-listado" onclick="window.cambiarVista('sec-listado', this)" style="display:none;"><span class="material-icons-round">library_books</span> Listado Maestro</button>
-
-            <div id="nav-audit-group" style="display:none;">
-                <p style="font-size:10px; color:#475569; font-weight:800; margin-left:16px; margin-bottom:8px; margin-top:20px;">MÓDULO DE AUDITORÍA</p>
-                <button class="nav-link" id="nav-norma" onclick="window.cambiarVista('sec-norma', this)"><span class="material-icons-round">menu_book</span> Manual y Norma OEA</button>
-                <button class="nav-link" id="nav-audit" onclick="window.cambiarVista('sec-audit', this)"><span class="material-icons-round">calendar_month</span> Calendario & Ejecución</button>
-                <button class="nav-link" id="nav-noconf" onclick="window.cambiarVista('sec-noconf', this)" style="display:none;"><span class="material-icons-round">warning</span> NC y Mejoras (F-023)</button>
-            </div>
-            
-            <div id="admin-only" style="display:none; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 20px; padding-top: 15px;">
-                <p style="font-size:10px; color:#475569; font-weight:800; margin-left:16px; margin-bottom:8px;">ADMINISTRACIÓN</p>
-                <button class="nav-link" id="nav-users" onclick="window.cambiarVista('sec-usuarios', this)"><span class="material-icons-round">people</span> Usuarios y Permisos</button>
-                <button class="nav-link" id="nav-struct" onclick="window.cambiarVista('sec-estructura', this)"><span class="material-icons-round">account_tree</span> Config. del Sistema</button>
-            </div>
-        </nav>
+        payload.fR = fR;
+        payload.tema = txtPlain;
+        payload.m = `📅 <b>REUNIÓN AGENDADA:</b> ${dateFmt}<br><b>Tema:</b><br>${txtHTML}`;
+        emTitle = `📅 Reunión Agendada: ${selectedDocData.customId}`;
         
-        <div style="background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 12px; margin-top:10px;">
-            <p id="curr-name" style="font-weight: 700; font-size: 13px; color:#fff;"></p>
-            <p id="curr-ger" style="font-size: 10px; color: #94a3b8; margin-top:3px;"></p>
-            
-            <div style="display: flex; justify-content: space-between; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-                <button onclick="window.toggleDarkMode()" style="background:none; border:none; color:#38bdf8; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; padding:0; transition:0.2s;">
-                    <span class="material-icons-round" id="dark-mode-icon" style="font-size:16px;">dark_mode</span> <span id="dark-mode-text">Descanso</span>
-                </button>
-                <button onclick="window.logout()" style="background:none; border:none; color:#ef4444; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; padding:0; transition:0.2s;">
-                    <span class="material-icons-round" style="font-size:16px;">logout</span> Salir
-                </button>
-            </div>
+        emBody = `Se ha agendado una reunión oficial para revisar el expediente <b>${selectedDocData.customId}</b>.<br><br>
+        <div style="padding: 15px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px; line-height: 1.6;">
+            <b>Fecha y Hora:</b> ${dateFmt}<br>
+            <b>Expediente:</b> ${selectedDocData.customId} - ${selectedDocData.titulo}<br>
+            <b>Convocado por:</b> ${currentUser.nombre}<br><br>
+            <b>Temas a tratar / Detalles:</b><br>${txtHTML}
         </div>
-    </aside>
+        <br><i>Por favor, verificar y confirmar la agenda en el sistema SGC.</i>`;
+        
+    } else {
+        payload.m = `🗣️ <b>${tempAction.toUpperCase()}:</b><br>${txtHTML}`;
+        emTitle = `Nueva ${tempAction}: ${selectedDocData.customId}`;
+        emBody = `<b>${currentUser.nombre}</b> ha registrado una nueva ${tempAction} en el expediente.<br><br><div style="padding: 12px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px;">${txtHTML}</div>`;
+    }
+    
+    if(fileUrl) { payload.archivo = fileUrl; payload.archivo_nombre = fileName; emBody += `<br><br><i>📎 Adjunto: <b>${fileName}</b></i>`; }
+    
+    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { chat: arrayUnion(payload) });
+    const dest = await window.getDatosEnvio(selectedDocData);
+    window.sendNotification(dest, emTitle, emBody);
+    
+    $('m-input-area').style.display='none'; $('m-extra-input').innerHTML=''; $('m-date-meeting').value=''; f.value='';
+    window.hideLoading(); window.verDetalle(selectedId);
+};
 
-    <main class="main" id="main">
-        <div class="mobile-header">
-            <h2 style="font-size: 16px; color: var(--primary); margin:0; display:flex; align-items:center; gap:5px; font-weight:800;"><span class="material-icons-round">verified_user</span> SISTEMA DE GESTIÓN</h2>
-            <button class="menu-btn" onclick="window.toggleMenu()"><span class="material-icons-round">menu</span></button>
+window.firmarPaso = async () => {
+const s = selectedDocData; const nIdx = s.idx + 1; const nEst = nIdx < 4 ? PASOS_NOMBRES[nIdx] : "Aprobado Final"; const faseAprobada = PASOS_NOMBRES[s.idx]; const now = new Date().toISOString();
+let updates = { idx: nIdx, estado: nEst, [`fase_${s.idx}_fin`]: now, [`fase_${nIdx}_ini`]: now, chat: arrayUnion({u: currentUser.nombre, m: `✅ FASE COMPLETADA: ${faseAprobada}`, t: new Date().toLocaleString()}) };
+await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), updates);
+const dest = await window.getDatosEnvio(s); window.sendNotification(dest, `Avance: ${s.customId}`, `La solicitud avanzó a: ${nEst}.`); window.closeModal();
+};
+
+window.enviarComentarioLibre = async () => {
+    const box = $('m-comentario-libre'); const txtHTML = box.innerHTML; const txtPlain = box.innerText.trim(); const f = $('m-file-comentario');
+    if(!txtPlain && !f.files[0] && txtHTML.replace(/<[^>]*>?/gm, '').trim() === '') return alert("Escribe un mensaje o adjunta un archivo."); window.showLoading(); let fileUrl = null; let fileName = null;
+    if (f.files[0]) { fileUrl = await window.uploadToCloudinary(f.files[0]); if (!fileUrl) { window.hideLoading(); return alert("Error de red."); } fileName = f.files[0].name; }
+    let chatPayload = {u: currentUser.nombre, m: `💬 <b>Comentario Libre:</b><br>${txtHTML}`, t: new Date().toLocaleString()}; 
+    if (fileUrl) { chatPayload.archivo = fileUrl; chatPayload.archivo_nombre = fileName; } 
+    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { chat: arrayUnion(chatPayload) });
+    const dest = await window.getDatosEnvio(selectedDocData); 
+    let mensajeCorreo = `<b>${currentUser.nombre}</b> ha dejado un comentario en el expediente:<br><br><div style="padding: 12px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px;">${txtHTML}</div>`;
+    if (fileName) { mensajeCorreo += `<br><br><i>📎 Además, adjuntó un archivo: <b>${fileName}</b></i>`; }
+    window.sendNotification(dest, `Nuevo Comentario: ${selectedDocData.customId}`, mensajeCorreo);
+    box.innerHTML = ""; f.value = ""; window.hideLoading(); window.closeModal();
+};
+
+window.guardarCierreFinal = async () => {
+const codFinal = $('m-final-cod').value; const ver = $('m-final-ver').value; const fecha = $('m-final-fecha').value; const com = $('m-final-comentario').value; const f = $('m-final-file');
+let fileUrl = selectedDocData.documento_final || null; let fileName = selectedDocData.documento_final_nombre || null;
+if(!ver || !fecha) return alert("Versión Final y Fecha son obligatorios."); 
+if(f.files[0]) { window.showLoading(); fileUrl = await window.uploadToCloudinary(f.files[0]); if (!fileUrl) { window.hideLoading(); return alert("Error al subir."); } fileName = f.files[0].name; }
+else if(!fileUrl) { return alert("Debes subir el documento final oficial."); }
+
+window.showLoading();
+const now = new Date().toISOString(); 
+let chatPayload = {u: "SISTEMA (SGC)", m: `🏁 <b>SOLICITUD PUBLICADA / CERRADA.</b><br>Ver: ${ver}. Obs: ${com}`, t: new Date().toLocaleString(), archivo: fileUrl, archivo_nombre: fileName};
+let updates = { estado: "Aprobado Final", codigo_final: codFinal, version_final: ver, fecha_final: fecha, comentario_final: com, documento_final: fileUrl, documento_final_nombre: fileName, chat: arrayUnion(chatPayload) };
+if(selectedDocData.idx === 3) { updates.idx = 4; updates.fase_3_fin = now; updates.fase_4_ini = now; }
+
+await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), updates);
+
+let dataMaestro = { estatus: "Vigente", registrado_por: "Sistema (Automático)", fecha_registro: new Date().toISOString() };
+columnasMaestro.forEach(c => { let cName = typeof c === 'string' ? c : c.nombre; let low = cName.toLowerCase(); if(low.includes('código') || low === 'codigo') dataMaestro[cName] = codFinal || selectedDocData.cod_ref || "POR_ASIGNAR"; else if(low.includes('gerencia')) dataMaestro[cName] = selectedDocData.gerencia; else if(low.includes('departamento')) dataMaestro[cName] = selectedDocData.departamento; else if(low.includes('tipo')) dataMaestro[cName] = selectedDocData.tipoDoc; else if(low.includes('nombre')) dataMaestro[cName] = selectedDocData.titulo; else if(low.includes('vers')) dataMaestro[cName] = ver; else if(low.includes('ubicaci') || low.includes('archivo') || low.includes('documento')) dataMaestro[cName] = fileUrl; else if(low.includes('fecha última') || low.includes('fecha ultima') || low === 'fecha') dataMaestro[cName] = fecha; });
+await addDoc(collection(db, "artifacts", appId, "public", "data", "ListadoMaestro"), dataMaestro);
+
+const dest = await window.getDatosEnvio(selectedDocData); window.sendNotification(dest, `✅ Documento Oficial Publicado: ${selectedDocData.customId}`, `El documento versión ${ver} ha sido publicado oficialmente en el sistema.`); window.hideLoading(); window.closeModal();
+};
+
+window.anularSolicitud = async () => {
+    if(!confirm("⚠️ ¿Estás seguro de anular esta solicitud?")) return; let motivo = prompt("Motivo de anulación:"); if(!motivo) return; window.showLoading();
+    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { estado: "Anulado", chat: arrayUnion({u: currentUser.nombre, m: `🚫 <b>SOLICITUD ANULADA</b><br>Motivo: ${motivo}`, t: new Date().toLocaleString()}) });
+    const dest = await window.getDatosEnvio(selectedDocData); 
+    let mensajeCorreo = `La solicitud fue <b>ANULADA</b> por ${currentUser.nombre}.<br><br><div style="padding: 12px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px;"><b>Motivo:</b> ${motivo}</div>`;
+    window.sendNotification(dest, `Cancelación: ${selectedDocData.customId}`, mensajeCorreo); 
+    window.hideLoading(); window.closeModal();
+};
+
+window.addInvolucradoList = () => {
+const sel = $('sol-involucrado-sel'); const email = sel.value; const name = sel.options[sel.selectedIndex].text; if(!email) return alert("Seleccione un usuario válido.");
+const existingTags = Array.from($$('.involucrado-item')); if(existingTags.some(el => el.dataset.email === email)) { return alert("El usuario ya está en la lista."); }
+const div = document.createElement('div'); div.className = 'involucrado-item badge badge-info'; div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '5px'; div.style.fontSize = '12px'; div.style.padding = '6px 12px'; div.dataset.email = email; div.innerHTML = `${name} <span class="material-icons-round" style="font-size:14px; cursor:pointer; color:var(--danger);" onclick="this.parentElement.remove()">close</span>`;
+$('lista-involucrados-tags').appendChild(div); sel.value = "";
+};
+
+window.guardarNuevoInvolucrado = async () => {
+const sel = $('m-new-involucrado-sel'); const newEmail = sel.value; const newName = sel.options[sel.selectedIndex].text; if(!newEmail || !newEmail.includes('@')) return alert('Selecciona un usuario válido.'); window.showLoading();
+let currentInv = selectedDocData.involucrados || []; if(currentInv.includes(newEmail)) { window.hideLoading(); return alert('El usuario ya está en la lista de involucrados.'); } 
+currentInv.push(newEmail); await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { involucrados: currentInv, chat: arrayUnion({u: currentUser.nombre, m: `👥 Añadió a ${newName} a la lista de involucrados.`, t: new Date().toLocaleString()}) });
+setVal('m-new-involucrado-sel', ''); window.hideLoading(); window.verDetalle(selectedId);
+};
+
+window.eliminarInvolucrado = async (emailToRemove) => {
+if(!confirm("¿Estás seguro de eliminar a este usuario de los involucrados?")) return; window.showLoading();
+let currentInv = selectedDocData.involucrados || []; currentInv = currentInv.filter(e => e.toLowerCase() !== emailToRemove.toLowerCase());
+await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { involucrados: currentInv, chat: arrayUnion({u: currentUser.nombre, m: `👥 Removió a ${emailToRemove} de la lista de involucrados.`, t: new Date().toLocaleString()}) });
+window.hideLoading(); window.verDetalle(selectedId);
+};
+
+window.filtrarTabla = (inputId, tbodyId) => {
+const input = $(inputId); if (!input) return; const filter = input.value.toLowerCase(); const tbody = $(tbodyId); if (!tbody) return; const trs = tbody.getElementsByTagName('tr');
+for (let i = 0; i < trs.length; i++) { let rowText = trs[i].textContent || trs[i].innerText; if (rowText.toLowerCase().indexOf(filter) > -1) { trs[i].style.display = ""; } else { trs[i].style.display = "none"; } }
+};
+
+window.descargarExcelFiltrado = (origen = 'hist') => {
+let elDesde = $(`${origen}-f-desde`), elHasta = $(`${origen}-f-hasta`), elEstado = $(`${origen}-f-estado`);
+let desde = elDesde ? elDesde.value : ""; 
+let hasta = elHasta ? elHasta.value : ""; 
+let estado = elEstado ? elEstado.value : ""; 
+let esAdminSGC = currentUser.permisos.admin || currentUser.permisos.p_gest_sgc;
+
+let datosFiltrados = globalSolicitudes.filter(s => {
+    if (origen !== 'all' && !esAdminSGC) { let isMine = (s.uid === currentUser.usuario) || (s.involucrados && currentUser.email && s.involucrados.includes(currentUser.email.toLowerCase())); if (origen === 'hist' && !isMine) return false; if (origen === 'gest') { const p = currentUser.permisos; let ver = p.p_ver_all || (p.p_ver_ger && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia)) || isMine; if(!ver) return false; } }
+    if (desde && s.fecha < desde) return false; if (hasta && s.fecha > hasta + "T23:59:59") return false;
+    if (estado) { let eStr = (s.estado || "").toUpperCase(); if (estado === 'Pendiente' && (eStr.includes('APROBADO FINAL') || eStr === 'ANULADO' || eStr === 'RECHAZADO')) return false; if (estado === 'Aprobado Final' && !eStr.includes('APROBADO FINAL')) return false; if (estado === 'Cancelado' && eStr !== 'ANULADO' && eStr !== 'RECHAZADO') return false; }
+    return true;
+});
+
+if(datosFiltrados.length === 0) return alert("No hay datos que coincidan con estos filtros para exportar.");
+
+const formatearDiferencia = (ini, fin) => { if(!ini || !fin) return "N/A"; const ms = new Date(fin) - new Date(ini); if(ms < 0) return "N/A"; const d = Math.floor(ms / 86400000); const h = Math.floor((ms % 86400000) / 3600000); const m = Math.floor((ms % 3600000) / 60000); if (d > 0) return `${d}d ${h}h ${m}m`; if (h > 0) return `${h}h ${m}m`; return `${m}m`; };
+
+let dataExport = datosFiltrados.map(s => {
+    let p = PASOS_NOMBRES[s.idx] || ''; let estadoFormat = s.estado === 'Aprobado Final' ? 'Aprobado Final' : (s.estado === 'Anulado' || s.estado === 'Rechazado' ? s.estado : `${s.estado} (${p})`);
+    let baseObj = { "ID Solicitud": s.customId, "Solicitante": s.solicitante || '', "Email Solicitante": s.solicitante_email || '', "Gerencia": s.gerencia || '', "Departamento": s.departamento || '', "Acción": s.accion || '', "Prioridad": s.prioridad || 'Normal', "Tipo Documento": s.tipoDoc || '', "Título Documento": s.titulo || '', "Estado Actual": estadoFormat, "Fecha Límite (SLA)": s.fecha_esperada_cierre || 'No definida', "Fecha de Creación": s.fecha ? new Date(s.fecha).toLocaleString() : '', "Código Ref. Original": s.cod_ref || '', "Versión Original": s.ver_ref || '', "Código Final Asignado": s.codigo_final || '', "Versión Final Asignada": s.version_final || '', "Fecha Final": s.fecha_final || '' };
+    
+    if (esAdminSGC) { 
+        baseObj["Tiempo Fase 1 (Documentado)"] = formatearDiferencia(s.fase_0_ini, s.fase_0_fin); 
+        baseObj["Tiempo Fase 2 (Verificado)"] = formatearDiferencia(s.fase_1_ini, s.fase_1_fin); 
+        baseObj["Tiempo Fase 3 (Aprob. Gerencia)"] = formatearDiferencia(s.fase_2_ini, s.fase_2_fin); 
+        baseObj["Tiempo Fase 4 (Aprob. SGC)"] = formatearDiferencia(s.fase_3_ini, s.fase_3_fin); 
+        baseObj["TIEMPO TOTAL DEL FLUJO"] = formatearDiferencia(s.fase_0_ini, s.fecha_final || s.fase_3_fin || s.fase_2_fin || s.fase_1_fin || s.fase_0_fin); 
+    }
+    return baseObj;
+});
+
+let nameF = esAdminSGC ? "Reporte_SGC_Completo_Con_Tiempos" : "Reporte_Solicitudes"; 
+let wb = XLSX.utils.book_new(); let ws = XLSX.utils.json_to_sheet(dataExport); XLSX.utils.book_append_sheet(wb, ws, "Datos_Exportados"); XLSX.writeFile(wb, `${nameF}.xlsx`);
+};
+
+window.switchAuditTab = (id) => { $$('.tab-btn').forEach(b=>b.classList.remove('active')); $$('.tab-content').forEach(c=>c.classList.remove('active')); if($(`btn-tab-${id}`)) $(`btn-tab-${id}`).classList.add('active'); if($(`tab-${id}`)) $(`tab-${id}`).classList.add('active'); };
+
+window.abrirModalPlan = () => {
+setTxt('edit-year-label', $('aud-year-select').value); $$('#ah-auditor-list input').forEach(cb=>cb.checked=false);
+if(globalAuditPlan) {
+    setVal('ah-obj', globalAuditPlan.objetivo || ''); setVal('ah-alcance', globalAuditPlan.alcance || ''); setVal('ah-tecnica', globalAuditPlan.tecnica || ''); setVal('ah-criterios', globalAuditPlan.criterios || ''); setVal('ah-ref', globalAuditPlan.referencia || ''); setVal('ah-fecha', globalAuditPlan.fecha_elab || ''); setVal('ah-tec', globalAuditPlan.recursos_tec || ''); setVal('ah-rrhh', globalAuditPlan.recursos_hh || ''); setVal('ah-extra-emails', (globalAuditPlan.extra_correos || []).join(', '));
+    let liderSel = $('ah-lider'); for(let i=0; i<liderSel.options.length; i++){ if(liderSel.options[i].value === globalAuditPlan.lider) liderSel.selectedIndex = i; }
+    let auditoresGuardados = globalAuditPlan.auditor_nombres || []; $$('#ah-auditor-list input').forEach(cb => { cb.checked = auditoresGuardados.includes(cb.value); });
+} else {
+    setVal('ah-obj', ''); setVal('ah-alcance', ''); setVal('ah-tecnica', ''); setVal('ah-criterios', ''); setVal('ah-ref', ''); setVal('ah-fecha', ''); setVal('ah-tec', ''); setVal('ah-rrhh', ''); setVal('ah-extra-emails', ''); if($('ah-lider')) $('ah-lider').selectedIndex = 0; 
+}
+setDisplay('modal-plan', 'flex');
+};
+window.cerrarModalPlan = () => setDisplay('modal-plan', 'none');
+
+window.saveAuditPlan = async () => {
+const y = $('aud-year-select').value; const docId = `Plan_${y}`;
+let motivo = "Creación inicial"; if(globalAuditPlan) { motivo = prompt("Motivo de la modificación del Plan Anual:"); if(!motivo) return alert("El motivo es obligatorio para editar."); }
+const liderSel = $('ah-lider'); const liderName = liderSel.options[liderSel.selectedIndex]?.value || ""; const liderEmail = liderSel.options[liderSel.selectedIndex]?.getAttribute('data-email') || "";
+const audNombres = []; const audEmails = []; $$('#ah-auditor-list input:checked').forEach(cb => { audNombres.push(cb.value); audEmails.push(cb.getAttribute('data-email')); });
+const extraEmails = $('ah-extra-emails').value.split(',').map(e => e.trim().toLowerCase()).filter(e=>e.includes('@'));
+let todosLosCorreos = new Set([...audEmails, ...extraEmails]); if(liderEmail) todosLosCorreos.add(liderEmail);
+const data = { year: y, objetivo: $('ah-obj').value, alcance: $('ah-alcance').value, tecnica: $('ah-tecnica').value, criterios: $('ah-criterios').value, referencia: $('ah-ref').value, fecha_elab: $('ah-fecha').value, lider: liderName, auditor: audNombres.join(', '), auditor_nombres: audNombres, recursos_tec: $('ah-tec').value, recursos_hh: $('ah-rrhh').value, extra_correos: extraEmails, correos: Array.from(todosLosCorreos), modificado_por: currentUser.nombre, ultima_modif: new Date().toISOString() };
+
+window.showLoading();
+if(globalAuditPlan) { await updateDoc(doc(db, "artifacts", appId, "public", "data", "AuditPlans", docId), { ...data, historial: arrayUnion({ fecha: new Date().toISOString(), usuario: currentUser.nombre, motivo: motivo }) }); } 
+else { await setDoc(doc(db, "artifacts", appId, "public", "data", "AuditPlans", docId), { ...data, historial: [{ fecha: new Date().toISOString(), usuario: currentUser.nombre, motivo: motivo }] }); }
+window.hideLoading(); alert("Plan Anual actualizado."); window.cerrarModalPlan();
+};
+
+window.cambiarAnioAuditoria = (val) => {
+if(val === 'nuevo') { let nYear = prompt("Ingrese el nuevo año a registrar (ej: 2028):"); if(nYear && !isNaN(nYear)) { let opt = document.createElement('option'); opt.value = nYear; opt.text = nYear; opt.selected = true; $('aud-year-select').add(opt, $('aud-year-select').options[1]); val = nYear; } else { setVal('aud-year-select', new Date().getFullYear().toString()); return; } }
+window.loadAuditPlan(val); window.renderTablaAuditorias(val);
+};
+
+window.loadAuditPlan = (year) => {
+const docId = `Plan_${year}`; setTxt('view-year-label', year);
+onSnapshot(doc(db, "artifacts", appId, "public", "data", "AuditPlans", docId), s => {
+    if(s.exists()) {
+        globalAuditPlan = s.data(); setDisplay('audit-header-view', 'block'); 
+        setTxt('view-ah-obj', globalAuditPlan.objetivo || '-'); setTxt('view-ah-alcance', globalAuditPlan.alcance || '-'); setTxt('view-ah-tecnica', globalAuditPlan.tecnica || '-'); setTxt('view-ah-criterios', globalAuditPlan.criterios || '-'); setTxt('view-ah-ref', globalAuditPlan.referencia || '-'); setTxt('view-ah-fecha', window.formatearFechaAbreviada(globalAuditPlan.fecha_elab) || '-'); setTxt('view-ah-lider', globalAuditPlan.lider || '-'); setTxt('view-ah-auditor', globalAuditPlan.auditor || '-'); setTxt('view-ah-tec', globalAuditPlan.recursos_tec || '-'); setTxt('view-ah-rrhh', globalAuditPlan.recursos_hh || '-');
+        let modInfo = `Por: ${globalAuditPlan.modificado_por || '-'} el ${window.formatearFechaAbreviada(globalAuditPlan.ultima_modif)}`; 
+        if(globalAuditPlan.historial && globalAuditPlan.historial.length > 0) { let ultimoMotivo = globalAuditPlan.historial[globalAuditPlan.historial.length-1].motivo; modInfo += ` (Motivo: ${ultimoMotivo})`; } 
+        setTxt('view-ah-mod-info', modInfo);
+    } else { globalAuditPlan = null; setDisplay('audit-header-view', 'none'); }
+});
+};
+
+window.abrirNuevaAuditoria = () => { window.cancelarEdicionAuditoria(); setDisplay('modal-nueva-aud', 'flex'); };
+
+window.cargarAuditoriaParaEditar = async (id) => {
+const au = globalAllAuditorias.find(x => x.id === id); if(!au) return; 
+editandoAuditoriaId = id; 
+if($('titulo-form-auditoria')) $('titulo-form-auditoria').innerText = "Editar Auditoría Programada"; 
+
+setVal('aud-fecha', au.fecha || ''); setVal('aud-h-ini', au.hora_inicio || ''); setVal('aud-h-fin', au.hora_fin || ''); setVal('aud-lugar', au.lugar || ''); setVal('aud-obs', au.observacion || ''); setVal('aud-org', au.organizacion || ''); setVal('aud-dir', au.direccion || ''); setVal('aud-sitios', au.sitios || ''); setVal('aud-personal', au.personal || ''); setVal('aud-turnos', au.turnos || '');
+
+let aa = au.auditado ? au.auditado.split(', ') : []; $$('#aud-auditado-list input[type="checkbox"]').forEach(cb => { cb.checked = aa.includes(cb.value); });
+let aua = au.auditor ? au.auditor.split(', ') : []; $$('#aud-auditor-list input[type="checkbox"]').forEach(cb => { cb.checked = aua.includes(cb.value); });
+let ar = au.requisitos ? au.requisitos.split(', ') : []; $$('#aud-req-list input[type="checkbox"]').forEach(cb => { cb.checked = ar.includes(cb.value); });
+let af = au.auditores_formacion ? au.auditores_formacion.split(', ') : []; $$('#aud-formacion-list input[type="checkbox"]').forEach(cb => { cb.checked = af.includes(cb.value); });
+
+setTxt('btn-guardar-aud', "ACTUALIZAR AUDITORÍA"); 
+setDisplay('btn-cancelar-aud', 'inline-block'); setDisplay('modal-nueva-aud', 'flex');
+};
+
+window.cancelarEdicionAuditoria = () => {
+editandoAuditoriaId = null; 
+if($('titulo-form-auditoria')) $('titulo-form-auditoria').innerText = "Programar Nueva Auditoría"; 
+
+['aud-fecha', 'aud-h-ini', 'aud-h-fin', 'aud-lugar', 'aud-obs', 'aud-org', 'aud-dir', 'aud-sitios', 'aud-personal', 'aud-turnos'].forEach(i => { if($(i)) $(i).value = ''; });
+
+$$('#aud-auditado-list input[type="checkbox"]').forEach(c => c.checked = false); 
+$$('#aud-auditor-list input[type="checkbox"]').forEach(c => c.checked = false); 
+$$('#aud-req-list input[type="checkbox"]').forEach(c => c.checked = false); 
+$$('#aud-formacion-list input[type="checkbox"]').forEach(c => c.checked = false);
+
+if($('btn-guardar-aud')) $('btn-guardar-aud').innerText = "GENERAR AUDITORÍA Y NOTIFICAR"; 
+setDisplay('btn-cancelar-aud', 'none'); setDisplay('modal-nueva-aud', 'none');
+};
+
+window.guardarAuditoria = async () => {
+const f = $('aud-fecha').value; 
+const reqN = []; $$('#aud-req-list input:checked').forEach(c => reqN.push(c.value)); 
+const r = reqN.join(', ');
+
+if(!f || !r) return alert("Fecha y Puntos son obligatorios.");
+
+const an = [], ae = []; $$('#aud-auditado-list input:checked').forEach(c => { an.push(c.value); ae.push(c.getAttribute('data-email')); });
+const aun = [], aue = []; $$('#aud-auditor-list input:checked').forEach(c => { aun.push(c.value); aue.push(c.getAttribute('data-email')); });
+const fn = []; $$('#aud-formacion-list input:checked').forEach(c => fn.push(c.value));
+
+let dt = { fecha: f, hora_inicio: $('aud-h-ini').value, hora_fin: $('aud-h-fin').value, lugar: $('aud-lugar').value, proceso: r, requisitos: r, auditado: an.join(', '), auditado_emails: ae, auditor: aun.join(', '), auditor_emails: aue, observacion: $('aud-obs').value, organizacion: $('aud-org').value, direccion: $('aud-dir').value, sitios: $('aud-sitios').value, personal: $('aud-personal').value, turnos: $('aud-turnos').value, auditores_formacion: fn.join(', ') };
+
+window.showLoading();
+
+try {
+    if(editandoAuditoriaId) { 
+        dt.modificado_por = currentUser.nombre; 
+        dt.ultima_modificacion = new Date().toISOString();
+        await updateDoc(doc(db, "artifacts", appId, "public", "data", "Auditorias", editandoAuditoriaId), dt); 
+    } else {
+        let aNum = ""; 
+        await runTransaction(db, async(t) => { 
+            const sn = await t.get(doc(db, "artifacts", appId, "public", "data", "Contadores", "auditorias")); 
+            let c = 1; if(sn.exists()) c = sn.data().count + 1; 
+            t.set(doc(db, "artifacts", appId, "public", "data", "Contadores", "auditorias"), { count: c }); 
+            aNum = `QSHE-${new Date().getFullYear()}-${c}`; 
+        });
+        dt.audit_num = aNum; dt.estado = "Programada"; dt.creado_por = currentUser.nombre; dt.timestamp = new Date().toISOString(); dt.bitacora = []; dt.lista_verificacion = []; dt.reporte_auditoria = { conclusiones: '' }; dt.rondas = 1;
+        await addDoc(collection(db, "artifacts", appId, "public", "data", "Auditorias"), dt);
+        
+        let gM = Array.from(new Set([...ae, ...aue])); 
+        if(globalAuditPlan && globalAuditPlan.correos) globalAuditPlan.correos.forEach(x => gM.push(x)); 
+        gM.push(EMAIL_ADMIN_SGC);
+        
+        let msgAuditoria = `Se ha programado una nueva Auditoría Interna (<b>${aNum}</b>). A continuación, los detalles:<br><br>
+        <div style="padding: 15px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px; line-height: 1.6;">
+            <b>Fecha:</b> ${window.formatearFechaAbreviada(f)}<br>
+            <b>Horario:</b> ${dt.hora_inicio || 'N/A'} - ${dt.hora_fin || 'N/A'}<br>
+            <b>Lugar:</b> ${dt.lugar || 'N/A'}<br>
+            <b>Proceso / Área:</b> ${r || 'N/A'}<br>
+            <b>Requisitos:</b> ${r || 'N/A'}<br>
+            <b>Auditado(s):</b> ${dt.auditado || 'N/A'}<br>
+            <b>Auditor(es):</b> ${dt.auditor || 'N/A'}<br>
+            <b>Observaciones:</b> ${dt.observacion || 'Ninguna'}
         </div>
+        <br><i>Por favor, verificar y confirmar la agenda en el sistema SGC.</i>`;
+        
+        window.sendNotification({to: gM.join(',')}, `Auditoría Programada: ${aNum}`, msgAuditoria);
+        alert(`Auditoría ${aNum} programada.`);
+    }
+    window.cancelarEdicionAuditoria(); 
+} catch(e) {
+    console.error(e);
+    alert("Error guardando auditoria.");
+} finally {
+    window.hideLoading();
+}
+};
 
-        <section id="sec-dash" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:25px;"><div><h1 style="font-size: 28px; font-weight: 800; color: var(--sidebar);">Panel Analítico</h1></div></div>
-            <h3 style="margin-bottom:15px; color:var(--primary); display:flex; align-items:center; gap:8px;"><span class="material-icons-round">person</span> Mis Estadísticas</h3>
-            <div class="stats-grid grid-4" style="gap: 20px; margin-bottom: 35px;">
-                <div class="card" style="border-left: 5px solid var(--sidebar);"><div class="custom-label">Solicitudes Totales</div><h2 id="dash-mis-tot" style="font-size:36px; margin-top:5px;">0</h2></div>
-                <div class="card" style="border-left: 5px solid var(--warning); background:#fffbeb;"><div class="custom-label" style="color:#92400e;">En Gestión / Pendientes</div><h2 id="dash-mis-pend" style="font-size:36px; margin-top:5px; color:#92400e;">0</h2></div>
-                <div class="card" style="border-left: 5px solid var(--success); background:#f0fdf4;"><div class="custom-label" style="color:#166534;">Aprobadas Oficialmente</div><h2 id="dash-mis-ok" style="font-size:36px; margin-top:5px; color:#166534;">0</h2></div>
-                <div class="card" style="border-left: 5px solid var(--danger); background:#fef2f2;"><div class="custom-label" style="color:#991b1b;">Rechazadas / Anuladas</div><h2 id="dash-mis-rech" style="font-size:36px; margin-top:5px; color:#991b1b;">0</h2></div>
-            </div>
-            
-            <div id="dash-admin-section" style="display:none; padding-top:20px; border-top:2px dashed var(--border);">
-                <h3 style="margin-bottom:15px; color:var(--info); display:flex; align-items:center; gap:8px;"><span class="material-icons-round">public</span> Visión Global y Cumplimiento SGC</h3>
-                <div class="stats-grid grid-4" style="gap: 20px;">
-                    <div class="card" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color:white; border:none;"><div class="custom-label" style="color:rgba(255,255,255,0.8);">Total Histórico Global</div><h2 id="dash-glob-tot" style="font-size:36px; margin-top:5px;">0</h2></div>
-                    <div class="card" style="border-left: 5px solid var(--warning);"><div class="custom-label">Pendientes Globales</div><h2 id="dash-glob-pend" style="font-size:36px; margin-top:5px; color:#d97706;">0</h2></div>
-                    <div class="card" style="border-left: 5px solid var(--success);"><div class="custom-label">Aprobadas Globales</div><h2 id="dash-glob-ok" style="font-size:36px; margin-top:5px; color:#059669;">0</h2></div>
-                    <div class="card" style="border-left: 5px solid #8b5cf6; background:#f5f3ff;"><div class="custom-label" style="color:#5b21b6;">Efectividad SLA a Tiempo</div><h2 id="dash-sla-percent" style="font-size:36px; margin-top:5px; color:#6d28d9;">0%</h2></div>
-                </div>
+window.renderTablaAuditorias = (yf) => {
+if(!$('tbody-auditorias')) return; 
+let isAdm = currentUser.permisos.p_audit_admin || currentUser.permisos.admin || currentUser.permisos.p_gest_sgc;
 
-                <div style="margin-top:25px; background:white; padding:20px; border-radius:16px; border:1px solid var(--border);">
-                    <div style="display:flex; gap:10px; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:15px;">
-                        <button class="btn btn-warning" onclick="window.renderDashTable('pendientes')" style="flex:1; font-size:14px;">📋 Ver Solicitudes Pendientes</button>
-                        <button class="btn btn-success" onclick="window.renderDashTable('completadas')" style="flex:1; font-size:14px;">✅ Ver Solicitudes Completadas/Cerradas</button>
-                    </div>
-                    <div class="table-responsive" id="dash-table-container" style="display:none;">
-                        <table id="tabla-dash">
-                            <thead><tr><th>ID Sistema</th><th>Solicitante</th><th>Documento</th><th>Estado Actual</th><th class="no-export">Doc</th><th class="no-export">Acción</th></tr></thead>
-                            <tbody id="tbody-dash"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
+globalAuditorias = globalAllAuditorias.filter(a => { 
+    if(a.fecha && !a.fecha.startsWith(yf)) return false; 
+    return isAdm || (a.auditado && a.auditado.includes(currentUser.nombre)) || (a.auditor && a.auditor.includes(currentUser.nombre)); 
+});
 
-        <section id="sec-crear" class="section">
-            <div class="card" style="max-width: 900px; margin: auto;">
-                <h2 style="margin-bottom:25px; color:var(--primary); font-size:22px;">Registrar Solicitud SGC-SOL</h2>
-                <form id="form-crear-solicitud" onsubmit="event.preventDefault(); window.crearSolicitud();">
-                    <div class="resp-grid">
-                        <div><label for="sol-accion">Acción Requerida</label><select id="sol-accion" onchange="window.toggleModPanel(this.value)"><option value="Creación">Creación</option><option value="Modificación">Modificación</option><option value="Inactivación">Inactivación</option></select></div>
-                        <div><label for="sol-tipo-doc">Tipo Documento</label><select id="sol-tipo-doc" required></select></div>
-                        <div><label for="sol-prioridad">Prioridad de Solicitud</label><select id="sol-prioridad"><option value="Normal">Normal</option><option value="Básica">Básica</option><option value="Alta">Alta (Urgente)</option></select></div>
-                    </div>
-                    <div id="panel-mod" class="resp-grid" style="display:none; background:#f8fafc; padding:20px; border-radius:12px; margin-bottom:20px; border:1px dashed var(--info);">
-                        <div><label for="sol-cod-prev">Código Actual</label><input type="text" id="sol-cod-prev" style="margin-bottom:0;"></div><div><label for="sol-ver-prev">Versión</label><input type="text" id="sol-ver-prev" style="margin-bottom:0;"></div><div><label for="sol-fecha-prev">Fecha Ult. Ver.</label><input type="date" id="sol-fecha-prev" style="margin-bottom:0;"></div>
-                    </div>
-                    <label for="sol-tit">Título del Documento</label><input type="text" id="sol-tit" required>
-                    <div class="resp-grid">
-                        <div><label for="sol-ger">Gerencia</label><select id="sol-ger" onchange="window.actualizarGerenteSelect(this.value)" required></select></div>
-                        <div><label for="sol-dep">Departamento</label><select id="sol-dep" required><option value="">-- Seleccione Gerencia Primero --</option></select></div>
-                    </div>
-                    <div class="resp-grid" style="background:#f0fdf4; padding:15px 20px; border-radius:12px; margin-bottom:20px; border:1px solid #bbf7d0;">
-                        <div><div class="custom-label" style="color:#166534; margin-bottom:2px;">Gerente(s) Responsable(s)</div><input type="text" id="sol-gerente-display" disabled style="background:transparent; border:none; font-weight:bold; color:#15803d; padding:0; margin:0; font-size:15px;"></div>
-                        <div><div class="custom-label" style="color:#166534; margin-bottom:2px;">Email Notificación</div><input type="text" id="sol-email-gerente" disabled style="background:transparent; border:none; font-weight:bold; color:#15803d; padding:0; margin:0; font-size:15px;"></div>
-                    </div>
-                    <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px;">
-                        <label for="sol-involucrado-sel">Añadir Involucrados (Revisores extras)</label>
-                        <div style="display:flex; gap:10px; margin-bottom:10px;"><select id="sol-involucrado-sel" style="margin:0; flex:1; background:white;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn btn-info" onclick="window.addInvolucradoList()">Añadir</button></div>
-                        <div id="lista-involucrados-tags" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
-                    </div>
-                    <label for="sol-motivo">Justificación / Motivo</label><textarea id="sol-motivo" rows="4" required></textarea>
-                    <div style="background: #eff6ff; padding: 20px; border-radius: 12px; border: 1px dashed var(--accent); margin-bottom: 25px;">
-                        <label for="sol-file" style="color:var(--primary)">Adjuntar Archivo Inicial (Word, PDF, Excel)</label><input type="file" id="sol-file" style="margin-bottom:0; background:white;">
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="btnSendSol" style="width:100%; padding: 16px; font-size:15px;">ENVIAR A REVISIÓN</button>
-                </form>
-            </div>
-        </section>
+globalAuditorias.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)); 
+let h = "";
 
-        <section id="sec-hist" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px;"><h1>Mis Solicitudes</h1></div>
-            <div class="card" style="padding:0; overflow:hidden;">
-                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
-                    <input type="text" id="search-hist" class="search-bar" style="margin:0;" placeholder="🔍 Buscar por ID o Título..." onkeyup="window.filtrarTabla('search-hist', 'tbody-historial')">
-                    <button class="btn btn-success" onclick="window.descargarExcelFiltrado('hist')"><span class="material-icons-round">download</span> Exportar</button>
-                </div>
-                <div class="table-responsive"><table id="tabla-mis-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-historial"></tbody></table></div>
-            </div>
-        </section>
+globalAuditorias.forEach(a => {
+    let e = String(a.estado || 'Programada'); 
+    let b = e === 'Completada' ? 'badge-success' : (e === 'En Progreso' ? 'badge-info' : (e === 'Pausada' ? 'badge-dark' : 'badge-warning'));
+    let btn = `<button class="btn btn-primary" style="padding:4px;font-size:10px;margin-right:5px;" onclick="window.verModalAuditoria('${a.id}')">Ver</button>`;
+    let roundLabel = a.rondas > 1 ? ` (R${a.rondas})` : '';
+    
+    const isAuditor = a.auditor && a.auditor.includes(currentUser.nombre); 
+    const canControl = isAdm || isAuditor;
+    
+    if (canControl) { 
+        if (e === 'Programada') btn += `<button class="btn btn-success" style="padding:4px;font-size:10px;margin-right:5px;" onclick="window.iniciarAuditoriaDirecto('${a.id}')">Iniciar</button>`; 
+        else if (e === 'En Progreso') {
+            btn += `<button class="btn btn-warning" style="padding:4px;font-size:10px;margin-right:5px;" onclick="window.pausarAuditoriaDirecto('${a.id}')">Pausar</button>`; 
+            btn += `<button class="btn btn-danger" style="padding:4px;font-size:10px;margin-right:5px;" onclick="window.finalizarAuditoriaDirecto('${a.id}')">Fin</button>`;
+        } else if (e === 'Pausada') {
+            btn += `<button class="btn btn-success" style="padding:4px;font-size:10px;margin-right:5px;" onclick="window.reanudarAuditoriaDirecto('${a.id}')">Reanudar</button>`; 
+            btn += `<button class="btn btn-danger" style="padding:4px;font-size:10px;margin-right:5px;" onclick="window.finalizarAuditoriaDirecto('${a.id}')">Fin</button>`;
+        }
+        btn += `<button class="btn btn-info" style="padding:4px;font-size:10px;margin-right:5px;" onclick="window.cargarAuditoriaParaEditar('${a.id}')">Ed</button>`;
+    }
+    
+    if(isAdm) btn += `<button class="btn-icon-danger" onclick="window.del('Auditorias','${a.id}')">X</button>`;
+    
+    h += `<tr><td><b>${a.audit_num || '-'}</b></td><td><b>${window.formatearFechaAbreviada(a.fecha)}</b><br><small>${a.hora_inicio || ''} - ${a.hora_fin || ''}</small></td><td>${a.requisitos ? a.requisitos.substring(0,30) + '...' : '-'}</td><td>${a.auditado || '-'}</td><td>${a.auditor || '-'}</td><td><span class="badge ${b}">${e}${roundLabel}</span></td><td class="no-export">${btn}</td></tr>`;
+});
+setHtml('tbody-auditorias', h); 
+if(isAdm) window.verificarAlertasAuditoria(globalAuditorias);
+};
 
-        <section id="sec-all" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px;"><div><h1>Todas las Solicitudes</h1></div></div>
-            <div class="card" style="padding:0; overflow:hidden;">
-                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
-                    <input type="text" id="search-all" class="search-bar" style="margin:0;" placeholder="🔍 Buscar..." onkeyup="window.filtrarTabla('search-all', 'tbody-all')">
-                    <button class="btn btn-success" onclick="window.descargarExcelFiltrado('all')"><span class="material-icons-round">download</span> Exportar Completo</button>
-                </div>
-                <div class="table-responsive"><table id="tabla-todas-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-all"></tbody></table></div>
-            </div>
-        </section>
+window.iniciarAuditoriaDirecto = async (id) => { if(!confirm("¿Iniciar auditoría?")) return; window.showLoading(); await updateDoc(doc(db, "artifacts", appId, "public", "data", "Auditorias", id), {estado:"En Progreso", hora_real_inicio:new Date().toISOString(), rondas: 1}); window.hideLoading(); };
+window.finalizarAuditoriaDirecto = async (id) => { if(!confirm("¿Finalizar definitivamente?")) return; window.showLoading(); await updateDoc(doc(db, "artifacts", appId, "public", "data", "Auditorias", id), {estado:"Completada", hora_real_fin:new Date().toISOString()}); window.hideLoading(); };
+window.pausarAuditoriaDirecto = async (id) => { 
+    if(!confirm("¿Pausar auditoría para una nueva ronda?")) return; 
+    window.showLoading(); 
+    const sn = await getDoc(doc(db, "artifacts", appId, "public", "data", "Auditorias", id)); 
+    let r = sn.data().rondas || 1; 
+    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Auditorias", id), {estado:"Pausada", rondas: r + 1}); 
+    window.hideLoading(); 
+};
+window.reanudarAuditoriaDirecto = async (id) => { if(!confirm("¿Reanudar auditoría?")) return; window.showLoading(); await updateDoc(doc(db, "artifacts", appId, "public", "data", "Auditorias", id), {estado:"En Progreso"}); window.hideLoading(); };
 
-        <section id="sec-gest" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px;"><div><h1 style="font-size: 26px; font-weight: 800; color:var(--primary);">Bandeja de Gestión</h1><p style="color:var(--text-muted); font-size:13px;">Firmas y revisiones pendientes de su atención.</p></div></div>
-            <div class="card" style="padding:0; border-radius: 16px; overflow:hidden; border-top: 4px solid var(--warning);">
-                <div style="background: #f8fafc; padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:250px;"><input type="text" id="search-gest" class="search-bar" style="max-width:100%; margin-bottom:0;" placeholder="🔍 Buscar en tabla..." onkeyup="window.filtrarTabla('search-gest', 'tbody-gestionar')"></div>
-                </div>
-                <div class="table-responsive">
-                    <table id="tabla-gestion-solicitudes">
-                        <thead><tr><th style="width: 120px;">ID Sistema</th><th>Origen</th><th>Documento</th><th>Etapa Actual</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Gestión</th></tr></thead>
-                        <tbody id="tbody-gestionar"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+window.verModalAuditoria = async (id) => {
+try {
+    window.showLoading();
+    selectedAuditId = id; 
+    const sn = await getDoc(doc(db, "artifacts", appId, "public", "data", "Auditorias", id)); 
+    if(!sn.exists()) { window.hideLoading(); return alert("Auditoría no encontrada."); }
+    
+    selectedAuditData = sn.data(); 
+    const a = selectedAuditData || {};
+    
+    ['ma-num','ma-proceso','ma-fecha','ma-hora','ma-lugar','ma-auditado','ma-auditor','ma-req','ma-obs','rep-num','rep-org','rep-dir','rep-sitios','rep-fechas','rep-personal','rep-turnos','rep-lider','rep-adicionales','rep-formacion','rep-alcance'].forEach(i => { 
+        if($(i)) $(i).innerText = a[i.replace('ma-','').replace('rep-','')] || (globalAuditPlan ? globalAuditPlan[i.replace('rep-','')] : '') || '-'; 
+    });
+    
+    if($('ma-fecha')) $('ma-fecha').innerText = window.formatearFechaAbreviada(a.fecha); 
+    if($('ma-hora')) $('ma-hora').innerText = `${a.hora_inicio || ''} a ${a.hora_fin || ''}`; 
+    if($('ma-req')) $('ma-req').innerText = a.requisitos || ''; 
+    if($('rep-fechas')) $('rep-fechas').innerText = window.formatearFechaAbreviada(a.fecha); 
+    if($('rep-lider')) $('rep-lider').innerText = globalAuditPlan ? globalAuditPlan.lider : ''; 
+    if($('rep-adicionales')) $('rep-adicionales').innerText = a.auditor || ''; 
+    if($('rep-formacion')) $('rep-formacion').innerText = a.auditores_formacion || ''; 
+    if($('rep-alcance')) $('rep-alcance').innerText = globalAuditPlan ? globalAuditPlan.alcance : '';
+    
+    let e = String(a.estado || 'Programada'); 
+    if($('ma-estado-badge')) {
+        $('ma-estado-badge').className = `badge ${e === 'Completada' ? 'badge-success' : (e === 'En Progreso' ? 'badge-info' : (e === 'Pausada' ? 'badge-dark' : 'badge-warning'))}`; 
+        $('ma-estado-badge').innerText = e.toUpperCase() + (a.rondas && a.rondas > 1 ? ` (RONDA ${a.rondas})` : '');
+    }
+    
+    if($('ma-inicio-real')) $('ma-inicio-real').innerText = a.hora_real_inicio ? new Date(a.hora_real_inicio).toLocaleString() : '---'; 
+    if($('ma-fin-real')) $('ma-fin-real').innerText = a.hora_real_fin ? new Date(a.hora_real_fin).toLocaleString() : '---';
+    
+    if(a.hora_real_inicio && a.hora_real_fin && $('ma-duracion')) { 
+        let m = new Date(a.hora_real_fin) - new Date(a.hora_real_inicio); 
+        $('ma-duracion').innerText = `${Math.floor(m/3600000)}h ${Math.floor((m%3600000)/60000)}m`; 
+    }
+    
+    const isAdm = currentUser.permisos.admin || currentUser.permisos.p_audit_admin;
+    const isAud = a.auditor && a.auditor.includes(currentUser.nombre);
+    
+    const canEd = (isAdm || isAud) && e !== 'Completada'; 
+    const canEdReporte = (isAdm || isAud); 
+    
+    setDisplay('btn-comenzar-auditoria', (isAdm || isAud) && (e === 'Programada' || e === 'Pausada') ? 'inline-block' : 'none'); 
+    if($('btn-comenzar-auditoria')) $('btn-comenzar-auditoria').innerText = e === 'Pausada' ? '▶️ REANUDAR AUDITORÍA' : '▶️ COMENZAR AUDITORÍA';
+    setDisplay('btn-pausar-auditoria', (isAdm || isAud) && e === 'En Progreso' ? 'inline-block' : 'none');
+    setDisplay('btn-finalizar-auditoria', (isAdm || isAud) && (e === 'En Progreso' || e === 'Pausada') ? 'inline-block' : 'none');
+    
+    if($('chat-box-audit')) $('chat-box-audit').innerHTML = a.bitacora ? a.bitacora.map(c => `<div class="chat-msg"><b style="font-size:10px">${c.u}</b> <span style="font-size:9px;color:#94a3b8">${c.t}</span><br>${c.m}${c.archivo ? `<br><a href="#" onclick="window.abrirDocumento('${c.archivo}','${c.archivo_nombre}');return false;" style="font-size:10px;color:blue;">📎 Ver</a>` : ''}</div>`).join('') : '';
+    
+    currentAuditF020 = a.lista_verificacion || []; window.renderF020();
+    
+    ['f003-conclusiones','f003-n-proceso','f003-n-personal','f003-n-cargo','f003-n-req','f003-n-doc','f003-n-evidencia'].forEach(i => { if($(i)) $(i).disabled = !canEdReporte; });
+    if(a.reporte_auditoria) { ['conclusiones','n_proceso','n_personal','n_cargo','n_req','n_doc','n_evidencia'].forEach(k => { if($('f003-'+k)) $('f003-'+k).value = a.reporte_auditoria[k] || ""; }); }
+    
+    window.actualizarMetricasF003(canEdReporte); window.renderAuditSACs();
+    
+    setDisplay('btn-tab-f020', (isAdm || isAud) ? 'inline-block' : 'none'); 
+    setDisplay('btn-add-f020', canEd ? 'inline-block' : 'none'); 
+    setDisplay('btn-save-f020', canEd ? 'inline-block' : 'none'); 
+    setDisplay('btn-submit-f020', canEd ? 'inline-block' : 'none'); 
+    setDisplay('btn-save-f003', canEdReporte ? 'inline-block' : 'none'); 
+    setDisplay('btn-add-sac-manual', canEdReporte ? 'inline-block' : 'none');
+    
+    window.switchAuditTab('info'); setDisplay('modal-auditoria', 'flex');
+} catch(e) {
+    console.error("Error abriendo auditoría:", e);
+} finally {
+    window.hideLoading();
+}
+};
 
-        <section id="sec-norma" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px;">
-                <div>
-                    <h1 style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--primary); font-size:28px;">menu_book</span> Manual y Norma OEA</h1>
-                    <p style="color:var(--text-muted); font-size:13px;">Gestión del documento oficial y puntos a evaluar en auditorías.</p>
-                </div>
-            </div>
-            <div class="grid-2">
-                <div class="card" style="border-top: 4px solid var(--info);">
-                    <h3 style="color:var(--primary); margin-bottom:15px; font-size:16px;">Documento Oficial del Manual</h3>
-                    <div id="oea-manual-link" style="margin-bottom:20px; padding:20px; background:#f8fafc; border-radius:12px; border:1px solid var(--border); text-align:center;"></div>
-                    <div id="oea-manual-upload-box" style="display:none; background:#eff6ff; padding:20px; border-radius:12px; border:1px dashed var(--primary);">
-                        <label for="oea-file" style="color:var(--primary);">Subir Nueva Versión (PDF/Word)</label>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <input type="file" id="oea-file" accept=".pdf,.doc,.docx" style="margin:0; flex:1; background:white;">
-                            <button class="btn btn-primary" onclick="window.subirManualOEA()">Subir Archivo</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card" style="border-top: 4px solid var(--warning);">
-                    <h3 style="color:var(--primary); margin-bottom:15px; font-size:16px;">Requisitos / Puntos de Control</h3>
-                    <div id="oea-req-upload-box" style="display:none; flex-direction:column; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px; border:1px solid var(--border);">
-                        <input type="text" id="oea-req-input" placeholder="Nombre del Punto (Ej: 1.1 Seguridad)" style="margin:0;">
-                        <textarea id="oea-req-desc" placeholder="Descripción detallada o guía para el auditor..." rows="3" style="margin:0;"></textarea>
-                        <input type="text" id="oea-req-link" placeholder="Página del manual (Ej: 15) o enlace URL externo" style="margin:0;">
-                        <button class="btn btn-success" onclick="window.agregarRequisitoOEA()" style="width:100%;"><span class="material-icons-round" style="font-size:16px;">add</span> Guardar Punto de Control</button>
-                    </div>
-                    <div id="oea-req-list-container" class="settings-list" style="max-height:350px;"></div>
-                </div>
-            </div>
-        </section>
+window.comenzarAuditoria = async () => { 
+    if(selectedAuditData.estado === 'Pausada') { await window.reanudarAuditoriaDirecto(selectedAuditId); } 
+    else { await window.iniciarAuditoriaDirecto(selectedAuditId); }
+    window.verModalAuditoria(selectedAuditId); 
+};
+window.pausarAuditoria = async () => { await window.pausarAuditoriaDirecto(selectedAuditId); window.verModalAuditoria(selectedAuditId); };
+window.finalizarAuditoria = async () => { await window.finalizarAuditoriaDirecto(selectedAuditId); window.verModalAuditoria(selectedAuditId); };
+window.enviarComentarioAuditoria = async () => { const b = $('ma-comentario-libre'); const th = b.innerHTML; const f = $('ma-file-comentario'); if(!b.innerText.trim() && !f.files[0]) return; window.showLoading(); let u = null, fn = null; if(f.files[0]) { u = await window.uploadToCloudinary(f.files[0]); fn = f.files[0].name; } await updateDoc(doc(db,"artifacts",appId,"public","data","Auditorias",selectedAuditId), {bitacora: arrayUnion({u:currentUser.nombre, m:`💬 ${th}`, t:new Date().toLocaleString(), archivo:u, archivo_nombre:fn})}); b.innerHTML=""; f.value=""; window.hideLoading(); window.verModalAuditoria(selectedAuditId); };
 
-        <section id="sec-audit" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-                <div>
-                    <h1 style="margin-bottom: 5px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--primary); font-size:28px;">calendar_month</span> Calendario de Auditoría</h1>
-                    <p style="color:var(--text-muted); font-size:13px;">Programación anual y ejecución (F-005).</p>
-                </div>
-                <div style="display:flex; gap:10px; align-items:center; background:white; padding:8px 15px; border-radius:12px; border:1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <label for="aud-year-select" style="margin:0; font-size:12px;">Año:</label>
-                    <select id="aud-year-select" style="margin:0; width:100px; padding:8px; border:none; font-weight:bold; color:var(--primary); background:transparent; cursor:pointer; font-size:14px;" onchange="window.cambiarAnioAuditoria(this.value)"></select>
-                    <div style="width:1px; height:20px; background:var(--border); margin:0 5px;"></div>
-                    <button class="btn btn-info" id="btn-config-plan" style="display:none; padding:8px 12px; font-size:12px;" onclick="window.abrirModalPlan()"><span class="material-icons-round" style="font-size:16px;">settings</span> Configurar Plan</button>
-                    <button class="btn btn-primary" id="btn-nueva-aud" style="display:none; padding:8px 12px; font-size:12px;" onclick="window.abrirNuevaAuditoria()"><span class="material-icons-round" style="font-size:16px;">add</span> Nueva Auditoría</button>
-                    <button class="btn btn-success" onclick="window.exportarExcelAuditoria()" style="padding:8px 12px; font-size:12px;"><span class="material-icons-round" style="font-size:16px;">download</span> Exportar</button>
-                </div>
-            </div>
+window.sincronizarF020DOM = () => {
+    let dA = [];
+    $$('#tbody-f020 tr').forEach(tr => {
+        let inps = tr.querySelectorAll('.table-input, .table-select');
+        if(inps.length >= 7) {
+            dA.push({
+                id: tr.dataset.id,
+                pregunta: inps[0].value,
+                requisito: inps[1].value,
+                comentarios: inps[2].value,
+                auditado: inps[3].value,
+                nc: inps[4].value,
+                observacion: inps[5].value,
+                fortaleza: inps[6].value
+            });
+        }
+    });
+    currentAuditF020 = dA;
+};
 
-            <div id="audit-header-view" class="card" style="margin-bottom:25px; border-top: 4px solid var(--primary); display:none;">
-               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px;">
-                   <h3 style="color:var(--sidebar); margin:0; font-size:18px;">Plan Anual de Auditorías <span id="view-year-label" style="color:var(--primary);"></span></h3>
-                   <div style="text-align:right; background:#f8fafc; padding:8px 15px; border-radius:8px;"><span style="font-size:10px; color:#64748b; font-weight:800; text-transform:uppercase;">Última Modificación</span><p id="view-ah-mod-info" style="font-size:11px; margin:0; color:var(--primary); font-weight:600;"></p></div>
-               </div>
-               <div class="resp-grid" style="margin-bottom:15px;"><div class="audit-info-box"><div class="custom-label">Objetivo</div><p id="view-ah-obj" style="font-size:13px;"></p></div><div class="audit-info-box"><div class="custom-label">Alcance</div><p id="view-ah-alcance" style="font-size:13px;"></p></div></div>
-               <div class="resp-grid" style="margin-bottom:15px;"><div class="audit-info-box"><div class="custom-label">Técnica</div><p id="view-ah-tecnica" style="font-size:13px;"></p></div><div class="audit-info-box"><div class="custom-label">Criterios</div><p id="view-ah-criterios" style="font-size:13px;"></p></div><div class="audit-info-box"><div class="custom-label">Doc. Referencia / Fecha Elab.</div><p style="font-size:13px;"><span id="view-ah-ref" style="font-weight:600;"></span> <br><small style="color:#94a3b8" id="view-ah-fecha"></small></p></div></div>
-               <div class="resp-grid">
-                   <div class="audit-info-box" style="background:#eff6ff; border-color:#bfdbfe; padding:15px; border-radius:8px;"><div class="custom-label" style="color:#1d4ed8;"><span class="material-icons-round" style="font-size:14px; vertical-align:middle;">groups</span> Equipo Auditor Global</div><p style="font-size:13px;"><b>Líder:</b> <span id="view-ah-lider"></span></p><p style="margin-top:5px; font-size:13px;"><b>Auditores:</b> <span id="view-ah-auditor"></span></p></div>
-                   <div class="audit-info-box" style="background:#f0fdf4; border-color:#bbf7d0; padding:15px; border-radius:8px;"><div class="custom-label" style="color:#15803d;"><span class="material-icons-round" style="font-size:14px; vertical-align:middle;">build</span> Recursos Generales</div><p style="font-size:13px;"><b>Tecnológicos:</b> <span id="view-ah-tec"></span></p><p style="margin-top:5px; font-size:13px;"><b>Humanos:</b> <span id="view-ah-rrhh"></span></p></div>
-               </div>
-            </div>
+window.renderF020 = () => {
+    if(!$('tbody-f020')) return; 
+    let canEd = selectedAuditData && String(selectedAuditData.estado||"") !== 'Completada' && (currentUser.permisos.admin || currentUser.permisos.p_audit_admin || (selectedAuditData.auditor && selectedAuditData.auditor.includes(currentUser.nombre))); 
+    
+    let h = "";
+    let rqs = selectedAuditData && selectedAuditData.requisitos ? selectedAuditData.requisitos.split(', ') : [];
+    let aOps = `<option value="">-- Sel --</option>` + (selectedAuditData && selectedAuditData.auditado ? selectedAuditData.auditado.split(', ').map(a => `<option value="${a}">${a}</option>`).join('') : '');
 
-            <div class="card" style="padding:0; overflow:hidden;">
-                <div class="table-responsive">
-                    <table id="tabla-auditorias">
-                        <thead><tr><th>N° Auditoría</th><th>Fecha / Hora</th><th>Requisitos OEA</th><th>Auditado(s)</th><th>Auditor(es)</th><th>Estado</th><th class="no-export">Acción</th></tr></thead>
-                        <tbody id="tbody-auditorias"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+    currentAuditF020.forEach((i, idx) => {
+        let dis = canEd ? '' : 'disabled';
+        let rOpt = `<option value="">-- Sel --</option>` + rqs.map(r => `<option value="${r}" ${i.requisito === r ? 'selected' : ''}>${r}</option>`).join('');
+        let aOpt = `<option value="${i.auditado || ''}" selected>${i.auditado || '-- Sel --'}</option>` + aOps;
+        let nOpt = `<option value="N/A" ${i.nc==='N/A'||!i.nc?'selected':''}>N/A</option><option value="NC Menor" ${i.nc==='NC Menor'?'selected':''}>NC Menor</option><option value="NC Mayor" ${i.nc==='NC Mayor'?'selected':''}>NC Mayor</option><option value="OM" ${i.nc==='OM'?'selected':''}>OM</option>`;
+        let fOpt = `<option value="N/A" ${i.fortaleza==='N/A'||!i.fortaleza?'selected':''}>N/A</option><option value="Sí" ${i.fortaleza==='Sí'?'selected':''}>Sí</option>`;
+        
+        h += `<tr data-id="${i.id}">
+            <td>${idx+1}</td>
+            <td><textarea class="table-input" rows="2" ${dis}>${i.pregunta||''}</textarea></td>
+            <td><select class="table-select" ${dis}>${rOpt}</select></td>
+            <td><textarea class="table-input" rows="2" ${dis}>${i.comentarios||''}</textarea></td>
+            <td><select class="table-select" ${dis}>${aOpt}</select></td>
+            <td><select class="table-select hallazgo-sel" ${dis}>${nOpt}</select></td>
+            <td><textarea class="table-input" rows="2" ${dis}>${i.observacion||''}</textarea></td>
+            <td><select class="table-select" ${dis}>${fOpt}</select></td>
+            <td class="f020-action-col">${canEd ? `<button class="btn-icon-danger" onclick="window.eliminarF020('${i.id}')"><span class="material-icons-round">delete</span></button>` : ''}</td>
+        </tr>`;
+    }); 
+    
+    setHtml('tbody-f020', h); 
+    $$('.f020-action-col').forEach(e => e.style.display = canEd ? '' : 'none');
+};
 
-        <section id="sec-noconf" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-                <div>
-                    <h1 style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--danger); font-size:28px;">warning</span> Control de NC y Mejoras (F-023)</h1>
-                    <p style="color:var(--text-muted); font-size:13px;">Seguimiento global de acciones correctivas.</p>
-                </div>
-                <button class="btn btn-success" onclick="window.exportarExcelNoConf()" style="padding:10px 15px;"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar F-023</button>
-            </div>
-            <div class="card" style="padding:0; margin-top:20px; overflow:hidden; border-top:4px solid var(--danger);">
-                <div style="padding: 20px; border-bottom: 1px solid var(--border); background:#f8fafc; display:flex; gap:15px; flex-wrap:wrap;">
-                    <input type="text" id="search-noconf" class="search-bar" placeholder="🔍 Buscar por Requisito, NC, o Estado..." onkeyup="window.filtrarTabla('search-noconf', 'tbody-noconf')" style="flex:1;">
-                    <select id="filter-noconf-estado" class="search-bar" style="width:220px;" onchange="window.setFilterGestNC(this.value)"><option value="">Todos los Estados</option><option value="Abierta (En Plan)">Abierta (En Plan)</option><option value="En Seguimiento">En Seguimiento</option><option value="Cerrada">Cerrada</option></select>
-                </div>
-                <div class="table-responsive"><table id="tabla-noconf" style="white-space:nowrap;"><thead><tr><th>SAC N°</th><th>Requisito Evaluado</th><th>Tipo</th><th>Responsable</th><th>Detalle</th><th>Apertura</th><th>Estado</th><th>Cierre</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-noconf"></tbody></table></div>
-            </div>
-        </section>
+window.agregarFilaF020 = () => { 
+    window.sincronizarF020DOM(); 
+    currentAuditF020.push({ id:'f020_'+Date.now(), pregunta:'', requisito:'', comentarios:'', auditado:'', nc:'N/A', observacion:'', fortaleza:'N/A' }); 
+    window.renderF020(); 
+};
 
-        <section id="sec-usuarios" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-                <div>
-                    <h1 style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--primary); font-size:28px;">people</span> Usuarios y Permisos</h1>
-                    <p style="color:var(--text-muted); font-size:13px;">Gestión de accesos y roles del sistema.</p>
-                </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button class="btn btn-primary" onclick="window.abrirModalUsuario()"><span class="material-icons-round" style="font-size:18px;">person_add</span> Nuevo Usuario</button>
-                    <button class="btn btn-success" onclick="window.exportarExcelUsuarios()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar Lista</button>
-                </div>
-            </div>
-            <div class="card" style="padding:0; overflow:hidden;">
-                <div style="padding:20px; border-bottom:1px solid var(--border); background:#f8fafc;">
-                    <input type="text" id="search-users" class="search-bar" placeholder="🔍 Buscar por nombre o email..." onkeyup="window.filtrarTabla('search-users', 'tbody-users')" style="margin:0; max-width:400px;">
-                </div>
-                <div class="table-responsive">
-                    <table id="table-users">
-                        <thead><tr><th>Usuario</th><th>Email</th><th>Rol/Gerencias</th><th class="no-export">Acciones</th></tr></thead>
-                        <tbody id="tbody-users"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+window.eliminarF020 = (id) => { 
+    if(!confirm("¿Eliminar este ítem de la lista?")) return; 
+    window.sincronizarF020DOM(); 
+    currentAuditF020 = currentAuditF020.filter(x => x.id !== id); 
+    window.renderF020(); 
+};
 
-        <section id="sec-listado" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-                <div>
-                    <h1 style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--primary); font-size:28px;">library_books</span> Listado Maestro</h1>
-                    <p style="color:var(--text-muted); font-size:13px;">Documentación centralizada del SGC.</p>
-                </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;"><button class="btn btn-primary" id="btn-nuevo-maestro" onclick="window.abrirModalListadoMaestro()" style="display:none;"><span class="material-icons-round" style="font-size:18px;">add</span> Nuevo Registro</button><button class="btn btn-success" onclick="window.exportarExcelListado()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar</button></div>
-            </div>
-            <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
-                <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input type="text" id="search-maestro" class="search-bar" placeholder="🔍 Buscar en el listado maestro..." onkeyup="window.filtrarTabla('search-maestro', 'tbody-listado-maestro')" style="margin:0; max-width:400px;"></div>
-                <div class="table-responsive"><table id="tabla-listado-maestro" style="white-space:nowrap;"><thead id="thead-listado-maestro"></thead><tbody id="tbody-listado-maestro"></tbody></table></div>
-            </div>
-        </section>
+window.guardarF020 = async (notificar=false) => { 
+    window.sincronizarF020DOM(); 
+    window.showLoading(); 
+    await updateDoc(doc(db,"artifacts",appId,"public","data","Auditorias",selectedAuditId), {lista_verificacion: currentAuditF020}); 
+    if(notificar) { 
+        window.sendNotification({to: EMAIL_ADMIN_SGC}, "F-020 Actualizado", `Auditor ${currentUser.nombre} subió F-020 para la auditoría ${selectedAuditData.audit_num}.`); 
+        alert("Guardado y Notificado a SGC"); 
+    } else { 
+        alert("Lista de Verificación (F-020) Guardada exitosamente."); 
+    } 
+    window.hideLoading(); 
+    window.verModalAuditoria(selectedAuditId); 
+};
+window.enviarPreguntasSGC = () => window.guardarF020(true);
 
-        <section id="sec-estructura" class="section">
-            <h2 style="margin-bottom: 25px; color:var(--primary); display:flex; align-items:center; gap:8px; font-size:24px;"><span class="material-icons-round" style="font-size:28px;">account_tree</span> Configuración Estructural</h2>
-            <div class="resp-grid">
-                <div class="card" style="border-top: 4px solid var(--accent);"><h3>Gerencias</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input type="text" id="g-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarGerencia()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-ger" class="settings-list"></div></div>
-                <div class="card" style="border-top: 4px solid var(--info);"><h3>Departamentos</h3><div style="display:flex; gap:0; margin-bottom:15px;"><select id="d-ger-sel" style="margin:0; width:40%; border-radius: 10px 0 0 10px;"></select><input type="text" id="d-nom" style="margin:0; border-radius: 0; width:60%;"><button class="btn btn-success" onclick="window.agregarDepartamento()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-dep" class="settings-list"></div></div>
-            </div>
-            <h3 style="margin:35px 0 20px; color:var(--primary); border-bottom:2px solid var(--border); padding-bottom:10px; font-size:20px;">Configuración Dinámica de Documentos</h3>
-            <div class="resp-grid">
-                <div class="card" style="border-top: 4px solid var(--success);"><h3>Tipos de Documento</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input type="text" id="doc-tipo-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarTipoDoc()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-tipos-doc" class="settings-list"></div></div>
-                <div class="card" style="border-top: 4px solid #8b5cf6;"><h3>Columnas Listado Maestro</h3><div style="display:flex; gap:0; margin-bottom:15px; flex-wrap:wrap;"><input type="text" id="col-nom" style="margin:0; border-radius: 10px 0 0 10px; flex:1;"><select id="col-tipo" style="margin:0; width:110px; border-radius:0;"><option value="text">Texto</option><option value="date">Fecha</option><option value="number">Número</option><option value="url">Enlace</option></select><button class="btn btn-success" onclick="window.agregarColumna()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-columnas" class="settings-list"></div></div>
-                <div class="card" style="border-top: 4px solid var(--warning);"><h3>Estatus Listado Maestro</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input type="text" id="est-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarEstatus()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-estatus" class="settings-list"></div></div>
-            </div>
-        </section>
-    </main>
+window.generarBloqueNCDinamico = (i, idx, t, canEd) => {
+let d = selectedAuditData.reporte_auditoria?.detalles_nc?.[i.id] || {}; let dis = canEd ? '' : 'disabled';
+return `<div style="border:1px solid #ccc;font-size:12px;margin-bottom:15px;" class="f003-hallazgo-block" data-id="${i.id}"><div style="display:grid;grid-template-columns:150px 1fr;"><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">No. de ${t}</div><div style="padding:8px;border:1px solid #ccc;">${idx}</div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Dpto/Función</div><div style="padding:0;border:1px solid #ccc;"><input type="text" class="h-dep" value="${d.departamento||i.auditado||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Doc Ref</div><div style="padding:0;border:1px solid #ccc;"><input type="text" class="h-doc" value="${d.doc_ref||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Requisito Afectado</div><div style="padding:0;border:1px solid #ccc;"><input type="text" class="h-req" value="${d.requisito||i.requisito||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Detalle</div><div style="padding:0;border:1px solid #ccc;"><textarea class="h-det" ${dis} style="border:none;width:100%;height:100%;min-height:40px;padding:8px;">${d.detalle||i.comentarios||i.pregunta||''}</textarea></div></div></div>`;
+};
 
-    <div class="modal-overlay" id="modal">
-        <div class="modal-content">
-            <div class="modal-main">
-                <div style="display:flex; justify-content:space-between; margin-bottom:20px; border-bottom:2px solid var(--border); padding-bottom:15px; flex-wrap:wrap; gap:15px;">
-                    <div>
-                        <span id="m-id" style="font-weight:800; color:var(--primary); font-size:16px;"></span>
-                        <h2 id="m-tit" style="font-size:20px; margin-top:5px; color:var(--sidebar);"></h2>
-                    </div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <button class="btn btn-info" onclick="window.descargarFicha()"><span class="material-icons-round" style="font-size:16px;">download</span> PDF</button>
-                        <button class="btn btn-warning" id="btn-reabrir" onclick="window.reabrirSolicitud()" style="display:none; padding:8px;">Reabrir</button>
-                        <button class="btn btn-danger" id="btn-anular" onclick="window.anularSolicitud()" style="display:none; padding:8px;">Anular</button>
-                        <button class="btn btn-dark" onclick="window.closeModal()" style="padding:8px 15px;">X Cerrar</button>
-                    </div>
-                </div>
-
-                <div class="step-container" style="margin-bottom:25px;"><div class="step" id="s1"><div class="step-dot">1</div><div class="custom-label">Creación Doc</div></div><div class="step" id="s2"><div class="step-dot">2</div><div class="custom-label">Verificación</div></div><div class="step" id="s3"><div class="step-dot">3</div><div class="custom-label">Aprobación</div></div><div class="step" id="s4"><div class="step-dot">4</div><div class="custom-label">Publicación SGC</div></div></div>
-                
-                <div id="m-admin-sla" style="display:none; margin-bottom:20px; background:#fffbeb; padding:15px; border-radius:12px; border: 1px dashed var(--warning);">
-                    <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;"><label for="m-sla-date" style="margin:0; width:120px;">Fecha Límite (SLA)</label><input type="date" id="m-sla-date" style="margin:0; width:auto; flex:1;"><button class="btn btn-warning" id="btn-save-sla" onclick="window.guardarSLA()">Guardar SLA</button></div>
-                </div>
-                
-                <div id="m-tiempos-panel" style="margin-bottom:20px; background:#f0fdf4; padding:15px; border-radius:12px; border:1px solid #bbf7d0; display:none;">
-                    <div class="custom-label" style="color:#166534; font-weight:800; font-size:13px; margin-bottom:10px;"><span class="material-icons-round" style="font-size:16px; vertical-align:middle;">timer</span> Tiempos por Fase</div><div class="resp-grid" id="m-tiempos-grid" style="gap:10px;"></div>
-                </div>
-
-                <div id="m-display-final" style="display:none; margin-bottom:25px; background:#f0fdf4; padding:20px; border-radius:16px; border: 2px solid var(--success);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 style="color:var(--success); margin:0;">✅ Documento Oficial Publicado</h3> <button id="btn-edit-final" class="btn btn-warning" style="display:none; padding:6px 10px; font-size:11px;" onclick="window.habilitarEdicionFinal()">Editar Doc Final</button></div>
-                    <div class="resp-grid" style="background:white; padding:15px; border-radius:8px;">
-                        <div><div class="custom-label">Código Oficial</div><p id="m-disp-cod" style="font-weight:800; font-size:16px;"></p></div>
-                        <div><div class="custom-label">Versión</div><p id="m-disp-ver" style="font-weight:800; font-size:16px;"></p></div>
-                        <div><div class="custom-label">Fecha Emisión</div><p id="m-disp-fecha" style="font-weight:800; font-size:16px;"></p></div>
-                    </div>
-                    <div style="margin-top:15px;"><div class="custom-label">Archivo Oficial Descargable</div><div id="m-disp-file" style="font-size:14px;"></div></div>
-                </div>
-
-                <div id="m-original-data">
-                    <div class="section-title">1. INFORMACIÓN GENERAL</div>
-                    <div class="resp-grid">
-                        <div><div class="custom-label">Solicitante</div><p id="m-sol" style="font-weight:500; font-size:13px;"></p></div>
-                        <div><div class="custom-label">Gerencia</div><p id="m-ger" style="font-weight:500; font-size:13px;"></p></div>
-                        <div><div class="custom-label">Prioridad</div><div id="m-prioridad-container"></div></div>
-                        <div><div class="custom-label">Estado Actual</div><span id="m-est" class="badge" style="font-size:11px;"></span></div>
-                        <div><div class="custom-label">Tipo Documento</div><p id="m-tipo" style="font-weight:500; font-size:13px;"></p></div>
-                        <div><div class="custom-label">Acción Solicitada</div><p id="m-accion" style="font-weight:800; color:var(--primary); font-size:13px;"></p></div>
-                    </div>
-                    
-                    <div class="section-title">2. DOCUMENTACIÓN ADJUNTA</div>
-                    <div class="resp-grid" style="background:#f8fafc; padding:15px; border-radius:10px; border:1px solid var(--border);">
-                        <div><div class="custom-label">Archivo Borrador / Origen</div><div id="m-file-link" style="font-size:14px; margin-top:5px;"></div></div>
-                    </div>
-                    <div id="m-extra-panel" style="display:none; margin-top:15px; padding:15px; background:#f1f5f9; border-radius:8px; border:1px dashed #cbd5e1;">
-                        <div class="custom-label" style="color:var(--info); margin-bottom:10px;">Datos del Documento Anterior</div>
-                        <div class="resp-grid"><div><div class="custom-label">Cód. Original</div><p id="m-cod" style="font-weight:bold;"></p></div><div><div class="custom-label">Ver. Anterior</div><p id="m-ver" style="font-weight:bold;"></p></div><div><div class="custom-label">Fecha Ult. Ver.</div><p id="m-fecha-ult" style="font-weight:bold;"></p></div></div>
-                    </div>
-                    
-                    <div class="section-title">3. MOTIVACIÓN E INVOLUCRADOS</div>
-                    <div style="margin-top:10px; padding:15px; background:#fff; border:1px solid var(--border); border-radius:12px;">
-                        <div class="custom-label">Justificación / Motivo Detallado</div><p id="m-jus" style="line-height:1.5; color:#334155; font-size:13px;"></p>
-                    </div>
-                    
-                    <div id="m-involucrados-container" style="margin-top:15px;">
-                        <div class="custom-label">Personal Involucrado / Revisores Extras</div>
-                        <div id="m-involucrados-list" style="margin-bottom:10px; min-height:30px; padding:10px; background:#f8fafc; border-radius:8px; border:1px solid var(--border);"></div>
-                        <div id="m-add-involucrado-section" style="display:flex; gap:10px; flex-wrap:wrap;"><select id="m-new-involucrado-sel" style="flex:1; margin:0; min-width:200px;"><option value="">-- Añadir usuario a este caso --</option></select><button class="btn btn-info" onclick="window.guardarNuevoInvolucrado()">Añadir Usuario</button></div>
-                    </div>
-                </div>
-
-                <div id="m-panel-update-sgc" style="display:none; margin-top:25px; background:#f8fafc; padding:20px; border-radius:12px; border: 1px dashed var(--info);">
-                    <div class="section-title" style="margin-top:0;">AJUSTES SGC (Pre-Aprobación)</div>
-                    <div class="resp-grid"><div><label for="m-upd-tit">Título Corregido</label><input type="text" id="m-upd-tit"></div><div><label for="m-upd-cod">Código Asignado</label><input type="text" id="m-upd-cod"></div><div><label for="m-upd-ver">Versión</label><input type="text" id="m-upd-ver"></div><div><label for="m-upd-file">Adjunto Modificado (Opcional)</label><input type="file" id="m-upd-file"></div></div>
-                    <button class="btn btn-info" onclick="window.actualizarDatosSGC()" style="width:100%; padding:12px;">Actualizar Datos del Expediente</button>
-                </div>
-
-                <div id="m-panel-final-sgc" style="display:none; margin-top:25px; background:#eff6ff; padding:20px; border-radius:12px; border: 2px dashed var(--primary);">
-                    <div class="section-title" style="margin-top:0;">GENERACIÓN DE DOCUMENTO Y CIERRE SGC</div>
-                    <div class="resp-grid"><div><label for="m-final-cod">Cod. Oficial SGC</label><input type="text" id="m-final-cod" style="font-weight:bold; color:var(--primary);"></div><div><label for="m-final-ver">Ver. Oficial</label><input type="text" id="m-final-ver" style="font-weight:bold; color:var(--primary);"></div><div><label for="m-final-fecha">Fecha de Emisión</label><input type="date" id="m-final-fecha" style="font-weight:bold; color:var(--primary);"></div></div>
-                    <label for="m-final-file">Archivo Final Oficial PDF</label><input type="file" id="m-final-file">
-                    <input type="text" id="m-final-comentario" placeholder="Observaciones para el listado maestro...">
-                    <button class="btn btn-primary" onclick="window.guardarCierreFinal()" style="width:100%; padding:15px; font-size:15px;">PUBLICAR OFICIALMENTE Y CERRAR SOLICITUD</button>
-                </div>
-
-                <div id="m-actions" style="margin-top:30px; border-top:2px solid var(--border); padding-top:20px; display:none;">
-                    <div class="section-title" style="margin-top:0;">PANEL DE GESTIÓN Y FIRMAS</div>
-                    <div class="resp-grid">
-                        <button class="btn btn-primary" id="btn-firma-next" onclick="window.firmarPaso()" style="font-size:14px; box-shadow:0 4px 10px rgba(30,64,175,0.3);">✅ Firmar y Aprobar</button>
-                        <button class="btn btn-warning" onclick="window.gestionar('Reunión')">📅 Agendar Reunión</button>
-                        <button class="btn btn-info" onclick="window.gestionar('Consulta')">💬 Enviar Consulta</button>
-                        <button class="btn btn-warning" id="btn-devolver-paso" onclick="window.devolverPaso()" style="display:none; background-color:#d97706;">⏪ Devolver Fase</button>
-                        <button class="btn btn-danger" onclick="window.rechazar()">🚫 Rechazar</button>
-                    </div>
-                </div>
-
-                <div id="applicant-actions" style="margin-top:20px; display:none;"><button class="btn btn-info" style="background:var(--accent); width:100%; padding:15px; font-size:14px;" onclick="window.responderSolicitante()">Responder Consulta u Observación</button></div>
-
-                <div id="m-input-area" style="display:none; margin-top:20px; background:#fffbeb; padding:20px; border-radius:12px; border:2px dashed var(--warning);">
-                    <div id="reunion-container" style="display:none; margin-bottom:15px;"><label for="m-date-meeting" style="color:#b45309;">Fecha y Hora de Reunión</label><input type="datetime-local" id="m-date-meeting" style="margin:0; border-color:#d97706; background:#fff;"></div>
-                    <div class="custom-label" style="color:#b45309;">Detalle a registrar y enviar por correo:</div>
-                    <div id="m-extra-input" contenteditable="true" style="min-height:80px; border:1px solid #d97706; border-radius:8px; padding:15px; background:white; font-size:13px; line-height:1.5;"></div>
-                    <input type="file" id="m-file-gestion" style="margin-top:15px;">
-                    <div class="resp-grid" style="margin-top:15px;"><button class="btn btn-warning" id="btnConfirmAction" onclick="window.guardarGestion()" style="padding:12px;">Confirmar y Enviar Notificación</button><button class="btn btn-ghost" onclick="document.getElementById('m-input-area').style.display='none'">Cancelar</button></div>
-                </div>
-
-                <div id="general-comment-area" style="margin-top:30px; border-top:1px solid var(--border); padding-top:20px;">
-                    <div class="section-title" style="margin-top:0;">CHAT INTERNO / NOTAS LIBRES</div>
-                    <div id="m-comentario-libre" contenteditable="true" style="min-height:50px; border:1px solid #cbd5e1; border-radius:8px; padding:10px; background:white; font-size:12px; line-height:1.4;"></div>
-                    <div style="display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;"><input type="file" id="m-file-comentario" style="margin:0; flex:1; min-width:200px; padding:8px;"><button class="btn btn-success" onclick="window.enviarComentarioLibre()" style="padding:10px 20px; font-size:12px;">Subir Comentario</button></div>
-                </div>
-            </div>
-            
-            <div class="modal-side">
-                <div style="padding:20px; background:var(--sidebar); color:white; font-weight:800; font-size:12px; letter-spacing:1px; position:sticky; top:0;"><span class="material-icons-round" style="vertical-align:middle; font-size:16px; margin-right:5px;">history</span> BITÁCORA</div>
-                <div id="chat-box" style="padding:15px;"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal-plan">
-        <div class="modal-content" style="max-width: 850px; padding: 0; display:block; height:auto; max-height:92vh; overflow-y:auto; border-top:6px solid var(--primary);">
-            <div style="display:flex; justify-content:space-between; align-items:center; padding: 25px 30px; border-bottom:1px solid var(--border); background:white; position:sticky; top:0; z-index:100;">
-                <h2 style="color:var(--primary); margin:0; font-size:20px; font-weight:800;">Configurar Plan Anual <span id="edit-year-label"></span></h2>
-                <button class="btn-icon-danger" onclick="window.cerrarModalPlan()"><span class="material-icons-round">close</span></button>
-            </div>
-            <div style="padding:30px;">
-                <div class="grid-2"><div><label for="ah-obj">Objetivo General</label><textarea id="ah-obj" rows="3"></textarea></div><div><label for="ah-alcance">Alcance</label><textarea id="ah-alcance" rows="3"></textarea></div></div>
-                <div class="grid-3"><div><label for="ah-tecnica">Técnica</label><input type="text" id="ah-tecnica"></div><div><label for="ah-criterios">Criterios de Auditoría</label><input type="text" id="ah-criterios"></div><div><div class="custom-label">Referencia y Fecha Elab.</div><div style="display:flex; gap:5px;"><input type="text" id="ah-ref" style="width:60%;"><input type="date" id="ah-fecha" style="width:40%;"></div></div></div>
-                <div class="grid-2" style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
-                    <div><label for="ah-lider" style="color:var(--primary);">Auditor Líder</label><select id="ah-lider" style="margin-bottom:15px; font-weight:bold; color:var(--primary);"></select></div>
-                    <div><div class="custom-label" style="color:var(--info);">Equipo Auditor</div><div id="ah-auditor-list" class="checkbox-list" style="height:120px;"></div></div>
-                </div>
-                <div class="grid-2"><div><label for="ah-tec">Recursos Tecnológicos</label><input type="text" id="ah-tec"></div><div><label for="ah-rrhh">Recursos Humanos</label><input type="text" id="ah-rrhh"></div></div>
-                <div style="background:#eff6ff; padding:20px; border-radius:12px; border:1px dashed var(--info); margin-bottom:20px;">
-                    <label for="ah-extra-emails" style="color:var(--info);">Correos Adicionales / Notificaciones Externas</label>
-                    <input type="text" id="ah-extra-emails" placeholder="ej: asesor@mail.com, gerente@mail.com" style="margin-bottom:0;">
-                </div>
-                <div style="display:flex; gap:15px; margin-top:10px;">
-                    <button class="btn btn-primary" onclick="window.saveAuditPlan()" style="flex:2; padding:16px; font-size:15px;">GUARDAR PLAN ANUAL</button>
-                    <button class="btn btn-dark" onclick="window.cerrarModalPlan()" style="flex:1;">CANCELAR</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal-nueva-aud">
-        <div class="modal-content" style="max-width: 900px; display:block; padding: 0; height:auto; max-height:92vh; overflow-y:auto; border-top:6px solid var(--accent);">
-            <div style="display:flex; justify-content:space-between; align-items:center; padding: 25px 30px; border-bottom:1px solid var(--border); background:white; position:sticky; top:0; z-index:100;">
-                <h2 id="titulo-form-auditoria" style="color:var(--primary); margin:0; font-size:20px; font-weight:800;">Programar Nueva Auditoría</h2>
-                <button class="btn-icon-danger" onclick="window.cancelarEdicionAuditoria()"><span class="material-icons-round">close</span></button>
-            </div>
-            <div style="padding:30px;">
-                <div class="resp-grid">
-                    <div><label for="aud-fecha">Fecha Estimada</label><input type="date" id="aud-fecha"></div><div><label for="aud-h-ini">Hora Inicio</label><input type="time" id="aud-h-ini"></div>
-                    <div><label for="aud-h-fin">Hora Final</label><input type="time" id="aud-h-fin"></div><div><label for="aud-lugar">Lugar / Modalidad</label><input type="text" id="aud-lugar"></div>
-                </div>
-                <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
-                    <div class="custom-label" style="color:var(--primary);">Puntos / Requisitos OEA a Evaluar</div>
-                    <div id="aud-req-list" class="checkbox-list" style="height:140px; margin-bottom:0;"></div>
-                </div>
-                <div class="grid-2" style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
-                    <div><div class="custom-label" style="color:var(--success);">Personal Auditado(s)</div><div id="aud-auditado-list" class="checkbox-list" style="margin-bottom:0;"></div></div>
-                    <div><div class="custom-label" style="color:var(--info);">Auditor(es) a cargo</div><div id="aud-auditor-list" class="checkbox-list" style="margin-bottom:0;"></div></div>
-                </div>
-                <div class="grid-3" style="margin-bottom: 20px;">
-                    <div><label for="aud-org">Organización</label><input type="text" id="aud-org" placeholder="Ej: Empresa S.A."></div><div><label for="aud-dir">Dirección</label><input type="text" id="aud-dir" placeholder="Dirección principal"></div><div><label for="aud-sitios">Sitio(s) Auditado(s)</label><input type="text" id="aud-sitios"></div>
-                    <div><label for="aud-personal">No. de Personal</label><input type="number" id="aud-personal" placeholder="Ej: 50" readonly title="Calculado automáticamente"></div><div><label for="aud-turnos">No. de Turnos</label><input type="number" id="aud-turnos" placeholder="Ej: 2"></div>
-                    <div style="grid-column: span 3; margin-top:10px;"><div class="custom-label" style="color:var(--primary);">Auditores en Formación / Participantes (Opcional)</div><div id="aud-formacion-list" class="checkbox-list"></div></div>
-                </div>
-                <label for="aud-obs">Observaciones / Enfoque</label><textarea id="aud-obs" rows="3"></textarea>
-                <div style="display:flex; gap:15px; margin-top:10px;">
-                    <button class="btn btn-primary" id="btn-guardar-aud" onclick="window.guardarAuditoria()" style="flex:2; padding:16px; font-size:15px;">GENERAR AUDITORÍA Y NOTIFICAR</button>
-                    <button class="btn btn-dark" id="btn-cancelar-aud" onclick="window.cancelarEdicionAuditoria()" style="flex:1; display:none;">CANCELAR</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal-auditoria">
-        <div class="modal-content modal-full">
-            <div style="display:flex; justify-content:space-between; padding:20px 30px; border-bottom:1px solid var(--border); background:white;">
-                <div>
-                    <h2 style="font-size:22px; color:var(--primary); margin-bottom:5px; display:flex; align-items:center; gap:8px;">
-                        <span class="material-icons-round">fact_check</span> Expediente de Auditoría (<span id="ma-num"></span>)
-                    </h2>
-                    <span id="ma-proceso" style="font-weight:800; color:var(--sidebar); font-size:16px;"></span>
-                </div>
-                <div><button class="btn btn-dark" onclick="window.cerrarModalAuditoria()"><span class="material-icons-round">close</span> Cerrar</button></div>
-            </div>
-
-            <div class="tab-container">
-                <button class="tab-btn active" id="btn-tab-info" onclick="window.switchAuditTab('info')">Detalles Generales</button>
-                <button class="tab-btn" id="btn-tab-f020" onclick="window.switchAuditTab('f020')" style="display:none;">Lista Verif. (SGC-F-020)</button>
-                <button class="tab-btn" id="btn-tab-sac" onclick="window.switchAuditTab('sac')">Acciones (SAC SGC-F-002)</button>
-                <button class="tab-btn" id="btn-tab-f003" onclick="window.switchAuditTab('f003')">Reporte (SGC-F-003)</button>
-            </div>
-
-            <div style="flex:1; overflow-y:auto; padding:30px; background:white;">
-                <div id="tab-info" class="tab-content active">
-                    <div class="resp-grid" style="margin-bottom:15px;">
-                        <div><div class="custom-label">Fecha y Hora Programada</div><p><b id="ma-fecha"></b> (<span id="ma-hora"></span>)</p></div>
-                        <div><div class="custom-label">Lugar / Modalidad</div><p id="ma-lugar"></p></div>
-                        <div><div class="custom-label">Auditado(s)</div><p id="ma-auditado" style="color:var(--primary); font-weight:600;"></p></div>
-                        <div><div class="custom-label">Auditor(es)</div><p id="ma-auditor" style="color:var(--info); font-weight:600;"></p></div>
-                    </div>
-                    <div style="background:#f8fafc; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid var(--border);">
-                        <div class="custom-label">Requisitos / Puntos a Evaluar</div><p id="ma-req"></p>
-                        <div class="custom-label" style="margin-top:10px;">Observaciones / Enfoque</div><p id="ma-obs"></p>
-                    </div>
-
-                    <div style="background:#eff6ff; padding:20px; border-radius:12px; border: 1px dashed var(--accent); margin-bottom:20px;">
-                        <h4 style="color:var(--primary); margin-bottom:15px;">Ejecución y Tiempos Reales</h4>
-                        <div class="resp-grid" style="margin-bottom:15px;">
-                            <div><div class="custom-label">Estado</div><span id="ma-estado-badge" class="badge"></span></div>
-                            <div><div class="custom-label">Inicio Real</div><p id="ma-inicio-real" style="font-weight:bold;">---</p></div>
-                            <div><div class="custom-label">Fin Real</div><p id="ma-fin-real" style="font-weight:bold;">---</p></div>
-                        </div>
-                        <div><div class="custom-label">Duración Total</div><p id="ma-duracion" style="color:var(--success); font-weight:800; font-size:16px;">---</p></div>
-                        <div id="ma-controles-tiempo" style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
-                            <button id="btn-comenzar-auditoria" class="btn btn-primary" onclick="window.comenzarAuditoria()" style="display:none; padding:15px;"></button>
-                            <button id="btn-pausar-auditoria" class="btn btn-warning" onclick="window.pausarAuditoria()" style="display:none; padding:15px;">⏸️ PAUSAR (NUEVA RONDA)</button>
-                            <button id="btn-finalizar-auditoria" class="btn btn-success" onclick="window.finalizarAuditoria()" style="display:none; padding:15px;">⏹️ FINALIZAR AUDITORÍA</button>
-                        </div>
-                    </div>
-
-                    <h4 style="border-bottom:1px solid #e2e8f0; padding-bottom:10px; margin-top:30px;">Bitácora de Auditoría</h4>
-                    <div id="chat-box-audit" style="max-height: 250px; background:#f8fafc; border:1px solid var(--border); border-radius:8px;"></div>
-                    
-                    <div id="general-comment-area-audit" style="margin-top:15px;">
-                        <div class="custom-label">AÑADIR NOTA / HALLAZGO RÁPIDO:</div>
-                        <div style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:white; margin-bottom:10px;">
-                            <div id="ma-comentario-libre" contenteditable="true" style="min-height:50px; padding:10px;"></div>
-                        </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <input type="file" id="ma-file-comentario" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg" style="flex:1; margin:0;">
-                            <button class="btn btn-info" onclick="window.enviarComentarioAuditoria()">Guardar en Bitácora</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="tab-f020" class="tab-content">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
-                        <h3 style="color:var(--primary);">SGC-GG-F-020: Lista de Verificación</h3>
-                        <button class="btn btn-info" id="btn-add-f020" onclick="window.agregarFilaF020()" style="display:none;">+ Añadir Ítem</button>
-                    </div>
-                    <div class="table-responsive" style="border:1px solid var(--border); border-radius:8px;">
-                        <table style="width:100%; min-width:1000px;">
-                            <thead style="background:#f1f5f9;">
-                                <tr>
-                                    <th style="width:30px;">#</th>
-                                    <th>Pregunta</th>
-                                    <th style="width:120px;">Requisito OEA</th>
-                                    <th>Comentarios</th>
-                                    <th style="width:100px;">Auditado</th>
-                                    <th style="width:100px;">NC / Hallazgo</th>
-                                    <th>Observación</th>
-                                    <th style="width:80px;">Fortaleza</th>
-                                    <th style="width:50px;" class="f020-action-col">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-f020"></tbody>
-                        </table>
-                    </div>
-                    <div style="text-align:right; margin-top:15px; display:flex; justify-content:flex-end; gap:10px;">
-                        <button class="btn btn-info" id="btn-submit-f020" onclick="window.enviarPreguntasSGC()" style="display:none; padding:15px;">Subir Preguntas a SGC</button>
-                        <button class="btn btn-success" id="btn-save-f020" onclick="window.guardarF020()" style="display:none; padding:15px;">Guardar Cambios</button>
-                    </div>
-                </div>
-
-                <div id="tab-sac" class="tab-content">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h3 style="color:var(--primary); margin:0;">Control de Acciones Correctivas</h3>
-                        <button class="btn btn-info" id="btn-add-sac-manual" onclick="window.abrirCrearSACManual()" style="display:none;">+ Añadir SAC Manual Libre</button>
-                    </div>
-                    <div class="table-responsive" style="border:1px solid var(--border); border-radius:8px;">
-                        <table style="width:100%;">
-                            <thead style="background:#f1f5f9;"><tr><th>Ítem Ref.</th><th>Detalle Hallazgo</th><th>Tipo</th><th>Estado SAC</th><th>Gestión</th></tr></thead>
-                            <tbody id="tbody-audit-sacs"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="tab-f003" class="tab-content" style="background:#fff; border:1px solid #ccc; padding:40px; max-width:900px; margin:0 auto;">
-                    <div style="text-align:center; border-bottom:2px solid var(--primary); padding-bottom:15px; margin-bottom:20px;">
-                        <h2 style="color:var(--primary); font-weight:800; text-transform:uppercase;">Reporte de Auditoría Interna</h2>
-                        <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:10px; color:#475569; font-weight:700;">
-                            <span>CÓDIGO: SGC-GG-F-003</span><span>FECHA EMISIÓN: 06 DIC 2022</span><span>FECHA VERSIÓN: 12 MAY 2025</span><span>VERSIÓN: 3</span>
-                        </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns: 150px 1fr; border:1px solid #ccc; font-size:12px; margin-bottom:20px;">
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">No. de Auditoría</div><div style="padding:8px; border-bottom:1px solid #ccc;" id="rep-num"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Organización</div><div style="padding:8px; border-bottom:1px solid #ccc;" id="rep-org"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Dirección</div><div style="padding:8px; border-bottom:1px solid #ccc;" id="rep-dir"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Sitio(s) Auditado(s)</div><div style="padding:8px; border-bottom:1px solid #ccc;" id="rep-sitios"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Fechas de Auditoría</div><div style="padding:8px; border-bottom:1px solid #ccc;" id="rep-fechas"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">No. de Personal</div><div style="padding:8px; border-bottom:1px solid #ccc;" id="rep-personal"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">No. de Turnos</div><div style="padding:8px; border-bottom:1px solid #ccc;" id="rep-turnos"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Auditor Líder</div><div style="padding:8px; border-bottom:1px solid #ccc;" id="rep-lider"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Auditor(es) Adicional(es)</div><div style="padding:8px; border-bottom:1px solid #ccc;" id="rep-adicionales"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Auditor(es) en Formación</div><div style="padding:8px;" id="rep-formacion"></div>
-                    </div>
-
-                    <h4 style="margin-bottom:5px; color:var(--primary);">1. Objetivo de la Auditoría</h4>
-                    <p style="font-size:12px; margin-bottom:15px; color:#334155; line-height:1.5;">Verificar que el Sistema de Gestión se ha implementado y se mantiene de manera eficaz, eficiente y efectiva para satisfacer los requisitos, y es conforme con las políticas y procedimientos internos de la organización y demás regulaciones aplicables a la Organización.</p>
-
-                    <h4 style="margin-bottom:5px; color:var(--primary);">2. Alcance de la Auditoría</h4>
-                    <p style="font-size:12px; margin-bottom:20px; color:#334155; line-height:1.5;">Todos los procesos del Sistema de Gestión <span id="rep-alcance" style="font-weight:bold;"></span>.</p>
-
-                    <h4 style="margin-bottom:10px; color:var(--primary);">3. Resumen de hallazgos de la Auditoría</h4>
-                    <table style="width:100%; border:1px solid #ccc; margin-bottom:20px; font-size:12px;">
-                        <thead style="background:#f1f5f9;"><tr><th style="border-right:1px solid #ccc; padding:8px;">Clasificación</th><th style="text-align:center; padding:8px;">#</th></tr></thead>
-                        <tbody>
-                            <tr><td style="border-right:1px solid #ccc; border-bottom:1px solid #ccc; padding:8px;">No Conformidades Menores</td><td id="f003-nc-menor" style="text-align:center; font-weight:bold; border-bottom:1px solid #ccc;">0</td></tr>
-                            <tr><td style="border-right:1px solid #ccc; border-bottom:1px solid #ccc; padding:8px;">No Conformidades Mayores</td><td id="f003-nc-mayor" style="text-align:center; font-weight:bold; border-bottom:1px solid #ccc; color:var(--danger)">0</td></tr>
-                            <tr><td style="border-right:1px solid #ccc; padding:8px;">Oportunidades de Mejora</td><td id="f003-om" style="text-align:center; font-weight:bold; color:var(--info)">0</td></tr>
-                        </tbody>
-                    </table>
-
-                    <h4 style="margin-bottom:5px; color:var(--primary);">4. No Conformidades Menores (NC Menor)</h4><div id="container-nc-menor" style="margin-bottom:20px;"></div>
-                    <h4 style="margin-bottom:5px; color:var(--primary);">5. No Conformidades Mayores (NC Mayor)</h4><div id="container-nc-mayor" style="margin-bottom:20px;"></div>
-                    <h4 style="margin-bottom:5px; color:var(--primary);">6. Oportunidades de Mejora (OM)</h4><div id="container-om" style="margin-bottom:20px;"></div>
-
-                    <h4 style="margin-bottom:10px; color:var(--primary);">7. Conclusiones de Auditoria</h4>
-                    <textarea id="f003-conclusiones" rows="4" style="width:100%; border:1px solid #ccc; padding:10px; font-size:12px; margin-bottom:20px;"></textarea>
-
-                    <h4 style="margin-bottom:5px; color:var(--primary);">8. Notas de Auditoría</h4>
-                    <div style="display:grid; grid-template-columns: 150px 1fr; border:1px solid #ccc; font-size:12px; margin-bottom:20px;">
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Nombre del Proceso</div>
-                        <div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="f003-n-proceso" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Personal Auditado</div>
-                        <div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="f003-n-personal" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Cargo del Auditado</div>
-                        <div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="f003-n-cargo" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Requisitos Norma</div>
-                        <div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="f003-n-req" style="border:none; margin:0; width:100%; border-radius:0; height:100%; min-height:40px;"></textarea></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Documentación</div>
-                        <div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="f003-n-doc" style="border:none; margin:0; width:100%; border-radius:0; height:100%; min-height:40px;"></textarea></div>
-                        <div style="padding:8px; border-right:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Evidencias Evaluadas</div>
-                        <div style="padding:0;"><textarea id="f003-n-evidencia" style="border:none; margin:0; width:100%; border-radius:0; height:100%; min-height:60px;"></textarea></div>
-                    </div>
-                    <div style="text-align:right;"><button class="btn btn-primary" id="btn-save-f003" onclick="window.guardarF003()" style="display:none; padding:12px 25px; font-size:14px;">GUARDAR REPORTE SGC-F-003</button></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal-sac">
-        <div class="modal-content" style="max-width: 900px; display:block; padding: 0; height:auto; max-height:95vh; overflow-y:auto; border-top:5px solid #d97706; background:#fff;">
-            <div style="padding:20px; border-bottom:1px solid var(--border); background:#f8fafc; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100;">
-                <h2 style="color:#92400e; margin:0; font-size:18px; font-weight:800;">SOLICITUD DE ACCIONES CORRECTIVAS Y MEJORAS</h2>
-                <button class="btn-icon-danger" onclick="document.getElementById('modal-sac').style.display='none'"><span class="material-icons-round">close</span></button>
-            </div>
-            <div style="padding:30px;">
-                <div style="display:grid; grid-template-columns: 180px 1fr; border:1px solid #ccc; font-size:12px; margin-bottom:20px;">
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Fecha</div><div style="padding:0; border-bottom:1px solid #ccc;"><input type="date" id="sac-fecha" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;"># de Solicitud / Estado</div><div style="padding:8px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between;"><span id="sac-num" style="font-weight:bold;"></span><span id="sac-estado-badge" class="badge"></span></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Requisito Evaluado</div><div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="sac-proceso" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Acción Correctiva / Mejora</div><div style="padding:0; border-bottom:1px solid #ccc;"><select id="sac-tipo" style="border:none; margin:0; width:100%; border-radius:0; height:100%; font-weight:bold; background:transparent;"><option value="NC Mayor">NC Mayor</option><option value="NC Menor">NC Menor</option><option value="OM">Oportunidad de Mejora (OM)</option></select></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Tipo de Doc. a Afectar/Crear</div><div style="padding:0; border-bottom:1px solid #ccc;"><select id="sac-tipo-doc-afectado" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></select></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Fuente de No Conformidad</div><div style="padding:0; border-bottom:1px solid #ccc;"><select id="sac-fuente" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"><option value="Auditoría Interna">Auditoría Interna</option><option value="Auditoría Externa">Auditoría Externa</option><option value="Incidente">Incidente / Accidente</option><option value="Queja Cliente">Queja de Cliente</option><option value="Otro">Otro</option></select></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">En el caso de otro, detalle:</div><div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="sac-fuente-otro" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Detalle NC / Problema</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="sac-detalle" rows="3" disabled style="border:none; margin:0; width:100%; border-radius:0; background:transparent; resize:vertical; padding:8px;"></textarea></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Beneficio Esperado</div><div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="sac-beneficio" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Análisis de Causa-Raíz</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="sac-causa" rows="3" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:8px;"></textarea></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Acción a Implementar</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="sac-accion" rows="3" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:8px;"></textarea></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; font-weight:bold; background:#fef3c7;">Responsable de la AC</div><div style="padding:0; display:flex; align-items:center;"><select id="sac-dueno" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></select></div>
-                </div>
-                <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">PLAN DE ACCIÓN</h4>
-                <div class="table-responsive" style="margin-bottom:10px;"><table style="width:100%; border:1px solid #ccc; font-size:11px; text-align:left;"><thead style="background:#f1f5f9;"><tr><th style="border:1px solid #ccc; width:30px;">#</th><th style="border:1px solid #ccc;">Detalle</th><th style="border:1px solid #ccc;">Responsable</th><th style="border:1px solid #ccc;">Fecha Inicio</th><th style="border:1px solid #ccc;">Fecha Cierre</th><th style="border:1px solid #ccc; width:40px;"></th></tr></thead><tbody id="tbody-plan-accion"></tbody></table></div>
-                <button class="btn btn-info" onclick="window.addPlanRow()" style="font-size:10px; padding:4px 8px; margin-bottom:20px;">+ Añadir Fila</button>
-
-                <div style="display:flex; gap:20px; align-items:center; border:1px solid #ccc; padding:10px; background:#f8fafc; margin-bottom:20px; font-size:12px;"><b style="color:var(--primary);">Aprobación del Plan de Acción:</b><input type="date" id="sac-fecha-aprob-plan" style="margin:0; width:200px; padding:6px;"></div>
-
-                <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">ACTIVIDADES DE SEGUIMIENTO</h4>
-                <div class="table-responsive" style="margin-bottom:10px;"><table style="width:100%; border:1px solid #ccc; font-size:11px; text-align:left;"><thead style="background:#f1f5f9;"><tr><th style="border:1px solid #ccc; width:30px;">#</th><th style="border:1px solid #ccc;">Resultado Seguimiento</th><th style="border:1px solid #ccc;">Responsable</th><th style="border:1px solid #ccc;">Fecha</th><th style="border:1px solid #ccc; width:40px;"></th></tr></thead><tbody id="tbody-seguimiento"></tbody></table></div>
-                <button class="btn btn-info" onclick="window.addSeguimientoRow()" style="font-size:10px; padding:4px 8px; margin-bottom:20px;">+ Añadir Fila</button>
-
-                <div id="sac-panel-cierre" style="border:2px dashed var(--success); padding:20px; border-radius:8px; margin-bottom:20px; background:#f0fdf4;"><h4 style="color:var(--success); margin-bottom:10px; font-size:14px;">Aprobación de Cierre</h4><div class="grid-2"><div><label for="sac-resp-cierre">Responsable</label><input type="text" id="sac-resp-cierre" disabled style="background:#e2e8f0;"></div><div><label for="sac-fecha-cierre">Fecha de Cierre</label><input type="date" id="sac-fecha-cierre" style="background:#fff;"></div></div><div style="display:flex; align-items:center; gap:10px; margin-top:10px;"><input type="checkbox" id="sac-check-cerrar" style="width:20px; height:20px; cursor:pointer; margin:0;"> <label for="sac-check-cerrar" style="margin:0; font-size:13px; color:var(--success); cursor:pointer;"><b>CERRAR SAC</b></label></div></div>
-                <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-primary" id="btn-save-sac" onclick="window.guardarSAC()" style="flex:1; padding:15px;">Guardar SAC</button><button class="btn btn-dark" onclick="document.getElementById('modal-sac').style.display='none'" style="padding:15px; width:150px;">Cancelar</button></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal-usuario">
-        <div class="modal-content" style="max-width: 650px; display:block; padding: 30px; height:auto; max-height:90vh; overflow-y:auto; border-top: 5px solid var(--primary);">
-            <h2 id="user-form-title" style="color:var(--primary); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">person_add</span> Registrar / Editar Usuario</h2>
-            
-            <div class="resp-grid" style="margin-bottom:15px;">
-                <div><label for="u-nom">Nombre Completo</label><input type="text" id="u-nom" placeholder="Ej: Juan Pérez"></div>
-                <div><label for="u-usr">Usuario ID (Corto)</label><input type="text" id="u-usr" placeholder="Ej: jperez"></div>
-                <div><label for="u-email">Correo Autorizado (Google)</label><input type="email" id="u-email" placeholder="Ej: jperez@empresa.com"></div>
-                <div><label for="u-rol">Cargo / Rol</label><input type="text" id="u-rol" placeholder="Ej: Analista de Calidad"></div>
-            </div>
-            
-            <div class="card" style="margin-bottom:15px; padding:15px; border:1px solid var(--border); box-shadow:none;">
-                <div class="custom-label" style="color:var(--primary); margin-bottom:10px; display:block;">Gerencia(s) Asignada(s)</div>
-                <div id="u-ger-list" class="checkbox-list" style="max-height:100px; display:grid; grid-template-columns:1fr 1fr; gap:5px;"></div>
-            </div>
-
-            <div class="card" style="margin-bottom:20px; padding:15px; border:1px solid var(--border); box-shadow:none;">
-                <div class="custom-label" style="color:var(--primary); margin-bottom:10px; display:block;">Permisos y Roles de Acceso</div>
-                <div class="resp-grid" style="gap:10px; grid-template-columns:1fr 1fr;">
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-solicitar" style="margin:0;"> Crear Solicitudes (SGC-SOL)</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-propias" style="margin:0;"> Ver sus Solicitudes</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-ger" style="margin:0;"> Ver solicitudes de su Gerencia</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-todas" style="margin:0;"> Ver TODAS las Solicitudes</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-paso1" style="margin:0;"> Aprobar Paso 1 (Doc)</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-paso2" style="margin:0;"> Aprobar Paso 2 (Verif)</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-paso4" style="margin:0;"> Aprobar Paso 4 (SGC Final)</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--success); font-weight:bold;"><input type="checkbox" id="p-gest-sgc" style="margin:0;"> Gestor SGC (Avanzado)</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--warning); font-weight:bold;"><input type="checkbox" id="p-ger-apr" style="margin:0;"> Aprobador Gerencia (Paso 3)</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-listado" style="margin:0;"> Ver Listado Maestro</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-users" style="margin:0;"> Administrar Usuarios</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-struct" style="margin:0;"> Configurar Estructura</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-ver" style="margin:0;"> Ver Auditorías</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-auditor" style="margin:0;"> Es Auditor / Lider</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-dueno" style="margin:0;"> Dueño de Proceso (Auditado)</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--danger); font-weight:bold;"><input type="checkbox" id="p-audit-admin" style="margin:0;"> Admin de Auditorías / OEA</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--primary); font-weight:bold;"><input type="checkbox" id="p-admin" style="margin:0;"> Super Administrador</label>
-                </div>
-            </div>
-
-            <div style="display:flex; gap:10px;">
-                <button class="btn btn-primary" id="btnSaveUser" onclick="window.guardarUsuario()" style="flex:1; padding:15px; font-size:15px;">GUARDAR USUARIO</button>
-                <button class="btn btn-dark" onclick="window.cerrarModalUsuario()" style="flex:1;">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal-form-listado">
-        <div class="modal-content" style="max-width: 800px; display:block; padding: 30px; height:auto; max-height:90vh; overflow-y:auto;">
-           <h2 style="color:var(--primary); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">edit_document</span> <span id="lm-modal-title">Agregar Registro al Listado Maestro</span></h2>
-           <div class="resp-grid" id="dinamic-form-maestro"></div>
-           <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-primary" onclick="window.guardarRegistroMaestro()" style="flex:1;">Guardar Documento</button><button class="btn btn-dark" onclick="document.getElementById('modal-form-listado').style.display='none'" style="flex:1;">Cancelar</button></div>
-        </div>
-    </div>
-
-    <script type="module" src="app.js"></script>
-</body>
-</html>
+window.actualizarMetricasF003 = (canEd) => {
+let nM = 0, nm = 0, om = 0, hM = "", hm = "", ho = ""; 
+currentAuditF020.forEach(i => { if(i.nc === 'NC Mayor'){nM++; hM += window.generarBloqueNCDinamico(i,nM,'NC Mayor',canEd);} if(i.nc === 'NC Menor'){nm++; hm += window.generarBloqueNCDinamico(i,nm,'NC Menor',canEd);} if(i.nc === 'OM'){om++;
