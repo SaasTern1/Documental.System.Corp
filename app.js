@@ -1,14 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, updateDoc, setDoc, query, where, getDocs, arrayUnion, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
 const firebaseConfig = { apiKey: "AIzaSyDdzCiachuhbE9jATz-TesPI2vUVIJrHjM", authDomain: "sistemadegestion-7400d.firebaseapp.com", projectId: "sistemadegestion-7400d", storageBucket: "sistemadegestion-7400d.firebasestorage.app", messagingSenderId: "709030283072", appId: "1:709030283072:web:5997837b36a448e9515ca5" };
-const app = initializeApp(firebaseConfig); 
-const auth = getAuth(app); 
-const db = getFirestore(app); 
-const appId = 'sgc-final-v6';
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const appId = 'sgc-final-v6';
 
-const EMAIL_SERVICE_ID = "service_vumxptj", EMAIL_TEMPLATE_ID = "template_z27y5yk", EMAIL_PUBLIC_KEY = "kWsovOfdi7dBqLMw2", EMAIL_ADMIN_SGC = "sistemadegestion@fcipty.com"; 
+const EMAIL_SERVICE_ID = "service_a7yozqh", EMAIL_TEMPLATE_ID = "template_n5myebl", EMAIL_PUBLIC_KEY = "2jVnfkJKKG0bpKN-U", EMAIL_ADMIN_SGC = "sistemadegestion@fcipty.com"; 
 (function() { emailjs.init(EMAIL_PUBLIC_KEY); })();
 
 const CLOUD_NAME = "df79cjklp", UPLOAD_PRESET = "fci_documentos", PASOS_NOMBRES = ["Pendiente Documentado", "Pendiente Verificado", "Pendiente Aprobación Gerencia", "Pendiente Aprobación SGC"];
@@ -40,16 +37,6 @@ window.cambiarVista = (id, btn) => {
   if(window.innerWidth <= 768) { if($('sidebar')) $('sidebar').classList.remove('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.remove('active'); }
 };
 window.toggleMenu = () => { if($('sidebar')) $('sidebar').classList.toggle('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.toggle('active'); };
-
-window.toggleDarkMode = () => {
-    const body = document.body;
-    body.classList.toggle('dark-theme');
-    const isDark = body.classList.contains('dark-theme');
-    localStorage.setItem('sgc_dark_mode', isDark);
-    const icon = document.getElementById('dark-mode-icon');
-    const text = document.getElementById('dark-mode-text');
-    if (icon && text) { icon.innerText = isDark ? 'light_mode' : 'dark_mode'; text.innerText = isDark ? 'Claro' : 'Descanso'; }
-};
 
 window.abrirDocumento = async (url, nombreOriginal) => {
   if (!url || url === "#") return;
@@ -169,9 +156,13 @@ window.renderTablasSolicitudes = () => {
   let hH = "", hA = "", hG = "", sort = [...globalSolicitudes].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
   let totalCerradas = 0, cerradasATiempo = 0;
 
+  const p = currentUser.permisos || {}; 
+  const esAdm = p.admin || p.p_gest_sgc;
+
   sort.forEach(s => {
     let es = s.estado || "Pendiente", c = es==='Anulado'||es==='Rechazado', apr = es.includes('Aprobado Final');
     let bc = apr ? 'badge-success' : (c ? 'badge-danger' : 'badge-warning'), ps = s.prioridad || "Normal", bp = ps==='Alta'?'badge-danger':(ps==='Básica'?'badge-info':'badge-dark'), et = PASOS_NOMBRES[s.idx] || '';
+    
     let isM = (s.uid === currentUser.usuario) || (s.involucrados && currentUser.email && s.involucrados.includes(currentUser.email.toLowerCase()));
     
     let slaVisual = s.fecha_esperada_cierre ? window.formatearFechaAbreviada(s.fecha_esperada_cierre) : '<span style="color:#cbd5e1">-</span>';
@@ -181,13 +172,30 @@ window.renderTablasSolicitudes = () => {
         totalCerradas++; if(s.fecha_final <= s.fecha_esperada_cierre) cerradasATiempo++;
     }
 
-    if(isM) hH += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}</td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bc}">${es}</span></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver / Gestionar</button></td></tr>`;
-    hA += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}</td><td><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bc}">${es}</span><br><small>${et}</small></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver Detalle</button></td></tr>`;
+    if(isM) {
+        hH += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}</td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bc}">${es}</span></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver / Gestionar</button></td></tr>`;
+    }
 
-    let act = !apr && !c, p = currentUser.permisos, esAdm = p.admin || p.p_gest_sgc;
+    let puedeVerTodas = false;
+    if (esAdm || p.p_ver_todas) {
+        puedeVerTodas = true;
+    } else if (p.p_ver_ger && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia)) {
+        puedeVerTodas = true;
+    } else if (isM) {
+         puedeVerTodas = true;
+    }
+
+    if(puedeVerTodas) {
+        hA += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}</td><td><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bc}">${es}</span><br><small>${et}</small></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver Detalle</button></td></tr>`;
+    }
+
+    let act = !apr && !c;
     let pgS = act && ((s.idx===0 && (esAdm||p.p_paso1)) || (s.idx===1 && (esAdm||p.p_paso2)) || (s.idx===3 && (esAdm||p.p_paso4)));
     let pgG = act && s.idx===2 && p.p_ger_apr && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia);
-    if(pgS || pgG) hG += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td><span class="badge badge-info">${et}</span></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button class="btn btn-warning" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Revisar / Firmar</button></td></tr>`;
+    
+    if(pgS || pgG) {
+        hG += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td><span class="badge badge-info">${et}</span></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button class="btn btn-warning" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Revisar / Firmar</button></td></tr>`;
+    }
   });
 
   setHtml('tbody-historial', hH); setHtml('tbody-all', hA); setHtml('tbody-gestionar', hG);
@@ -230,10 +238,25 @@ window.completarLoginUI = () => {
   if (p.p_gest_sgc || isAdm) window.cambiarVista('sec-all', $('nav-all')); else if (p.can_solicit) window.cambiarVista('sec-crear', $('nav-crear')); else if (p.p_ver_propias) window.cambiarVista('sec-hist', $('nav-hist')); else if (canDash) window.cambiarVista('sec-dash', $('nav-dash')); else if (canAud) window.cambiarVista('sec-audit', $('nav-audit'));
 };
 
+window.logout = () => { localStorage.removeItem('sgc_session_user'); currentUser = null; setDisplay('sidebar', 'none'); setDisplay('main', 'none'); setDisplay('login-screen', 'flex'); setVal('login-user', ''); setVal('login-pass', ''); };
+
+window.iniciarSesion = async () => {
+  const u = $('login-user').value.toLowerCase().trim(); const p = $('login-pass').value.trim();
+  if (!u || !p) return alert("Por favor, ingresa tu usuario y contraseña."); window.showLoading();
+  try {
+    if(u === 'admin' && p === '1130') {
+      const adminRef = doc(db, "artifacts", appId, "public", "data", "Usuarios", "admin"); const snapAdmin = await getDoc(adminRef);
+      if(!snapAdmin.exists()) { await setDoc(adminRef, { nombre: "Admin Maestro", usuario: "admin", pass: "1130", gerencias: ["SGC"], gerencia: "SGC", email: EMAIL_ADMIN_SGC, permisos: { can_solicit:true, p_gest_sgc:true, p_ger_apr:true, p_ver_propias:true, p_ver_ger:true, p_ver_all:true, p_ver_todas:true, p_users:true, p_struct:true, p_ver_listado:true, p_audit_admin:true, p_audit_ver:true, admin:true, p_paso1:true, p_paso2:true, p_paso4:true } }); }
+    }
+    const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", u), where("pass", "==", p)));
+    if(!qs.empty) { localStorage.setItem('sgc_session_user', u); currentUser = qs.docs[0].data(); window.completarLoginUI(); } else alert("Credenciales incorrectas.");
+  } catch (error) { alert("Error de red."); } finally { window.hideLoading(); }
+};
+
 window.cargarUsuarioParaEditar = (id) => {
   const u = allUsers.find(x => x.usuario === id); if(!u) return;
   setHtml('user-form-title', `<span class="material-icons-round">edit</span> Editando Usuario: ${u.usuario}`);
-  setVal('u-nom', u.nombre || ''); setVal('u-usr', u.usuario || ''); if($('u-usr')) $('u-usr').disabled = true; setVal('u-rol', u.role || ''); setVal('u-email', u.email || '');
+  setVal('u-nom', u.nombre || ''); setVal('u-usr', u.usuario || ''); if($('u-usr')) $('u-usr').disabled = true; setVal('u-pas', u.pass || ''); setVal('u-rol', u.role || ''); setVal('u-email', u.email || '');
   let gs = u.gerencias || []; if(!u.gerencias && u.gerencia) gs = [u.gerencia]; $$('#u-ger-list input[type="checkbox"]').forEach(cb => { cb.checked = gs.includes(cb.value); });
   const p = u.permisos || {};
   ['p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno'].forEach(i => { let k = i.replace(/-/g,'_'); if(k==='p_solicitar')k='can_solicit'; if($(i)) $(i).checked = p[k]||false; });
@@ -250,23 +273,20 @@ window.eliminarUsuario = async (uid) => {
 
 window.resetUserForm = () => {
   setHtml('user-form-title', `<span class="material-icons-round">person_add</span> Registrar / Editar Usuario`);
-  setVal('u-nom', ''); setVal('u-usr', ''); if($('u-usr')) $('u-usr').disabled = false; setVal('u-rol', ''); setVal('u-email', '');
+  setVal('u-nom', ''); setVal('u-usr', ''); if($('u-usr')) $('u-usr').disabled = false; setVal('u-pas', '123'); setVal('u-rol', ''); setVal('u-email', '');
   $$('#u-ger-list input[type="checkbox"]').forEach(cb => cb.checked = false);
   ['p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-admin'].forEach(i => { if($(i)) $(i).checked=false; });
   if($('btnSaveUser')) $('btnSaveUser').innerText = "GUARDAR USUARIO"; 
 };
 
 window.guardarUsuario = async () => {
-  const n = $('u-nom').value.trim(), u = $('u-usr').value.toLowerCase().trim(), r = $('u-rol').value.trim(), e = $('u-email').value.trim().toLowerCase(), gs = []; $$('#u-ger-list input:checked').forEach(cb => { gs.push(cb.value); });
-  if(!n || !u || !e || gs.length === 0) return alert("Nombre, Usuario ID, Correo y al menos 1 Gerencia son obligatorios.");
+  const n = $('u-nom').value.trim(), u = $('u-usr').value.toLowerCase().trim(), p = $('u-pas').value.trim(), r = $('u-rol').value.trim(), e = $('u-email').value.trim().toLowerCase(), gs = []; $$('#u-ger-list input:checked').forEach(cb => { gs.push(cb.value); });
+  if(!n || !u || !p || gs.length === 0) return alert("Nombre, Usuario, Contraseña y al menos 1 Gerencia son obligatorios.");
   const pm = { can_solicit: $('p-solicitar').checked, p_ver_propias: $('p-ver-propias').checked, p_ver_ger: $('p-ver-ger').checked, p_ver_todas: $('p-ver-todas').checked, p_paso1: $('p-paso1').checked, p_paso2: $('p-paso2').checked, p_paso4: $('p-paso4').checked, p_gest_sgc: $('p-gest-sgc').checked, p_ger_apr: $('p-ger-apr').checked, p_users: $('p-users').checked, p_struct: $('p-struct').checked, p_ver_listado: $('p-ver-listado').checked, p_audit_ver: $('p-audit-ver').checked, p_audit_admin: $('p-audit-admin').checked, p_audit_auditor: $('p-audit-auditor').checked, p_audit_dueno: $('p-audit-dueno').checked, admin: $('p-admin').checked };
-  window.showLoading(); 
-  
-  try {
-      await setDoc(doc(db, "artifacts", appId, "public", "data", "Usuarios", e), { nombre: n, usuario: u, gerencias: gs, gerencia: gs[0], role: r, email: e, permisos: pm }, { merge: true });
-      window.cerrarModalUsuario(); alert("Usuario configurado y autorizado para Google Login exitosamente.");
-  } catch(err) { alert("Error al guardar usuario."); }
-  finally { window.hideLoading(); }
+  window.showLoading(); const docRef = doc(db, "artifacts", appId, "public", "data", "Usuarios", u); const snap = await getDoc(docRef);
+  if(snap.exists() && $('user-form-title').innerText.includes("Registrar")) { window.hideLoading(); return alert("Ese ID de usuario ya existe."); }
+  await setDoc(docRef, { nombre: n, usuario: u, pass: p, gerencias: gs, gerencia: gs[0], role: r, email: e, permisos: pm });
+  window.cerrarModalUsuario(); window.hideLoading(); alert("Usuario guardado exitosamente.");
 };
 
 window.exportarExcelUsuarios = () => {
@@ -707,10 +727,42 @@ let estado = elEstado ? elEstado.value : "";
 let esAdminSGC = currentUser.permisos.admin || currentUser.permisos.p_gest_sgc;
 
 let datosFiltrados = globalSolicitudes.filter(s => {
-    if (origen !== 'all' && !esAdminSGC) { let isMine = (s.uid === currentUser.usuario) || (s.involucrados && currentUser.email && s.involucrados.includes(currentUser.email.toLowerCase())); if (origen === 'hist' && !isMine) return false; if (origen === 'gest') { const p = currentUser.permisos; let ver = p.p_ver_all || (p.p_ver_ger && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia)) || isMine; if(!ver) return false; } }
-    if (desde && s.fecha < desde) return false; if (hasta && s.fecha > hasta + "T23:59:59") return false;
-    if (estado) { let eStr = (s.estado || "").toUpperCase(); if (estado === 'Pendiente' && (eStr.includes('APROBADO FINAL') || eStr === 'ANULADO' || eStr === 'RECHAZADO')) return false; if (estado === 'Aprobado Final' && !eStr.includes('APROBADO FINAL')) return false; if (estado === 'Cancelado' && eStr !== 'ANULADO' && eStr !== 'RECHAZADO') return false; }
-    return true;
+    let isMine = (s.uid === currentUser.usuario) || (s.involucrados && currentUser.email && s.involucrados.includes(currentUser.email.toLowerCase())); 
+    
+    if (!esAdminSGC) { 
+        if (origen === 'hist' && !isMine) {
+            return false; 
+        }
+        if (origen === 'all') {
+            const p = currentUser.permisos;
+            let puedeExportar = false;
+            if (p.p_ver_todas) {
+                puedeExportar = true;
+            } else if (p.p_ver_ger && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia)) {
+                puedeExportar = true;
+            } else if (isMine) {
+                puedeExportar = true;
+            }
+            if(!puedeExportar) return false;
+        }
+        if (origen === 'gest') { 
+            const p = currentUser.permisos; 
+            let ver = p.p_ver_todas || (p.p_ver_ger && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia)) || isMine; 
+            if(!ver) return false; 
+        } 
+    }
+
+    if (desde && s.fecha < desde) return false; 
+    if (hasta && s.fecha > hasta + "T23:59:59") return false;
+    
+    if (estado) { 
+        let eStr = (s.estado || "").toUpperCase(); 
+        if (estado === 'Pendiente' && (eStr.includes('APROBADO FINAL') || eStr === 'ANULADO' || eStr === 'RECHAZADO')) return false; 
+        if (estado === 'Aprobado Final' && !eStr.includes('APROBADO FINAL')) return false; 
+        if (estado === 'Cancelado' && eStr !== 'ANULADO' && eStr !== 'RECHAZADO') return false; 
+    }
+    
+    return true; 
 });
 
 if(datosFiltrados.length === 0) return alert("No hay datos que coincidan con estos filtros para exportar.");
@@ -1121,8 +1173,7 @@ window.hideLoading(); alert("Reporte F-003 guardado.");
 };
 
 window.renderAuditSACs = () => {
-const tb = $('tbody-audit-sacs'); if(!tb) return; 
-let hs = currentAuditF020.filter(i => i.nc === 'NC Mayor' || i.nc === 'NC Menor' || i.nc === 'OM');
+const tb = $('tbody-audit-sacs'); if(!tb) return; let hs = currentAuditF020.filter(i => i.nc === 'NC Mayor' || i.nc === 'NC Menor' || i.nc === 'OM');
 if(hs.length === 0) { tb.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No hay NC/OM.</td></tr>"; return; } let ht = "";
 hs.forEach((h, idx) => {
     let sac = globalAllSacs.find(s => s.f020_id === h.id), bd = '', es = 'SIN GENERAR', btn = '', cb = h.nc === 'NC Mayor' ? 'badge-danger' : (h.nc === 'NC Menor' ? 'badge-warning' : 'badge-info');
@@ -1282,13 +1333,9 @@ let dE = globalAllSacs.map(s => {
 let wb = XLSX.utils.book_new(); let ws = XLSX.utils.json_to_sheet(dE); XLSX.utils.book_append_sheet(wb, ws, "F-023"); XLSX.writeFile(wb, "F-023_Control_NC.xlsx");
 };
 
-// ==========================================
-// INICIALIZACIÓN DE LA APLICACIÓN
-// ==========================================
 const inicializarApp = async () => {
     window.hideLoading(); 
     
-    // Cargar preferencia de Modo Oscuro
     if (localStorage.getItem('sgc_dark_mode') === 'true') {
         document.body.classList.add('dark-theme');
         const icon = document.getElementById('dark-mode-icon');
@@ -1296,25 +1343,15 @@ const inicializarApp = async () => {
         if (icon && text) { icon.innerText = 'light_mode'; text.innerText = 'Claro'; }
     }
 
-    // Verificar sesión (Usuario / Contraseña manual)
     const su = localStorage.getItem('sgc_session_user');
     if (su) {
         window.showLoading();
         try { 
             const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", su)));
-            if (!qs.empty) { 
-                currentUser = qs.docs[0].data(); 
-                window.completarLoginUI(); 
-            } else {
-                window.logout();
-            }
-        } catch(e) { 
-            window.logout(); 
-        } 
+            if (!qs.empty) { currentUser = qs.docs[0].data(); window.completarLoginUI(); } else window.logout();
+        } catch(e) { window.logout(); } 
         window.hideLoading();
-    } else { 
-        setDisplay('login-screen', 'flex'); 
-    }
+    } else { setDisplay('login-screen', 'flex'); }
 };
 
 document.addEventListener("DOMContentLoaded", inicializarApp);
