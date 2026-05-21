@@ -14,6 +14,7 @@ const auth = getAuth(app);
 const db = getFirestore(app); 
 const appId = 'sgc-final-v6';
 
+
 const EMAIL_SERVICE_ID = "service_vumxptj", 
   EMAIL_TEMPLATE_ID = "template_z27y5yk", 
   EMAIL_PUBLIC_KEY = "kWsovOfdi7dBqLMw2", 
@@ -25,10 +26,10 @@ const CLOUD_NAME = "df79cjklp", UPLOAD_PRESET = "fci_documentos", PASOS_NOMBRES 
 
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
-const setDisplay = (id, val) => { if($(id)) $(id).style.display = val; };
-const setTxt = (id, txt) => { if($(id)) $(id).innerText = txt; };
-const setVal = (id, val) => { if($(id)) $(id).value = val; };
-const setHtml = (id, html) => { if($(id)) $(id).innerHTML = html; };
+window.setDisplay = (id, val) => { if($(id)) $(id).style.display = val; };
+window.setTxt = (id, txt) => { if($(id)) $(id).innerText = txt; };
+window.setVal = (id, val) => { if($(id)) $(id).value = val; };
+window.setHtml = (id, html) => { if($(id)) $(id).innerHTML = html; };
 
 // Funciones Seguras anti-errores nulos
 const getValSafe = (id, def = '') => $(id) ? $(id).value : def;
