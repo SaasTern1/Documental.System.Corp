@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Seguridad</title>
+    <title>Sistema de Gestión de Seguridad OEA</title>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: wss: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -50,6 +50,12 @@
                 <button class="nav-link" id="nav-norma" onclick="window.cambiarVista('sec-norma', this)"><span class="material-icons-round">menu_book</span> Manual y Norma OEA</button>
                 <button class="nav-link" id="nav-audit" onclick="window.cambiarVista('sec-audit', this)"><span class="material-icons-round">calendar_month</span> Calendario & Ejecución</button>
                 <button class="nav-link" id="nav-noconf" onclick="window.cambiarVista('sec-noconf', this)" style="display:none;"><span class="material-icons-round">warning</span> NC y Mejoras (F-023)</button>
+            </div>
+
+            <div id="nav-oea-group" style="display:none;">
+                <p style="font-size:10px; color:#475569; font-weight:800; margin-left:16px; margin-bottom:8px; margin-top:20px;">CUMPLIMIENTO OEA</p>
+                <button class="nav-link" id="nav-proveedores" onclick="window.cambiarVista('sec-proveedores', this)"><span class="material-icons-round">local_shipping</span> Evaluación Proveedores</button>
+                <button class="nav-link" id="nav-riesgos" onclick="window.cambiarVista('sec-riesgos', this)"><span class="material-icons-round">query_stats</span> Matriz de Riesgos</button>
             </div>
             
             <div id="admin-only" style="display:none; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 20px; padding-top: 15px;">
@@ -274,6 +280,72 @@
             </div>
         </section>
 
+        <section id="sec-proveedores" class="section">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h1 style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--info); font-size:28px;">local_shipping</span> Evaluación de Proveedores</h1>
+                    <p style="color:var(--text-muted); font-size:13px;">Gestión de socios comerciales según normativa OEA.</p>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-primary" onclick="window.abrirModalProveedor()"><span class="material-icons-round" style="font-size:18px;">add</span> Nuevo Proveedor</button>
+                    <button class="btn btn-success" onclick="window.exportarExcelProveedores()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar</button>
+                </div>
+            </div>
+            
+            <div class="card" style="padding:0; overflow:hidden; border-top: 4px solid var(--info);">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); background:#f8fafc; display:flex; gap:15px; flex-wrap:wrap;">
+                    <input type="text" id="search-prov" class="search-bar" placeholder="🔍 Buscar por nombre o RUC..." onkeyup="window.filtrarTabla('search-prov', 'tbody-proveedores')" style="flex:1;">
+                    <select id="filter-prov-riesgo" class="search-bar" style="width:200px;" onchange="window.renderTablaProveedores()"><option value="">Todos los Riesgos</option><option value="Bajo">Riesgo Bajo</option><option value="Medio">Riesgo Medio</option><option value="Alto">Riesgo Alto</option></select>
+                </div>
+                <div class="table-responsive">
+                    <table id="tabla-proveedores" style="white-space:nowrap;">
+                        <thead><tr><th>Razón Social</th><th>Servicio</th><th>Certificaciones</th><th>Puntaje Global</th><th>Nivel Riesgo</th><th>Próxima Eval.</th><th>Estado</th><th class="no-export">Acciones</th></tr></thead>
+                        <tbody id="tbody-proveedores"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-riesgos" class="section">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h1 style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--warning); font-size:28px;">query_stats</span> Matriz Dinámica de Riesgos</h1>
+                    <p style="color:var(--text-muted); font-size:13px;">Identificación, análisis y mitigación de amenazas (OEA / ISO 31000).</p>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-primary" onclick="window.abrirModalRiesgo()"><span class="material-icons-round" style="font-size:18px;">add</span> Registrar Riesgo</button>
+                    <button class="btn btn-success" onclick="window.exportarExcelRiesgos()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar Matriz</button>
+                </div>
+            </div>
+            
+            <div class="card" style="padding:0; overflow:hidden; border-top: 4px solid var(--warning);">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); background:#f8fafc; display:flex; gap:15px; flex-wrap:wrap;">
+                    <input type="text" id="search-riesgo" class="search-bar" placeholder="🔍 Buscar por proceso o descripción..." onkeyup="window.filtrarTabla('search-riesgo', 'tbody-riesgos')" style="flex:1;">
+                    <select id="filter-riesgo-sev" class="search-bar" style="width:200px;" onchange="window.renderTablaRiesgos()"><option value="">Todas las Severidades</option><option value="Bajo">Bajo (1-4)</option><option value="Medio">Medio (5-9)</option><option value="Alto">Alto (10-15)</option><option value="Crítico">Crítico (16-25)</option></select>
+                </div>
+                <div class="table-responsive">
+                    <table id="tabla-riesgos" style="white-space:nowrap;">
+                        <thead><tr><th>ID</th><th>Proceso Afectado</th><th>Amenaza Principal</th><th>Prob.</th><th>Imp.</th><th>Severidad</th><th>Acción Decidida</th><th>Responsable</th><th class="no-export">Acciones</th></tr></thead>
+                        <tbody id="tbody-riesgos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-listado" class="section">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h1 style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--primary); font-size:28px;">library_books</span> Listado Maestro</h1>
+                    <p style="color:var(--text-muted); font-size:13px;">Documentación centralizada del SGC.</p>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;"><button class="btn btn-primary" id="btn-nuevo-maestro" onclick="window.abrirModalListadoMaestro()" style="display:none;"><span class="material-icons-round" style="font-size:18px;">add</span> Nuevo Registro</button><button class="btn btn-success" onclick="window.exportarExcelListado()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar</button></div>
+            </div>
+            <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
+                <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input type="text" id="search-maestro" class="search-bar" placeholder="🔍 Buscar en el listado maestro..." onkeyup="window.filtrarTabla('search-maestro', 'tbody-listado-maestro')" style="margin:0; max-width:400px;"></div>
+                <div class="table-responsive"><table id="tabla-listado-maestro" style="white-space:nowrap;"><thead id="thead-listado-maestro"></thead><tbody id="tbody-listado-maestro"></tbody></table></div>
+            </div>
+        </section>
+
         <section id="sec-usuarios" class="section">
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
                 <div>
@@ -295,20 +367,6 @@
                         <tbody id="tbody-users"></tbody>
                     </table>
                 </div>
-            </div>
-        </section>
-
-        <section id="sec-listado" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-                <div>
-                    <h1 style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--primary); font-size:28px;">library_books</span> Listado Maestro</h1>
-                    <p style="color:var(--text-muted); font-size:13px;">Documentación centralizada del SGC.</p>
-                </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;"><button class="btn btn-primary" id="btn-nuevo-maestro" onclick="window.abrirModalListadoMaestro()" style="display:none;"><span class="material-icons-round" style="font-size:18px;">add</span> Nuevo Registro</button><button class="btn btn-success" onclick="window.exportarExcelListado()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar</button></div>
-            </div>
-            <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
-                <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input type="text" id="search-maestro" class="search-bar" placeholder="🔍 Buscar en el listado maestro..." onkeyup="window.filtrarTabla('search-maestro', 'tbody-listado-maestro')" style="margin:0; max-width:400px;"></div>
-                <div class="table-responsive"><table id="tabla-listado-maestro" style="white-space:nowrap;"><thead id="thead-listado-maestro"></thead><tbody id="tbody-listado-maestro"></tbody></table></div>
             </div>
         </section>
 
@@ -441,6 +499,14 @@
                 <div style="padding:20px; background:var(--sidebar); color:white; font-weight:800; font-size:12px; letter-spacing:1px; position:sticky; top:0;"><span class="material-icons-round" style="vertical-align:middle; font-size:16px; margin-right:5px;">history</span> BITÁCORA</div>
                 <div id="chat-box" style="padding:15px;"></div>
             </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-form-listado">
+        <div class="modal-content" style="max-width: 800px; display:block; padding: 30px; height:auto; max-height:90vh; overflow-y:auto;">
+           <h2 style="color:var(--primary); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">edit_document</span> <span id="lm-modal-title">Agregar Registro al Listado Maestro</span></h2>
+           <div class="resp-grid" id="dinamic-form-maestro"></div>
+           <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-primary" onclick="window.guardarRegistroMaestro()" style="flex:1;">Guardar Documento</button><button class="btn btn-dark" onclick="document.getElementById('modal-form-listado').style.display='none'" style="flex:1;">Cancelar</button></div>
         </div>
     </div>
 
@@ -698,13 +764,13 @@
                 
                 <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">PLAN DE ACCIÓN</h4>
                 <div class="table-responsive" style="margin-bottom:10px;"><table style="width:100%; border:1px solid #ccc; font-size:12px; text-align:left;"><thead style="background:#f1f5f9;"><tr><th style="border:1px solid #ccc; width:30px; padding:8px;">#</th><th style="border:1px solid #ccc; padding:8px;">Detalle</th><th style="border:1px solid #ccc; width:200px; padding:8px;">Responsable</th><th style="border:1px solid #ccc; width:130px; padding:8px;">Fecha Inicio</th><th style="border:1px solid #ccc; width:130px; padding:8px;">Fecha Cierre</th><th style="border:1px solid #ccc; width:40px;"></th></tr></thead><tbody id="tbody-plan-accion"></tbody></table></div>
-                <button class="btn btn-info" id="btn-add-plan" onclick="window.addPlanRow()" style="font-size:11px; padding:6px 12px; margin-bottom:20px;">+ Añadir Fila al Plan</button>
+                <button type="button" class="btn btn-info" id="btn-add-plan" onclick="window.addPlanRow()" style="font-size:11px; padding:6px 12px; margin-bottom:20px;">+ Añadir Fila al Plan</button>
 
                 <div style="display:flex; gap:20px; align-items:center; border:1px dashed #d97706; padding:15px; background:#fffbeb; border-radius:8px; margin-bottom:20px; font-size:13px;"><b style="color:#b45309;">Aprobación del Plan de Acción (SGC/Auditor):</b><input type="date" id="sac-fecha-aprob-plan" style="margin:0; width:200px; padding:8px;"></div>
 
                 <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">ACTIVIDADES DE SEGUIMIENTO</h4>
                 <div class="table-responsive" style="margin-bottom:10px;"><table style="width:100%; border:1px solid #ccc; font-size:12px; text-align:left;"><thead style="background:#f1f5f9;"><tr><th style="border:1px solid #ccc; width:30px; padding:8px;">#</th><th style="border:1px solid #ccc; padding:8px;">Resultado Seguimiento</th><th style="border:1px solid #ccc; width:200px; padding:8px;">Responsable</th><th style="border:1px solid #ccc; width:130px; padding:8px;">Fecha</th><th style="border:1px solid #ccc; width:40px;"></th></tr></thead><tbody id="tbody-seguimiento"></tbody></table></div>
-                <button class="btn btn-dark" id="btn-add-seguimiento" onclick="window.addSeguimientoRow()" style="font-size:11px; padding:6px 12px; margin-bottom:20px;">+ Añadir Fila de Seguimiento</button>
+                <button type="button" class="btn btn-dark" id="btn-add-seguimiento" onclick="window.addSeguimientoRow()" style="font-size:11px; padding:6px 12px; margin-bottom:20px;">+ Añadir Fila de Seguimiento</button>
 
                 <div id="sac-panel-cierre" style="border:2px dashed var(--success); padding:20px; border-radius:8px; margin-bottom:20px; background:#f0fdf4;"><h4 style="color:var(--success); margin-bottom:10px; font-size:14px;">Aprobación de Cierre</h4><div class="grid-2"><div><label for="sac-resp-cierre">Responsable</label><input type="text" id="sac-resp-cierre" disabled style="background:#e2e8f0;"></div><div><label for="sac-fecha-cierre">Fecha de Cierre</label><input type="date" id="sac-fecha-cierre" style="background:#fff;"></div></div><div style="display:flex; align-items:center; gap:10px; margin-top:10px;"><input type="checkbox" id="sac-check-cerrar" style="width:20px; height:20px; cursor:pointer; margin:0;"> <label for="sac-check-cerrar" style="margin:0; font-size:14px; color:var(--success); cursor:pointer;"><b>CERRAR ACCIÓN CORRECTIVA DEFINITIVAMENTE</b></label></div></div>
                 
@@ -716,42 +782,39 @@
     <div class="modal-overlay" id="modal-usuario">
         <div class="modal-content" style="max-width: 650px; display:block; padding: 30px; height:auto; max-height:90vh; overflow-y:auto; border-top: 5px solid var(--primary);">
             <h2 id="user-form-title" style="color:var(--primary); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">person_add</span> Registrar / Editar Usuario</h2>
-            
             <div class="resp-grid" style="margin-bottom:15px;">
                 <div><label for="u-nom">Nombre Completo</label><input type="text" id="u-nom" placeholder="Ej: Juan Pérez"></div>
                 <div><label for="u-usr">Usuario ID (Corto)</label><input type="text" id="u-usr" placeholder="Ej: jperez"></div>
                 <div><label for="u-email">Correo Autorizado</label><input type="email" id="u-email" placeholder="Ej: jperez@empresa.com"></div>
                 <div><label for="u-rol">Cargo / Rol</label><input type="text" id="u-rol" placeholder="Ej: Analista de Calidad"></div>
             </div>
-            
             <div class="card" style="margin-bottom:15px; padding:15px; border:1px solid var(--border); box-shadow:none;">
                 <div class="custom-label" style="color:var(--primary); margin-bottom:10px; display:block;">Gerencia(s) Asignada(s)</div>
                 <div id="u-ger-list" class="checkbox-list" style="max-height:100px; display:grid; grid-template-columns:1fr 1fr; gap:5px;"></div>
             </div>
-
             <div class="card" style="margin-bottom:20px; padding:15px; border:1px solid var(--border); box-shadow:none;">
                 <div class="custom-label" style="color:var(--primary); margin-bottom:10px; display:block;">Permisos y Roles de Acceso</div>
                 <div class="resp-grid" style="gap:10px; grid-template-columns:1fr 1fr;">
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-solicitar" style="margin:0;"> Crear Solicitudes (SGC-SOL)</label>
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-propias" style="margin:0;"> Ver sus Solicitudes</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-ger" style="margin:0;"> Ver solicitudes de su Gerencia</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-todas" style="margin:0;"> Ver TODAS las Solicitudes</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-ger" style="margin:0;"> Ver solicitudes Gerencia</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-todas" style="margin:0;"> Ver TODAS Solicitudes</label>
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-paso1" style="margin:0;"> Aprobar Paso 1 (Doc)</label>
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-paso2" style="margin:0;"> Aprobar Paso 2 (Verif)</label>
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-paso4" style="margin:0;"> Aprobar Paso 4 (SGC Final)</label>
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--success); font-weight:bold;"><input type="checkbox" id="p-gest-sgc" style="margin:0;"> Gestor SGC (Avanzado)</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--warning); font-weight:bold;"><input type="checkbox" id="p-ger-apr" style="margin:0;"> Aprobador Gerencia (Paso 3)</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--warning); font-weight:bold;"><input type="checkbox" id="p-ger-apr" style="margin:0;"> Aprobador Gerencia (P3)</label>
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-ver-listado" style="margin:0;"> Ver Listado Maestro</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-users" style="margin:0;"> Administrar Usuarios</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-struct" style="margin:0;"> Configurar Estructura</label>
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-ver" style="margin:0;"> Ver Auditorías</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-auditor" style="margin:0;"> Es Auditor / Lider</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-dueno" style="margin:0;"> Dueño de Proceso (Auditado)</label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--danger); font-weight:bold;"><input type="checkbox" id="p-audit-admin" style="margin:0;"> Admin de Auditorías / OEA</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-auditor" style="margin:0;"> Es Auditor / Líder</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0;"><input type="checkbox" id="p-audit-dueno" style="margin:0;"> Dueño Proceso (Auditado)</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--danger); font-weight:bold;"><input type="checkbox" id="p-audit-admin" style="margin:0;"> Admin Auditorías / OEA</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--info); font-weight:bold;"><input type="checkbox" id="p-proveedores" style="margin:0;"> Evaluar Proveedores</label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:#8b5cf6; font-weight:bold;"><input type="checkbox" id="p-riesgos" style="margin:0;"> Gestionar Riesgos</label>
+                    
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin:0; color:var(--primary); font-weight:bold;"><input type="checkbox" id="p-admin" style="margin:0;"> Super Administrador</label>
                 </div>
             </div>
-
             <div style="display:flex; gap:10px;">
                 <button class="btn btn-primary" id="btnSaveUser" onclick="window.guardarUsuario()" style="flex:1; padding:15px; font-size:15px;">GUARDAR USUARIO</button>
                 <button class="btn btn-dark" onclick="window.cerrarModalUsuario()" style="flex:1;">Cancelar</button>
@@ -759,11 +822,89 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modal-form-listado">
-        <div class="modal-content" style="max-width: 800px; display:block; padding: 30px; height:auto; max-height:90vh; overflow-y:auto;">
-           <h2 style="color:var(--primary); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">edit_document</span> <span id="lm-modal-title">Agregar Registro al Listado Maestro</span></h2>
-           <div class="resp-grid" id="dinamic-form-maestro"></div>
-           <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-primary" onclick="window.guardarRegistroMaestro()" style="flex:1;">Guardar Documento</button><button class="btn btn-dark" onclick="document.getElementById('modal-form-listado').style.display='none'" style="flex:1;">Cancelar</button></div>
+    <div class="modal-overlay" id="modal-proveedor">
+        <div class="modal-content" style="max-width: 800px; display:block; padding: 30px; height:auto; max-height:92vh; overflow-y:auto; border-top: 5px solid var(--info);">
+            <h2 id="prov-form-title" style="color:var(--info); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">local_shipping</span> Registrar Evaluación de Proveedor</h2>
+            
+            <div class="resp-grid" style="margin-bottom:15px;">
+                <div><label for="pr-rs">Razón Social</label><input type="text" id="pr-rs" placeholder="Nombre de la empresa"></div>
+                <div><label for="pr-ruc">RUC / Tax ID</label><input type="text" id="pr-ruc" placeholder="12345-67-89"></div>
+                <div><label for="pr-serv">Tipo de Servicio</label><select id="pr-serv"><option value="Transporte de Carga">Transporte de Carga</option><option value="Agente de Aduanas">Agente de Aduanas</option><option value="Seguridad Privada">Seguridad Privada</option><option value="Almacenaje / Bodega">Almacenaje / Bodega</option><option value="Tecnología / TI">Tecnología / TI</option><option value="Servicios Generales">Servicios Generales</option></select></div>
+                <div><label for="pr-cert">Certificaciones de Seguridad</label><select id="pr-cert"><option value="OEA">Certificado OEA</option><option value="BASC">Certificado BASC</option><option value="ISO 28000">ISO 28000</option><option value="Ninguna">Ninguna / En Proceso</option></select></div>
+            </div>
+            
+            <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px dashed var(--info); margin-bottom:20px;">
+                <h4 style="color:var(--primary); margin-bottom:15px;">Evaluación de Criterios (0 a 10)</h4>
+                <div class="grid-3">
+                    <div><label for="pr-ev-fisica">Seguridad Física / Instalaciones</label><input type="number" id="pr-ev-fisica" min="0" max="10" value="0" oninput="window.calcularRiesgoProveedor()"></div>
+                    <div><label for="pr-ev-ti">Seguridad Tecnológica (TI)</label><input type="number" id="pr-ev-ti" min="0" max="10" value="0" oninput="window.calcularRiesgoProveedor()"></div>
+                    <div><label for="pr-ev-rrhh">Confiabilidad RRHH</label><input type="number" id="pr-ev-rrhh" min="0" max="10" value="0" oninput="window.calcularRiesgoProveedor()"></div>
+                </div>
+                
+                <div class="resp-grid" style="align-items:center; background:#fff; padding:15px; border-radius:8px; border:1px solid #ccc; margin-top:10px;">
+                    <div><div class="custom-label">Puntaje Global Promedio</div><p id="pr-puntaje-disp" style="font-size:24px; font-weight:800; color:var(--primary); margin:0;">0.0</p></div>
+                    <div><div class="custom-label">Nivel de Riesgo Calculado</div><span id="pr-riesgo-badge" class="badge badge-dark" style="font-size:14px; padding:8px 15px;">N/A</span></div>
+                </div>
+            </div>
+
+            <div class="resp-grid" style="margin-bottom:20px;">
+                <div><label for="pr-fecha-eval">Fecha de Próxima Evaluación</label><input type="date" id="pr-fecha-eval"></div>
+                <div><label for="pr-estado">Estado en la Cadena</label><select id="pr-estado" style="font-weight:bold;"><option value="Aprobado">Aprobado (Confiable)</option><option value="Condicionado">Condicionado (Requiere Plan)</option><option value="Rechazado">Rechazado (No apto)</option></select></div>
+            </div>
+            
+            <label for="pr-obs">Observaciones o Notas de Auditoría</label><textarea id="pr-obs" rows="3" placeholder="Detalle hallazgos, planes de acción o mejoras requeridas..."></textarea>
+
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn btn-info" onclick="window.guardarProveedor()" style="flex:1; padding:15px; font-size:15px;">GUARDAR EVALUACIÓN</button>
+                <button class="btn btn-dark" onclick="setDisplay('modal-proveedor', 'none')" style="flex:1;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-riesgo">
+        <div class="modal-content" style="max-width: 800px; display:block; padding: 30px; height:auto; max-height:92vh; overflow-y:auto; border-top: 5px solid var(--warning);">
+            <h2 id="riesgo-form-title" style="color:var(--warning); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">warning</span> Identificación y Análisis de Riesgo</h2>
+            
+            <div class="resp-grid" style="margin-bottom:15px;">
+                <div><label for="ri-proceso">Proceso Afectado</label><input type="text" id="ri-proceso" placeholder="Ej: Logística Internacional"></div>
+                <div><label for="ri-amenaza">Tipo de Amenaza</label><select id="ri-amenaza"><option value="Tráfico Ilícito">Tráfico Ilícito / Contrabando</option><option value="Robo / Pérdida">Robo / Pérdida de Carga</option><option value="Ciberataque">Ciberataque / Fuga de Info</option><option value="Sabotaje">Sabotaje / Terrorismo</option><option value="Corrupción">Corrupción / Soborno</option><option value="Otro">Otro</option></select></div>
+            </div>
+            <label for="ri-desc">Descripción Detallada del Riesgo (Vulnerabilidad)</label><textarea id="ri-desc" rows="2" placeholder="Describa cómo podría materializarse la amenaza..."></textarea>
+            
+            <div style="background:#fffbeb; padding:20px; border-radius:12px; border:1px dashed var(--warning); margin-bottom:20px;">
+                <h4 style="color:#b45309; margin-bottom:15px;">Evaluación de Severidad (Metodología 5x5)</h4>
+                <div class="grid-2">
+                    <div>
+                        <label for="ri-prob">Probabilidad de Ocurrencia</label>
+                        <select id="ri-prob" onchange="window.actualizarSeveridadColor()">
+                            <option value="1">1 - Raro (Casi Imposible)</option><option value="2">2 - Improbable</option><option value="3">3 - Posible (Puede ocurrir)</option><option value="4">4 - Probable</option><option value="5">5 - Casi Seguro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ri-imp">Impacto en la Organización</label>
+                        <select id="ri-imp" onchange="window.actualizarSeveridadColor()">
+                            <option value="1">1 - Insignificante</option><option value="2">2 - Menor (Pérdida Mínima)</option><option value="3">3 - Moderado</option><option value="4">4 - Mayor (Pérdida Grave)</option><option value="5">5 - Catastrófico</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:15px; border-radius:8px; border:1px solid #ccc; margin-top:10px;">
+                    <div><span style="font-size:12px; color:#64748b; font-weight:bold;">Puntaje (Prob x Impacto)</span></div>
+                    <div id="ri-sev-badge" class="badge badge-dark" style="font-size:18px; padding:10px 20px;">SEVERIDAD: 1 (BAJO)</div>
+                </div>
+            </div>
+
+            <div class="resp-grid" style="margin-bottom:15px;">
+                <div><label for="ri-accion">Acción Decidida</label><select id="ri-accion"><option value="Mitigar (Tratar)">Mitigar (Implementar Controles)</option><option value="Transferir">Transferir (Seguro/Tercero)</option><option value="Evitar">Evitar (Detener actividad)</option><option value="Aceptar">Aceptar (Riesgo residual bajo)</option></select></div>
+                <div><label for="ri-resp">Responsable del Control</label><select id="ri-resp"></select></div>
+            </div>
+            
+            <label for="ri-controles">Controles Actuales o Plan de Mitigación</label><textarea id="ri-controles" rows="3" placeholder="Ej: Cámaras CCTV, Guardias 24/7, Firewall actualizado..."></textarea>
+
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn btn-warning" onclick="window.guardarRiesgo()" style="flex:1; padding:15px; font-size:15px;">GUARDAR RIESGO</button>
+                <button class="btn btn-dark" onclick="setDisplay('modal-riesgo', 'none')" style="flex:1;">Cancelar</button>
+            </div>
         </div>
     </div>
 
