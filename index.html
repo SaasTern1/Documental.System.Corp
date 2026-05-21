@@ -502,6 +502,14 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="modal-form-listado">
+        <div class="modal-content" style="max-width: 800px; display:block; padding: 30px; height:auto; max-height:90vh; overflow-y:auto;">
+           <h2 style="color:var(--primary); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">edit_document</span> <span id="lm-modal-title">Agregar Registro al Listado Maestro</span></h2>
+           <div class="resp-grid" id="dinamic-form-maestro"></div>
+           <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-primary" onclick="window.guardarRegistroMaestro()" style="flex:1;">Guardar Documento</button><button class="btn btn-dark" onclick="document.getElementById('modal-form-listado').style.display='none'" style="flex:1;">Cancelar</button></div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="modal-plan">
         <div class="modal-content" style="max-width: 850px; padding: 0; display:block; height:auto; max-height:92vh; overflow-y:auto; border-top:6px solid var(--primary);">
             <div style="display:flex; justify-content:space-between; align-items:center; padding: 25px 30px; border-bottom:1px solid var(--border); background:white; position:sticky; top:0; z-index:100;">
@@ -779,6 +787,7 @@
                 <div><label for="u-usr">Usuario ID (Corto)</label><input type="text" id="u-usr" placeholder="Ej: jperez"></div>
                 <div><label for="u-email">Correo Autorizado</label><input type="email" id="u-email" placeholder="Ej: jperez@empresa.com"></div>
                 <div><label for="u-rol">Cargo / Rol</label><input type="text" id="u-rol" placeholder="Ej: Analista de Calidad"></div>
+                <div><label for="u-pas">Contraseña de Acceso</label><input type="text" id="u-pas" placeholder="Contraseña..."></div>
             </div>
             <div class="card" style="margin-bottom:15px; padding:15px; border:1px solid var(--border); box-shadow:none;">
                 <div class="custom-label" style="color:var(--primary); margin-bottom:10px; display:block;">Gerencia(s) Asignada(s)</div>
