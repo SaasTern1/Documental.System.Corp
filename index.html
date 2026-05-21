@@ -192,6 +192,20 @@
             </div>
         </section>
 
+        <section id="sec-listado" class="section">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h1 style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--primary); font-size:28px;">library_books</span> Listado Maestro</h1>
+                    <p style="color:var(--text-muted); font-size:13px;">Documentación centralizada del SGC.</p>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;"><button class="btn btn-primary" id="btn-nuevo-maestro" onclick="window.abrirModalListadoMaestro()" style="display:none;"><span class="material-icons-round" style="font-size:18px;">add</span> Nuevo Registro</button><button class="btn btn-success" onclick="window.exportarExcelListado()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar</button></div>
+            </div>
+            <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
+                <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input type="text" id="search-maestro" class="search-bar" placeholder="🔍 Buscar en el listado maestro..." onkeyup="window.filtrarTabla('search-maestro', 'tbody-listado-maestro')" style="margin:0; max-width:400px;"></div>
+                <div class="table-responsive"><table id="tabla-listado-maestro" style="white-space:nowrap;"><thead id="thead-listado-maestro"></thead><tbody id="tbody-listado-maestro"></tbody></table></div>
+            </div>
+        </section>
+
         <section id="sec-norma" class="section">
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px;">
                 <div>
@@ -332,20 +346,6 @@
             </div>
         </section>
 
-        <section id="sec-listado" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-                <div>
-                    <h1 style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--primary); font-size:28px;">library_books</span> Listado Maestro</h1>
-                    <p style="color:var(--text-muted); font-size:13px;">Documentación centralizada del SGC.</p>
-                </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;"><button class="btn btn-primary" id="btn-nuevo-maestro" onclick="window.abrirModalListadoMaestro()" style="display:none;"><span class="material-icons-round" style="font-size:18px;">add</span> Nuevo Registro</button><button class="btn btn-success" onclick="window.exportarExcelListado()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar</button></div>
-            </div>
-            <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
-                <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input type="text" id="search-maestro" class="search-bar" placeholder="🔍 Buscar en el listado maestro..." onkeyup="window.filtrarTabla('search-maestro', 'tbody-listado-maestro')" style="margin:0; max-width:400px;"></div>
-                <div class="table-responsive"><table id="tabla-listado-maestro" style="white-space:nowrap;"><thead id="thead-listado-maestro"></thead><tbody id="tbody-listado-maestro"></tbody></table></div>
-            </div>
-        </section>
-
         <section id="sec-usuarios" class="section">
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
                 <div>
@@ -449,7 +449,7 @@
                     <div id="m-involucrados-container" style="margin-top:15px;">
                         <div class="custom-label">Personal Involucrado / Revisores Extras</div>
                         <div id="m-involucrados-list" style="margin-bottom:10px; min-height:30px; padding:10px; background:#f8fafc; border-radius:8px; border:1px solid var(--border);"></div>
-                        <div id="m-add-involucrado-section" style="display:flex; gap:10px; flex-wrap:wrap;"><select id="m-new-involucrado-sel" style="flex:1; margin:0; min-width:200px;"><option value="">-- Añadir usuario a este caso --</option></select><button class="btn btn-info" onclick="window.guardarNuevoInvolucrado()">Añadir Usuario</button></div>
+                        <div id="m-add-involucrado-section" style="display:flex; gap:10px; flex-wrap:wrap;"><select id="m-new-involucrado-sel" style="flex:1; margin:0; min-width:200px;"><option value="">-- Añadir usuario a este caso --</option></select><button type="button" class="btn btn-info" onclick="window.guardarNuevoInvolucrado()">Añadir Usuario</button></div>
                     </div>
                 </div>
 
@@ -485,7 +485,7 @@
                     <div class="custom-label" style="color:#b45309;">Detalle a registrar y enviar por correo:</div>
                     <div id="m-extra-input" contenteditable="true" style="min-height:80px; border:1px solid #d97706; border-radius:8px; padding:15px; background:white; font-size:13px; line-height:1.5;"></div>
                     <input type="file" id="m-file-gestion" style="margin-top:15px;">
-                    <div class="resp-grid" style="margin-top:15px;"><button class="btn btn-warning" id="btnConfirmAction" onclick="window.guardarGestion()" style="padding:12px;">Confirmar y Enviar Notificación</button><button class="btn btn-ghost" onclick="document.getElementById('m-input-area').style.display='none'">Cancelar</button></div>
+                    <div class="resp-grid" style="margin-top:15px;"><button class="btn btn-warning" id="btnConfirmAction" onclick="window.guardarGestion()" style="padding:12px;">Confirmar y Enviar Notificación</button><button class="btn btn-ghost" onclick="window.setDisplay('m-input-area', 'none')">Cancelar</button></div>
                 </div>
 
                 <div id="general-comment-area" style="margin-top:30px; border-top:1px solid var(--border); padding-top:20px;">
@@ -502,19 +502,11 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modal-form-listado">
-        <div class="modal-content" style="max-width: 800px; display:block; padding: 30px; height:auto; max-height:90vh; overflow-y:auto;">
-           <h2 style="color:var(--primary); margin-bottom: 20px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">edit_document</span> <span id="lm-modal-title">Agregar Registro al Listado Maestro</span></h2>
-           <div class="resp-grid" id="dinamic-form-maestro"></div>
-           <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-primary" onclick="window.guardarRegistroMaestro()" style="flex:1;">Guardar Documento</button><button class="btn btn-dark" onclick="document.getElementById('modal-form-listado').style.display='none'" style="flex:1;">Cancelar</button></div>
-        </div>
-    </div>
-
     <div class="modal-overlay" id="modal-plan">
         <div class="modal-content" style="max-width: 850px; padding: 0; display:block; height:auto; max-height:92vh; overflow-y:auto; border-top:6px solid var(--primary);">
             <div style="display:flex; justify-content:space-between; align-items:center; padding: 25px 30px; border-bottom:1px solid var(--border); background:white; position:sticky; top:0; z-index:100;">
                 <h2 style="color:var(--primary); margin:0; font-size:20px; font-weight:800;">Configurar Plan Anual <span id="edit-year-label"></span></h2>
-                <button class="btn-icon-danger" onclick="window.cerrarModalPlan()"><span class="material-icons-round">close</span></button>
+                <button type="button" class="btn-icon-danger" onclick="window.cerrarModalPlan()"><span class="material-icons-round">close</span></button>
             </div>
             <div style="padding:30px;">
                 <div class="grid-2"><div><label for="ah-obj">Objetivo General</label><textarea id="ah-obj" rows="3"></textarea></div><div><label for="ah-alcance">Alcance</label><textarea id="ah-alcance" rows="3"></textarea></div></div>
@@ -540,7 +532,7 @@
         <div class="modal-content" style="max-width: 900px; display:block; padding: 0; height:auto; max-height:92vh; overflow-y:auto; border-top:6px solid var(--accent);">
             <div style="display:flex; justify-content:space-between; align-items:center; padding: 25px 30px; border-bottom:1px solid var(--border); background:white; position:sticky; top:0; z-index:100;">
                 <h2 id="titulo-form-auditoria" style="color:var(--primary); margin:0; font-size:20px; font-weight:800;">Programar Nueva Auditoría</h2>
-                <button class="btn-icon-danger" onclick="window.cancelarEdicionAuditoria()"><span class="material-icons-round">close</span></button>
+                <button type="button" class="btn-icon-danger" onclick="window.cancelarEdicionAuditoria()"><span class="material-icons-round">close</span></button>
             </div>
             <div style="padding:30px;">
                 <div class="resp-grid">
@@ -610,9 +602,9 @@
                         </div>
                         <div><div class="custom-label">Duración Total</div><p id="ma-duracion" style="color:var(--success); font-weight:800; font-size:16px;">---</p></div>
                         <div id="ma-controles-tiempo" style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
-                            <button id="btn-comenzar-auditoria" class="btn btn-primary" onclick="window.comenzarAuditoria()" style="display:none; padding:15px;"></button>
-                            <button id="btn-pausar-auditoria" class="btn btn-warning" onclick="window.pausarAuditoria()" style="display:none; padding:15px;">⏸️ PAUSAR (NUEVA RONDA)</button>
-                            <button id="btn-finalizar-auditoria" class="btn btn-success" onclick="window.finalizarAuditoria()" style="display:none; padding:15px;">⏹️ FINALIZAR AUDITORÍA</button>
+                            <button type="button" id="btn-comenzar-auditoria" class="btn btn-primary" onclick="window.comenzarAuditoria()" style="display:none; padding:15px;"></button>
+                            <button type="button" id="btn-pausar-auditoria" class="btn btn-warning" onclick="window.pausarAuditoria()" style="display:none; padding:15px;">⏸️ PAUSAR (NUEVA RONDA)</button>
+                            <button type="button" id="btn-finalizar-auditoria" class="btn btn-success" onclick="window.finalizarAuditoria()" style="display:none; padding:15px;">⏹️ FINALIZAR AUDITORÍA</button>
                         </div>
                     </div>
 
@@ -634,7 +626,7 @@
                 <div id="tab-f020" class="tab-content">
                     <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
                         <h3 style="color:var(--primary);">SGC-GG-F-020: Lista de Verificación</h3>
-                        <button class="btn btn-info" id="btn-add-f020" onclick="window.agregarFilaF020()" style="display:none;">+ Añadir Ítem</button>
+                        <button type="button" class="btn btn-info" id="btn-add-f020" onclick="window.agregarFilaF020()" style="display:none;">+ Añadir Ítem</button>
                     </div>
                     <div class="table-responsive" style="border:1px solid var(--border); border-radius:8px;">
                         <table style="width:100%; min-width:1000px;">
@@ -655,15 +647,15 @@
                         </table>
                     </div>
                     <div style="text-align:right; margin-top:15px; display:flex; justify-content:flex-end; gap:10px;">
-                        <button class="btn btn-info" id="btn-submit-f020" onclick="window.enviarPreguntasSGC()" style="display:none; padding:15px;">Subir Preguntas a SGC</button>
-                        <button class="btn btn-success" id="btn-save-f020" onclick="window.guardarF020()" style="display:none; padding:15px;">Guardar Cambios</button>
+                        <button type="button" class="btn btn-info" id="btn-submit-f020" onclick="window.enviarPreguntasSGC()" style="display:none; padding:15px;">Subir Preguntas a SGC</button>
+                        <button type="button" class="btn btn-success" id="btn-save-f020" onclick="window.guardarF020()" style="display:none; padding:15px;">Guardar Cambios</button>
                     </div>
                 </div>
 
                 <div id="tab-sac" class="tab-content">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <h3 style="color:var(--primary); margin:0;">Control de Acciones Correctivas</h3>
-                        <button class="btn btn-info" id="btn-add-sac-manual" onclick="window.abrirCrearSACManual()" style="display:none;">+ Añadir SAC Manual Libre</button>
+                        <button type="button" class="btn btn-info" id="btn-add-sac-manual" onclick="window.abrirCrearSACManual()" style="display:none;">+ Añadir SAC Manual Libre</button>
                     </div>
                     <div class="table-responsive" style="border:1px solid var(--border); border-radius:8px;">
                         <table style="width:100%;">
@@ -742,7 +734,7 @@
         <div class="modal-content" style="max-width: 900px; display:block; padding: 0; height:auto; max-height:95vh; overflow-y:auto; border-top:5px solid #d97706; background:#fff;">
             <div style="padding:20px; border-bottom:1px solid var(--border); background:#f8fafc; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100;">
                 <h2 style="color:#92400e; margin:0; font-size:18px; font-weight:800;">SOLICITUD DE ACCIONES CORRECTIVAS Y MEJORAS</h2>
-                <button class="btn-icon-danger" onclick="document.getElementById('modal-sac').style.display='none'"><span class="material-icons-round">close</span></button>
+                <button type="button" class="btn-icon-danger" onclick="window.setDisplay('modal-sac', 'none')"><span class="material-icons-round">close</span></button>
             </div>
             <div style="padding:30px;">
                 <div style="display:grid; grid-template-columns: 180px 1fr; border:1px solid #ccc; font-size:12px; margin-bottom:20px;">
@@ -774,7 +766,7 @@
 
                 <div id="sac-panel-cierre" style="border:2px dashed var(--success); padding:20px; border-radius:8px; margin-bottom:20px; background:#f0fdf4;"><h4 style="color:var(--success); margin-bottom:10px; font-size:14px;">Aprobación de Cierre</h4><div class="grid-2"><div><label for="sac-resp-cierre">Responsable</label><input type="text" id="sac-resp-cierre" disabled style="background:#e2e8f0;"></div><div><label for="sac-fecha-cierre">Fecha de Cierre</label><input type="date" id="sac-fecha-cierre" style="background:#fff;"></div></div><div style="display:flex; align-items:center; gap:10px; margin-top:10px;"><input type="checkbox" id="sac-check-cerrar" style="width:20px; height:20px; cursor:pointer; margin:0;"> <label for="sac-check-cerrar" style="margin:0; font-size:14px; color:var(--success); cursor:pointer;"><b>CERRAR ACCIÓN CORRECTIVA DEFINITIVAMENTE</b></label></div></div>
                 
-                <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-primary" id="btn-save-sac" onclick="window.guardarSAC()" style="flex:1; padding:15px; font-size:16px;">Guardar Avances de la SAC</button><button class="btn btn-ghost" onclick="document.getElementById('modal-sac').style.display='none'" style="padding:15px; width:150px; background:#e2e8f0;">Cancelar</button></div>
+                <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-primary" id="btn-save-sac" onclick="window.guardarSAC()" style="flex:1; padding:15px; font-size:16px;">Guardar Avances de la SAC</button><button class="btn btn-ghost" onclick="window.setDisplay('modal-sac', 'none')" style="padding:15px; width:150px; background:#e2e8f0;">Cancelar</button></div>
             </div>
         </div>
     </div>
@@ -856,7 +848,7 @@
 
             <div style="display:flex; gap:10px; margin-top:15px;">
                 <button class="btn btn-info" onclick="window.guardarProveedor()" style="flex:1; padding:15px; font-size:15px;">GUARDAR EVALUACIÓN</button>
-                <button class="btn btn-dark" onclick="setDisplay('modal-proveedor', 'none')" style="flex:1;">Cancelar</button>
+                <button class="btn btn-dark" onclick="window.setDisplay('modal-proveedor', 'none')" style="flex:1;">Cancelar</button>
             </div>
         </div>
     </div>
@@ -903,11 +895,11 @@
 
             <div style="display:flex; gap:10px; margin-top:15px;">
                 <button class="btn btn-warning" onclick="window.guardarRiesgo()" style="flex:1; padding:15px; font-size:15px;">GUARDAR RIESGO</button>
-                <button class="btn btn-dark" onclick="setDisplay('modal-riesgo', 'none')" style="flex:1;">Cancelar</button>
+                <button class="btn btn-dark" onclick="window.setDisplay('modal-riesgo', 'none')" style="flex:1;">Cancelar</button>
             </div>
         </div>
     </div>
-
+    
     <script type="module" src="app.js"></script>
 </body>
 </html>
