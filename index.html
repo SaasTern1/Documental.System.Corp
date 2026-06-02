@@ -112,6 +112,7 @@
             <button class="nav-link" id="nav-hist" onclick="window.cambiarVista('sec-hist', this)"><span class="material-icons-round">history</span> Mis Solicitudes</button>
             <button class="nav-link" id="nav-all" onclick="window.cambiarVista('sec-all', this)" style="display:none;"><span class="material-icons-round">all_inbox</span> Todas las Solicitudes</button>
             <button class="nav-link" id="nav-dash" onclick="window.cambiarVista('sec-dash', this)"><span class="material-icons-round">dashboard</span> Panel Analítico</button>
+            <button class="nav-link" id="nav-forms" onclick="window.cambiarVista('sec-forms', this)"><span class="material-icons-round">dynamic_form</span> Formularios</button>
             <button class="nav-link" id="nav-crear" onclick="window.cambiarVista('sec-crear', this)"><span class="material-icons-round">add_box</span> Crear Solicitud</button>
             <button class="nav-link" id="nav-gest" onclick="window.cambiarVista('sec-gest', this)" style="display:none;"><span class="material-icons-round">fact_check</span> Bandeja de Gestión</button>
             <button class="nav-link" id="nav-listado" onclick="window.cambiarVista('sec-listado', this)" style="display:none;"><span class="material-icons-round">library_books</span> Listado Maestro</button>
@@ -177,87 +178,88 @@
             <div class="section-header">
                 <div class="section-header-info">
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #1e40af, #3b82f6);"><span class="material-icons-round">dashboard</span></div>
-                    <div><h1>Panel Analítico Integrado</h1><p>Resumen ejecutivo de métricas, KPIs y estado general del SGC</p></div>
+                    <div><h1>Panel Analítico Inteligente</h1><p>Resumen avanzado de métricas y cumplimiento global</p></div>
                 </div>
             </div>
-            <h3 style="margin-bottom:15px; color:var(--primary); display:flex; align-items:center; gap:8px; font-size:16px;"><span class="material-icons-round" style="font-size:20px;">person</span> Mis Estadísticas Documentales</h3>
-            <div class="stats-grid grid-4" style="gap: 20px; margin-bottom: 35px;">
-                <div class="card" onclick="window.abrirModalDash('mis_tot')" style="border-left: 5px solid var(--sidebar); cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label">Solicitudes Totales</div><h2 id="dash-mis-tot" style="font-size:36px; margin-top:5px;">0</h2></div>
-                <div class="card" onclick="window.abrirModalDash('mis_pend')" style="border-left: 5px solid var(--warning); background:#fffbeb; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label" style="color:#92400e;">En Gestión / Pendientes</div><h2 id="dash-mis-pend" style="font-size:36px; margin-top:5px; color:#92400e;">0</h2></div>
-                <div class="card" onclick="window.abrirModalDash('mis_ok')" style="border-left: 5px solid var(--success); background:#f0fdf4; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label" style="color:#166534;">Aprobadas Oficialmente</div><h2 id="dash-mis-ok" style="font-size:36px; margin-top:5px; color:#166534;">0</h2></div>
-                <div class="card" onclick="window.abrirModalDash('mis_rech')" style="border-left: 5px solid var(--danger); background:#fef2f2; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label" style="color:#991b1b;">Rechazadas / Anuladas</div><h2 id="dash-mis-rech" style="font-size:36px; margin-top:5px; color:#991b1b;">0</h2></div>
+
+            <!-- KPI Cards -->
+            <div class="stats-grid grid-4" style="gap: 20px; margin-bottom: 30px;">
+                <div class="card" style="border-left: 5px solid var(--primary);"><div class="custom-label">Total Solicitudes</div><h2 id="dash-tot" style="font-size:36px; margin-top:5px; color:var(--primary);">0</h2></div>
+                <div class="card" style="border-left: 5px solid var(--warning);"><div class="custom-label">Pendientes / En Curso</div><h2 id="dash-pend" style="font-size:36px; margin-top:5px; color:var(--warning);">0</h2></div>
+                <div class="card" style="border-left: 5px solid var(--success);"><div class="custom-label">Aprobadas Oficiales</div><h2 id="dash-ok" style="font-size:36px; margin-top:5px; color:var(--success);">0</h2></div>
+                <div class="card" style="border-left: 5px solid #8b5cf6;"><div class="custom-label">Cumplimiento SLA</div><h2 id="dash-sla-percent" style="font-size:36px; margin-top:5px; color:#8b5cf6;">0%</h2></div>
             </div>
-            
-            <div id="dash-admin-section" style="display:none; padding-top:20px; border-top:2px dashed var(--border);">
-                <h3 style="margin-bottom:25px; color:var(--info); display:flex; align-items:center; gap:8px; font-size:22px;"><span class="material-icons-round" style="font-size:26px;">public</span> Visión Global y Cumplimiento SGC</h3>
-                <div class="stats-grid grid-4" style="gap: 20px; margin-bottom:30px;">
-                    <div class="card" onclick="window.abrirModalDash('glob_tot')" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color:white; border:none; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label" style="color:rgba(255,255,255,0.8);">Total Histórico Global</div><h2 id="dash-glob-tot" style="font-size:36px; margin-top:5px;">0</h2></div>
-                    <div class="card" onclick="window.abrirModalDash('glob_pend')" style="border-left: 5px solid var(--warning); cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label">Pendientes Globales</div><h2 id="dash-glob-pend" style="font-size:36px; margin-top:5px; color:#d97706;">0</h2></div>
-                    <div class="card" onclick="window.abrirModalDash('glob_ok')" style="border-left: 5px solid var(--success); cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label">Aprobadas Globales</div><h2 id="dash-glob-ok" style="font-size:36px; margin-top:5px; color:#059669;">0</h2></div>
-                    <div class="card" onclick="window.abrirModalDash('glob_sla')" style="border-left: 5px solid #8b5cf6; background:#f5f3ff; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label" style="color:#5b21b6;">Efectividad SLA a Tiempo</div><h2 id="dash-dash-sla-percent" style="font-size:36px; margin-top:5px; color:#6d28d9;">0%</h2></div>
-                </div>
 
-                <div class="grid-2" style="gap: 20px; margin-bottom: 30px;">
-                    <div class="card" style="box-shadow: 0 4px 6px rgba(0,0,0,0.05); border:1px solid var(--border);"><h4 style="color:var(--sidebar); margin-bottom:15px; text-align:center;">Estado de Acciones Correctivas (F-023)</h4><div style="position: relative; height: 250px;"><canvas id="chartSacs"></canvas></div></div>
-                    <div class="card" style="box-shadow: 0 4px 6px rgba(0,0,0,0.05); border:1px solid var(--border);"><h4 style="color:var(--sidebar); margin-bottom:15px; text-align:center;">Riesgo en Cadena de Suministro (OEA)</h4><div style="position: relative; height: 250px;"><canvas id="chartProv"></canvas></div></div>
-                </div>
-
-                <div class="card" style="box-shadow: 0 4px 6px rgba(0,0,0,0.05); border:1px solid var(--border); margin-bottom: 30px; background:#f8fafc;">
-                    <h4 style="color:var(--sidebar); margin-bottom:10px; text-align:center; font-size:18px;">Matriz Dinámica Térmica de Riesgos (OEA)</h4>
-                    <p style="text-align:center; color:var(--text-muted); font-size:13px; margin-bottom:25px;">Haga clic en las celdas con color para visualizar el detalle de los riesgos ubicados en ese cuadrante.</p>
-                    <div id="heatmap-grid" class="risk-matrix"></div>
-                    <div id="heatmap-details-panel" style="display:none; margin-top:30px; border-top: 2px dashed var(--border); padding-top:25px;">
-                        <h4 id="heatmap-details-title" style="color:var(--warning); margin-bottom:15px; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">zoom_in</span> Detalle de Cuadrante Seleccionado</h4>
-                        <div class="table-responsive"><table style="width:100%; border:1px solid var(--border); background:white;"><thead style="background:var(--table-header);"><tr><th>ID Riesgo</th><th>Proceso</th><th>Amenaza</th><th>Mitigación Definida</th></tr></thead><tbody id="tbody-heatmap-details"></tbody></table></div>
+            <!-- Dashboard Grid Row 1 -->
+            <div class="grid-2" style="gap: 20px; margin-bottom: 20px;">
+                <!-- Matriz de Riesgo -->
+                <div class="card" style="border:1px solid var(--border); box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+                    <h4 style="color:var(--sidebar); margin-bottom:15px; font-size:15px; font-weight:700;">Project Risks (Matriz OEA)</h4>
+                    <div style="background:#f8fafc; padding:15px; border-radius:8px;">
+                        <div id="heatmap-grid" class="risk-matrix" style="max-width:100%;"></div>
                     </div>
                 </div>
+                <!-- Bar Chart: Comparativa -->
+                <div class="card" style="border:1px solid var(--border); box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+                    <h4 style="color:var(--sidebar); margin-bottom:15px; font-size:15px; font-weight:700;">Rendimiento: Esperado vs Actual (SLA)</h4>
+                    <div style="position: relative; height: 280px; width:100%;"><canvas id="chartSlaCompare"></canvas></div>
+                </div>
+            </div>
 
-                <div style="background:white; padding:20px; border-radius:16px; border:1px solid var(--border); margin-top:30px;">
-                    <h4 style="color:var(--sidebar); margin-bottom:15px; font-size:18px; display:flex; align-items:center; gap:8px;">
-                        <span class="material-icons-round">table_chart</span> Análisis Detallado del Sistema
-                    </h4>
-                    
-                    <div style="display:flex; gap:10px; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:15px; flex-wrap:wrap;">
-                        <button class="btn btn-primary" onclick="window.setDashTab('solicitudes', this)" id="dash-tab-sol" style="flex:1; font-size:14px; min-width:150px;"><span class="material-icons-round" style="font-size:16px;">description</span> Solicitudes</button>
-                        <button class="btn btn-dark" onclick="window.setDashTab('sacs', this)" id="dash-tab-sacs" style="flex:1; font-size:14px; min-width:150px; background:var(--background-alt); color:var(--text-main); border:1px solid var(--border);"><span class="material-icons-round" style="font-size:16px;">warning</span> No Conformidades (F-023)</button>
-                        <button class="btn btn-dark" onclick="window.setDashTab('auditorias', this)" id="dash-tab-aud" style="flex:1; font-size:14px; min-width:150px; background:var(--background-alt); color:var(--text-main); border:1px solid var(--border);"><span class="material-icons-round" style="font-size:16px;">calendar_month</span> Auditorías</button>
-                        <button class="btn btn-dark" onclick="window.setDashTab('proveedores', this)" id="dash-tab-prov" style="flex:1; font-size:14px; min-width:150px; background:var(--background-alt); color:var(--text-main); border:1px solid var(--border);"><span class="material-icons-round" style="font-size:16px;">local_shipping</span> Proveedores</button>
+            <!-- Dashboard Grid Row 2 -->
+            <div class="grid-2" style="gap: 20px; margin-bottom: 30px;">
+                <!-- Bar Chart: Evolución Mensual -->
+                <div class="card" style="border:1px solid var(--border); box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h4 style="color:var(--sidebar); font-size:15px; font-weight:700; margin:0;">Evolución Mensual (Solicitudes)</h4>
+                        <select style="font-size:11px; padding:4px; border:none; color:var(--text-muted); cursor:pointer;"><option>Sort By: Yearly</option></select>
                     </div>
-
-                    <div style="display:flex; gap:15px; margin-bottom:20px; align-items:end; background:var(--background); padding:15px; border-radius:8px; border:1px solid var(--border);">
-                        <div style="flex:1; max-width:200px;">
-                            <label style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px; display:block;">Filtrar por Estado</label>
-                            <input type="text" id="dash-filter-estado" class="form-control" placeholder="Ej: Pendiente, Aprobado...">
-                        </div>
-                        <div style="flex:1; max-width:180px;">
-                            <label style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px; display:block;">Fecha Desde</label>
-                            <input type="date" id="dash-filter-desde" class="form-control">
-                        </div>
-                        <div style="flex:1; max-width:180px;">
-                            <label style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px; display:block;">Fecha Hasta</label>
-                            <input type="date" id="dash-filter-hasta" class="form-control">
-                        </div>
-                        <button class="btn btn-secondary" onclick="window.renderTablasDinamicasDash()" style="padding:10px 15px; display:flex; align-items:center; gap:5px; white-space:nowrap;">
-                            <span class="material-icons-round" style="font-size:18px;">filter_list</span> Filtrar
-                        </button>
-                        <button class="btn btn-dark" onclick="window.setVal('dash-filter-desde',''); window.setVal('dash-filter-hasta',''); window.setVal('dash-filter-estado',''); window.renderTablasDinamicasDash();" style="padding:10px 15px; display:flex; align-items:center; gap:5px; background:#fff; color:var(--danger); border:1px solid var(--danger); white-space:nowrap;">
-                            <span class="material-icons-round" style="font-size:18px;">clear</span> Limpiar
-                        </button>
+                    <div style="position: relative; height: 250px; width:100%;"><canvas id="chartMonthly"></canvas></div>
+                </div>
+                <!-- Donut Chart: Estados -->
+                <div class="card" style="border:1px solid var(--border); box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h4 style="color:var(--sidebar); font-size:15px; font-weight:700; margin:0;">Estado General (Stats)</h4>
+                        <span class="material-icons-round" style="color:var(--text-muted); font-size:18px;">more_horiz</span>
                     </div>
-
-                    <div class="table-responsive" id="dash-dynamic-table-container">
-                        <table id="tabla-dash-dinamica" style="width:100%; text-align:left; white-space:nowrap;">
-                            <thead id="thead-dash" style="background:#f8fafc; position:sticky; top:0;">
-                                <!-- Cabeceras generadas dinámicamente -->
-                            </thead>
-                            <tbody id="tbody-dash-dinamico">
-                                <tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">Selecciona un módulo arriba para ver los datos</td></tr>
-                            </tbody>
-                        </table>
+                    <div style="display:flex; height:250px; align-items:center;">
+                        <div style="flex:1.5; position:relative; height:100%;"><canvas id="chartDonutStats"></canvas></div>
+                        <div style="flex:1; padding-left:15px;" id="donut-legend-container">
+                            <!-- Custom HTML Legend will be injected here -->
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
+
+        <section id="sec-forms" class="section" style="display:none;">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><span class="material-icons-round">dynamic_form</span></div>
+                    <div><h1>Constructor de Formularios</h1><p>Diseña y publica formularios personalizados para la recolección de datos</p></div>
+                </div>
+                <div class="section-header-actions">
+                    <button class="btn btn-primary" onclick="window.abrirModalNuevoFormulario()" style="padding:10px 15px; font-size:14px; box-shadow:0 4px 10px rgba(30,64,175,0.3);"><span class="material-icons-round" style="font-size:18px;">add</span> Crear Nuevo Formulario</button>
+                </div>
+            </div>
+            
+            <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
+                <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;">
+                    <input type="text" id="search-forms" class="search-bar" placeholder="🔍 Buscar formulario..." onkeyup="window.filtrarTabla('search-forms', 'tbody-forms')" style="margin:0; max-width:400px;">
+                </div>
+                <div class="table-responsive">
+                    <table id="tabla-forms">
+                        <thead style="background:var(--table-header);">
+                            <tr><th>Nombre del Formulario</th><th>Descripción</th><th>Campos</th><th>Fecha de Creación</th><th>Estado</th><th style="text-align:center;">Acciones</th></tr>
+                        </thead>
+                        <tbody id="tbody-forms">
+                            <tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">Cargando formularios...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
 
         <section id="sec-crear" class="section">
             <div class="card" style="max-width: 900px; margin: auto;">
@@ -1169,5 +1171,59 @@
         </div>
     </div>
 
+    <!-- MODAL CONSTRUCTOR DE FORMULARIOS -->
+    <div class="modal-overlay" id="modal-form-builder" style="display:none;">
+        <div class="modal-content" style="max-width: 800px; width:95%;">
+            <h3 style="color:var(--primary); margin-top:0; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">build</span> Creador de Formularios</h3>
+            
+            <div class="grid-2" style="gap:20px;">
+                <!-- Panel Izquierdo: Datos Básicos y Controles -->
+                <div>
+                    <label>Título del Formulario</label>
+                    <input type="text" id="fb-titulo" placeholder="Ej: Encuesta de Satisfacción" style="margin-bottom:15px;">
+                    <label>Descripción Corta</label>
+                    <textarea id="fb-desc" rows="2" placeholder="Opcional..." style="margin-bottom:20px;"></textarea>
+                    
+                    <h4 style="font-size:13px; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">Añadir Nuevo Campo</h4>
+                    <label>Tipo de Campo</label>
+                    <select id="fb-tipo-campo" style="margin-bottom:10px;">
+                        <option value="text">Texto Corto</option>
+                        <option value="textarea">Texto Largo (Párrafo)</option>
+                        <option value="number">Número</option>
+                        <option value="date">Fecha</option>
+                        <option value="select">Lista Desplegable</option>
+                        <option value="checkbox">Casilla de Verificación (Check)</option>
+                    </select>
+                    <label>Etiqueta (Pregunta)</label>
+                    <input type="text" id="fb-label-campo" placeholder="Ej: ¿Cuál es su nombre?">
+                    
+                    <!-- Opciones para Select -->
+                    <div id="fb-opciones-panel" style="display:none; background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:15px;">
+                        <label style="font-size:11px;">Opciones (separadas por coma)</label>
+                        <input type="text" id="fb-opciones-campo" placeholder="Opción 1, Opción 2, Opción 3" style="margin-bottom:0;">
+                    </div>
+                    
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin-bottom:15px; cursor:pointer;">
+                        <input type="checkbox" id="fb-req-campo" style="margin:0; width:auto;"> Campo Obligatorio
+                    </label>
+
+                    <button class="btn btn-info" onclick="window.agregarCampoBuilder()" style="width:100%;"><span class="material-icons-round" style="font-size:16px;">add_circle</span> Añadir Campo a la Vista Previa</button>
+                </div>
+                
+                <!-- Panel Derecho: Vista Previa -->
+                <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:20px;">
+                    <h4 style="font-size:13px; color:var(--primary); margin-bottom:15px; text-align:center;">Vista Previa del Formulario</h4>
+                    <div id="fb-preview-area" style="min-height:300px; max-height:450px; overflow-y:auto; padding-right:5px;">
+                        <p style="text-align:center; color:var(--text-muted); font-size:12px; margin-top:50px;">El formulario está vacío. Añade campos desde el panel izquierdo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;">
+                <button class="btn btn-dark" onclick="window.setDisplay('modal-form-builder', 'none')">Cancelar</button>
+                <button class="btn btn-primary" onclick="window.guardarFormulario()"><span class="material-icons-round" style="font-size:18px;">save</span> Guardar Formulario</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

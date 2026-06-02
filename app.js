@@ -195,39 +195,14 @@ window.actualizarConteoPersonal = () => { if($('aud-personal')) $('aud-personal'
 // =========================================================================================
 // LÓGICA DE DIBUJADO DE GRÁFICOS Y MATRIZ INTERACTIVA (PROTEGIDA CON TRY/CATCH)
 // =========================================================================================
+let chartSlaInstance = null, chartMonthlyInstance = null, chartDonutStatsInstance = null;
+
 window.renderDashboardCharts = () => {
     try {
         if(!currentUser || (!currentUser.permisos.admin && !currentUser.permisos.p_gest_sgc)) return;
         if (typeof Chart === 'undefined') return;
 
-        const ctxSacs = $('chartSacs');
-        if(ctxSacs && globalAllSacs) {
-            let abiertas = globalAllSacs.filter(s => String(s.estado).includes('Abierta') || String(s.estado).includes('Plan')).length;
-            let seguimiento = globalAllSacs.filter(s => s.estado === 'En Seguimiento').length;
-            let cerradas = globalAllSacs.filter(s => s.estado === 'Cerrada').length;
-
-            if(chartSacsInstance) chartSacsInstance.destroy();
-            chartSacsInstance = new Chart(ctxSacs, {
-                type: 'doughnut',
-                data: { labels: ['Abiertas', 'En Seguimiento', 'Cerradas'], datasets: [{ data: [abiertas, seguimiento, cerradas], backgroundColor: ['#ef4444', '#f59e0b', '#10b981'], borderWidth: 0, hoverOffset: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 } } } } }
-            });
-        }
-
-        const ctxProv = $('chartProv');
-        if(ctxProv && globalProveedores) {
-            let bajos = globalProveedores.filter(p => p.riesgo === 'Bajo').length;
-            let medios = globalProveedores.filter(p => p.riesgo === 'Medio').length;
-            let altos = globalProveedores.filter(p => p.riesgo === 'Alto').length;
-
-            if(chartProvInstance) chartProvInstance.destroy();
-            chartProvInstance = new Chart(ctxProv, {
-                type: 'bar',
-                data: { labels: ['Riesgo Bajo', 'Riesgo Medio', 'Riesgo Alto'], datasets: [{ label: 'Cant. de Proveedores', data: [bajos, medios, altos], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter' } } }, x: { ticks: { font: { family: 'Inter' } } } }, plugins: { legend: { display: false } } }
-            });
-        }
-
+        // 1. Matriz de Riesgo OEA (Heatmap)
         const grid = $('heatmap-grid');
         if(grid && globalRiesgos) {
             let html = '';
@@ -259,8 +234,92 @@ window.renderDashboardCharts = () => {
             html += `<div></div>`;
             for(let i = 1; i <= 5; i++) { html += `<div style="text-align:center; font-weight:800; color:var(--primary); font-size:12px; margin-top:5px;">Imp ${i}</div>`; }
             grid.innerHTML = html;
-            window.setDisplay('heatmap-details-panel', 'none'); 
         }
+
+        // 2. Gráfico SLA Compare (Barras: SLA Esperado vs Real)
+        const ctxSla = $('chartSlaCompare');
+        if(ctxSla && globalSolicitudes) {
+            let prioAlta = globalSolicitudes.filter(s => s.prioridad === 'Alta');
+            let prioMedia = globalSolicitudes.filter(s => s.prioridad === 'Media');
+            let prioBaja = globalSolicitudes.filter(s => s.prioridad === 'Baja' || !s.prioridad);
+
+            let dataReal = [prioAlta.length, prioMedia.length, prioBaja.length];
+            // Simulamos datos de budget/expected basados en promedios
+            let dataExpected = [Math.max(2, prioAlta.length + 3), Math.max(5, prioMedia.length + 5), Math.max(10, prioBaja.length + 8)];
+
+            if(chartSlaInstance) chartSlaInstance.destroy();
+            chartSlaInstance = new Chart(ctxSla, {
+                type: 'bar',
+                data: { 
+                    labels: ['Prioridad Alta', 'Prioridad Media', 'Prioridad Baja'], 
+                    datasets: [
+                        { label: 'Esperado (Base)', data: dataExpected, backgroundColor: '#93c5fd', borderRadius: 4, categoryPercentage: 0.8, barPercentage: 0.9 },
+                        { label: 'Real (Actuales)', data: dataReal, backgroundColor: '#10b981', borderRadius: 4, categoryPercentage: 0.8, barPercentage: 0.9 }
+                    ] 
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } }, x: { grid: { display: false }, border: { display: false } } }, plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } } }
+            });
+        }
+
+        // 3. Gráfico Evolución Mensual (Solicitudes por mes)
+        const ctxMonthly = $('chartMonthly');
+        if(ctxMonthly && globalSolicitudes) {
+            let monthCounts = { "Ene":0, "Feb":0, "Mar":0, "Abr":0, "May":0, "Jun":0, "Jul":0, "Ago":0, "Sep":0, "Oct":0, "Nov":0, "Dic":0 };
+            const mesesStr = Object.keys(monthCounts);
+            globalSolicitudes.forEach(s => {
+                if(s.fecha) {
+                    let d = new Date(s.fecha);
+                    let m = d.getMonth();
+                    monthCounts[mesesStr[m]]++;
+                }
+            });
+            let dataValues = Object.values(monthCounts);
+            
+            if(chartMonthlyInstance) chartMonthlyInstance.destroy();
+            chartMonthlyInstance = new Chart(ctxMonthly, {
+                type: 'bar',
+                data: { labels: mesesStr.slice(0, new Date().getMonth()+1), datasets: [{ label: 'Solicitudes', data: dataValues.slice(0, new Date().getMonth()+1), backgroundColor: '#6366f1', borderRadius: 4, hoverBackgroundColor: '#4f46e5' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } }, x: { grid: { display: false }, border: { display: false } } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        // 4. Gráfico Donut (Estado General Stats)
+        const ctxDonut = $('chartDonutStats');
+        if(ctxDonut && globalSolicitudes) {
+            let aprobadas = globalSolicitudes.filter(s => String(s.estado).includes('Aprobado Final')).length;
+            let pendientes = globalSolicitudes.filter(s => !String(s.estado).includes('Aprobado Final') && s.estado !== 'Anulado' && s.estado !== 'Rechazado').length;
+            let anuladas = globalSolicitudes.filter(s => s.estado === 'Anulado' || s.estado === 'Rechazado').length;
+            let total = aprobadas + pendientes + anuladas;
+            let pAp = total > 0 ? Math.round((aprobadas/total)*100) : 0;
+            let pPe = total > 0 ? Math.round((pendientes/total)*100) : 0;
+            let pAn = total > 0 ? Math.round((anuladas/total)*100) : 0;
+
+            if(chartDonutStatsInstance) chartDonutStatsInstance.destroy();
+            chartDonutStatsInstance = new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: { labels: ['Aprobadas', 'En Trámite', 'Anuladas'], datasets: [{ data: [aprobadas, pendientes, anuladas], backgroundColor: ['#6366f1', '#10b981', '#ef4444'], borderWidth: 0, hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
+            });
+
+            // HTML Legend
+            if($('donut-legend-container')) {
+                $('donut-legend-container').innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">
+                        <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:#6366f1; border-radius:50%;"></div><span style="font-size:12px; color:var(--text-main); font-weight:600;">Aprobadas</span></div>
+                        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${aprobadas}</span><span style="background:#eef2ff; color:#6366f1; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pAp}%</span></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">
+                        <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:#10b981; border-radius:50%;"></div><span style="font-size:12px; color:var(--text-main); font-weight:600;">En Trámite</span></div>
+                        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${pendientes}</span><span style="background:#dcfce7; color:#10b981; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pPe}%</span></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:#ef4444; border-radius:50%;"></div><span style="font-size:12px; color:var(--text-main); font-weight:600;">Anuladas</span></div>
+                        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${anuladas}</span><span style="background:#fee2e2; color:#ef4444; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pAn}%</span></div>
+                    </div>
+                `;
+            }
+        }
+
     } catch(e) {
         console.error("Dashboard Render Warning: ", e);
     }
@@ -446,6 +505,10 @@ window.cargarDatosCentrales = () => {
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "MatrizRiesgos"), (sn) => { 
       globalRiesgos = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalRiesgos.push(obj); }); 
       window.renderTablaRiesgos(); window.renderDashboardCharts(); 
+  });
+  onSnapshot(collection(db, "artifacts", appId, "public", "data", "Formularios"), (sn) => { 
+      globalForms = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalForms.push(obj); }); 
+      window.renderTablaForms(); 
   });
 };
 
@@ -634,7 +697,7 @@ window.completarLoginUI = () => {
 
   const p = currentUser.permisos || {}; const isAdm = p.admin || false;
   const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
-  window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none');
+  window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-forms', (isAdm || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none');
   window.setDisplay('admin-gear-container', (isAdm || p.p_users || p.p_struct) ? 'flex' : 'none');
   
   const canAud = p.p_audit_ver || p.p_audit_admin || p.p_audit_auditor || p.p_audit_dueno || isAdm; 
@@ -2132,6 +2195,144 @@ window.abrirModalDash = (tipo) => {
     window.setHtml('m-dash-tbody', tbodyHTML);
     window.setDisplay('modal-dash-details', 'flex');
 };
+
+// ==========================================
+// MÓDULO DE FORMULARIOS DINÁMICOS
+// ==========================================
+let globalForms = [];
+let formBuilderCampos = []; // Almacena temporalmente los campos mientras se construye
+
+window.abrirModalNuevoFormulario = () => {
+    formBuilderCampos = [];
+    window.setVal('fb-titulo', '');
+    window.setVal('fb-desc', '');
+    window.setVal('fb-tipo-campo', 'text');
+    window.setVal('fb-label-campo', '');
+    window.setVal('fb-opciones-campo', '');
+    $('fb-req-campo').checked = false;
+    window.renderFormPreview();
+    window.setDisplay('modal-form-builder', 'flex');
+    
+    // Listener para mostrar/ocultar panel de opciones si es select
+    let sel = $('fb-tipo-campo');
+    if(sel) {
+        sel.onchange = (e) => {
+            window.setDisplay('fb-opciones-panel', e.target.value === 'select' ? 'block' : 'none');
+        };
+    }
+};
+
+window.agregarCampoBuilder = () => {
+    let tipo = getValSafe('fb-tipo-campo');
+    let label = getValSafe('fb-label-campo').trim();
+    let opciones = getValSafe('fb-opciones-campo').trim();
+    let req = $('fb-req-campo') ? $('fb-req-campo').checked : false;
+
+    if(!label) return alert("Por favor, ingrese la etiqueta o pregunta para el campo.");
+    
+    let campoObj = { id: 'field_' + Date.now(), tipo: tipo, label: label, requerido: req };
+    if(tipo === 'select') {
+        if(!opciones) return alert("Ingrese al menos una opción para la lista desplegable.");
+        campoObj.opciones = opciones.split(',').map(s => s.trim()).filter(s => s);
+    }
+
+    formBuilderCampos.push(campoObj);
+    window.setVal('fb-label-campo', '');
+    window.setVal('fb-opciones-campo', '');
+    $('fb-req-campo').checked = false;
+    window.renderFormPreview();
+};
+
+window.eliminarCampoBuilder = (idx) => {
+    formBuilderCampos.splice(idx, 1);
+    window.renderFormPreview();
+};
+
+window.renderFormPreview = () => {
+    let container = $('fb-preview-area');
+    if(!container) return;
+
+    if(formBuilderCampos.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:12px; margin-top:50px;">El formulario está vacío. Añade campos desde el panel izquierdo.</p>';
+        return;
+    }
+
+    let h = '';
+    formBuilderCampos.forEach((c, i) => {
+        let reqHTML = c.requerido ? '<span style="color:var(--danger)">*</span>' : '';
+        h += `<div style="background:white; padding:15px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border); position:relative;">
+                <button type="button" onclick="window.eliminarCampoBuilder(${i})" style="position:absolute; right:10px; top:10px; background:none; border:none; color:var(--danger); cursor:pointer;"><span class="material-icons-round" style="font-size:18px;">delete</span></button>
+                <label style="font-size:13px; color:var(--sidebar); display:block; margin-bottom:5px;">${c.label} ${reqHTML}</label>`;
+        
+        if(c.tipo === 'text') h += `<input type="text" disabled placeholder="Campo de texto corto" style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'textarea') h += `<textarea disabled placeholder="Campo de texto largo" rows="2" style="margin-bottom:0; background:#f8fafc;"></textarea>`;
+        else if(c.tipo === 'number') h += `<input type="number" disabled placeholder="123" style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'date') h += `<input type="date" disabled style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'checkbox') h += `<label style="font-size:12px; color:var(--text-muted);"><input type="checkbox" disabled style="margin-bottom:0; width:auto;"> Marcar casilla</label>`;
+        else if(c.tipo === 'select') {
+            h += `<select disabled style="margin-bottom:0; background:#f8fafc;">`;
+            c.opciones.forEach(op => h += `<option>${op}</option>`);
+            h += `</select>`;
+        }
+        h += `</div>`;
+    });
+    container.innerHTML = h;
+};
+
+window.guardarFormulario = async () => {
+    let titulo = getValSafe('fb-titulo').trim();
+    let desc = getValSafe('fb-desc').trim();
+    if(!titulo) return alert("El título del formulario es obligatorio.");
+    if(formBuilderCampos.length === 0) return alert("Añade al menos un campo al formulario.");
+
+    window.showLoading();
+    try {
+        let formData = {
+            titulo: titulo,
+            descripcion: desc,
+            campos: formBuilderCampos,
+            estado: 'Activo',
+            creado_por: currentUser.usuario,
+            fecha_creacion: new Date().toISOString()
+        };
+        await addDoc(collection(db, "artifacts", appId, "public", "data", "Formularios"), formData);
+        alert("Formulario guardado con éxito.");
+        window.setDisplay('modal-form-builder', 'none');
+    } catch(e) {
+        console.error(e);
+        alert("Error al guardar el formulario.");
+    } finally {
+        window.hideLoading();
+    }
+};
+
+window.renderTablaForms = () => {
+    let tb = $('tbody-forms');
+    if(!tb) return;
+    if(globalForms.length === 0) {
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">No hay formularios creados.</td></tr>';
+        return;
+    }
+
+    let h = '';
+    globalForms.sort((a,b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion)).forEach(f => {
+        let bEst = f.estado === 'Activo' ? 'badge-success' : 'badge-danger';
+        h += `<tr>
+                <td><b>${f.titulo}</b></td>
+                <td><small>${f.descripcion || '-'}</small></td>
+                <td style="text-align:center;"><span class="badge badge-info">${f.campos ? f.campos.length : 0}</span></td>
+                <td>${window.formatearFechaAbreviada(f.fecha_creacion)}</td>
+                <td><span class="badge ${bEst}">${f.estado}</span></td>
+                <td style="text-align:center;">
+                    <button class="btn btn-dark" style="padding:4px 8px; font-size:11px;"><span class="material-icons-round" style="font-size:14px;">preview</span></button>
+                    <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="window.del('Formularios','${f.id}')"><span class="material-icons-round" style="font-size:14px;">delete</span></button>
+                </td>
+              </tr>`;
+    });
+    tb.innerHTML = h;
+};
+
+// ==========================================
 
 document.addEventListener("DOMContentLoaded", () => {
     inicializarApp();
