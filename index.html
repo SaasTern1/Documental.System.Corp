@@ -161,15 +161,15 @@
             <button class="menu-btn" onclick="window.toggleMenu()"><span class="material-icons-round">menu</span></button>
         </div>
 
-        <div class="top-nav" id="admin-gear-container" style="display:none; justify-content:flex-end; padding:10px 25px; border-bottom:1px solid var(--border); background:#fff; position:sticky; top:0; z-index:1000; align-items:center;">
+        <div id="admin-gear-container" style="display:none; position:absolute; right:20px; top:20px; z-index:1000; align-items:center; background:transparent;">
             <div id="admin-gear-menu" style="position:relative;">
                 <button class="btn" style="background:transparent; border:none; color:var(--text-main); padding:8px; border-radius:50%; box-shadow:none; cursor:pointer;" onclick="document.getElementById('gear-dropdown').style.display = document.getElementById('gear-dropdown').style.display === 'none' ? 'block' : 'none';">
                     <span class="material-icons-round" style="font-size:26px; color:var(--primary);">settings</span>
                 </button>
                 <div id="gear-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; box-shadow:var(--shadow-xl); border-radius:12px; width:220px; z-index:1001; border:1px solid var(--border); padding:8px 0; margin-top:5px;">
                     <p style="font-size:10px; color:#94a3b8; font-weight:800; padding:0 15px; margin-bottom:5px; margin-top:5px;">ADMINISTRACIÓN</p>
-                    <button onclick="window.cambiarVista('sec-usuarios', document.getElementById('nav-dash')); document.getElementById('gear-dropdown').style.display='none'" style="width:100%; text-align:left; padding:10px 15px; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-main); transition:0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:18px; color:var(--primary);">people</span> Usuarios y Permisos</button>
-                    <button onclick="window.cambiarVista('sec-estructura', document.getElementById('nav-dash')); document.getElementById('gear-dropdown').style.display='none'" style="width:100%; text-align:left; padding:10px 15px; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-main); transition:0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:18px; color:var(--primary);">account_tree</span> Config. del Sistema</button>
+                    <button onclick="window.setDisplay('sec-usuarios', 'flex'); document.getElementById('gear-dropdown').style.display='none'" style="width:100%; text-align:left; padding:10px 15px; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-main); transition:0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:18px; color:var(--primary);">people</span> Usuarios y Permisos</button>
+                    <button onclick="window.setDisplay('sec-estructura', 'flex'); document.getElementById('gear-dropdown').style.display='none'" style="width:100%; text-align:left; padding:10px 15px; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-main); transition:0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:18px; color:var(--primary);">account_tree</span> Config. del Sistema</button>
                 </div>
             </div>
         </div>
@@ -232,7 +232,7 @@
             </div>
         </section>
 
-        <section id="sec-forms" class="section" style="display:none;">
+        <section id="sec-forms" class="section">
             <div class="section-header">
                 <div class="section-header-info">
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><span class="material-icons-round">dynamic_form</span></div>
@@ -475,7 +475,10 @@
             </div>
         </section>
 
-        <section id="sec-usuarios" class="section">
+        <!-- MODAL USUARIOS -->
+        <div id="sec-usuarios" class="modal-overlay" style="display:none; z-index:2000;">
+            <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto; position:relative;">
+                <button type="button" class="btn-icon-danger" onclick="window.setDisplay('sec-usuarios', 'none')" style="position:absolute; top:15px; right:15px; z-index:10;"><span class="material-icons-round">close</span></button>
             <div class="section-header">
                 <div class="section-header-info">
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6);"><span class="material-icons-round">people</span></div>
@@ -487,9 +490,12 @@
                 <div style="padding:20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input type="text" id="search-users" class="search-bar" placeholder="🔍 Buscar por nombre o email..." onkeyup="window.filtrarTabla('search-users', 'tbody-users')" style="margin:0; max-width:400px;"></div>
                 <div class="table-responsive"><table id="table-users"><thead><tr><th>Usuario</th><th>Email</th><th>Rol/Gerencias</th><th class="no-export">Acciones</th></tr></thead><tbody id="tbody-users"></tbody></table></div>
             </div>
-        </section>
+        </div></div>
 
-        <section id="sec-estructura" class="section">
+        <!-- MODAL CONFIGURACION SISTEMA -->
+        <div id="sec-estructura" class="modal-overlay" style="display:none; z-index:2000;">
+            <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto; position:relative;">
+                <button type="button" class="btn-icon-danger" onclick="window.setDisplay('sec-estructura', 'none')" style="position:absolute; top:15px; right:15px; z-index:10;"><span class="material-icons-round">close</span></button>
             <div class="section-header">
                 <div class="section-header-info">
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #475569, #64748b);"><span class="material-icons-round">account_tree</span></div>
@@ -529,7 +535,7 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </div></div>
     </main>
 
     <div class="modal-overlay" id="modal-dash-details">
@@ -1172,21 +1178,21 @@
     </div>
 
     <!-- MODAL CONSTRUCTOR DE FORMULARIOS -->
-    <div class="modal-overlay" id="modal-form-builder" style="display:none;">
+    <div class="modal-overlay" id="modal-form-builder" style="display:none; z-index:3000;">
         <div class="modal-content" style="max-width: 800px; width:95%;">
             <h3 style="color:var(--primary); margin-top:0; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">build</span> Creador de Formularios</h3>
             
             <div class="grid-2" style="gap:20px;">
                 <!-- Panel Izquierdo: Datos Básicos y Controles -->
                 <div>
-                    <label>Título del Formulario</label>
-                    <input type="text" id="fb-titulo" placeholder="Ej: Encuesta de Satisfacción" style="margin-bottom:15px;">
-                    <label>Descripción Corta</label>
-                    <textarea id="fb-desc" rows="2" placeholder="Opcional..." style="margin-bottom:20px;"></textarea>
+                    <label for="fb-titulo">Título del Formulario</label>
+                    <input type="text" id="fb-titulo" name="fb-titulo" placeholder="Ej: Encuesta de Satisfacción" style="margin-bottom:15px;">
+                    <label for="fb-desc">Descripción Corta</label>
+                    <textarea id="fb-desc" name="fb-desc" rows="2" placeholder="Opcional..." style="margin-bottom:20px;"></textarea>
                     
                     <h4 style="font-size:13px; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">Añadir Nuevo Campo</h4>
-                    <label>Tipo de Campo</label>
-                    <select id="fb-tipo-campo" style="margin-bottom:10px;">
+                    <label for="fb-tipo-campo">Tipo de Campo</label>
+                    <select id="fb-tipo-campo" name="fb-tipo-campo" style="margin-bottom:10px;">
                         <option value="text">Texto Corto</option>
                         <option value="textarea">Texto Largo (Párrafo)</option>
                         <option value="number">Número</option>
@@ -1194,17 +1200,17 @@
                         <option value="select">Lista Desplegable</option>
                         <option value="checkbox">Casilla de Verificación (Check)</option>
                     </select>
-                    <label>Etiqueta (Pregunta)</label>
-                    <input type="text" id="fb-label-campo" placeholder="Ej: ¿Cuál es su nombre?">
+                    <label for="fb-label-campo">Etiqueta (Pregunta)</label>
+                    <input type="text" id="fb-label-campo" name="fb-label-campo" placeholder="Ej: ¿Cuál es su nombre?">
                     
                     <!-- Opciones para Select -->
                     <div id="fb-opciones-panel" style="display:none; background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:15px;">
-                        <label style="font-size:11px;">Opciones (separadas por coma)</label>
-                        <input type="text" id="fb-opciones-campo" placeholder="Opción 1, Opción 2, Opción 3" style="margin-bottom:0;">
+                        <label for="fb-opciones-campo" style="font-size:11px;">Opciones (separadas por coma)</label>
+                        <input type="text" id="fb-opciones-campo" name="fb-opciones-campo" placeholder="Opción 1, Opción 2, Opción 3" style="margin-bottom:0;">
                     </div>
                     
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin-bottom:15px; cursor:pointer;">
-                        <input type="checkbox" id="fb-req-campo" style="margin:0; width:auto;"> Campo Obligatorio
+                    <label for="fb-req-campo" style="display:flex; align-items:center; gap:5px; font-size:12px; margin-bottom:15px; cursor:pointer;">
+                        <input type="checkbox" id="fb-req-campo" name="fb-req-campo" style="margin:0; width:auto;"> Campo Obligatorio
                     </label>
 
                     <button class="btn btn-info" onclick="window.agregarCampoBuilder()" style="width:100%;"><span class="material-icons-round" style="font-size:16px;">add_circle</span> Añadir Campo a la Vista Previa</button>
