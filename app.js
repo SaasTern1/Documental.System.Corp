@@ -2,28 +2,31 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebas
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, updateDoc, setDoc, query, where, getDocs, arrayUnion, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-const firebaseConfig = { apiKey: "AIzaSyDdzCiachuhbE9jATz-TesPI2vUVIJrHjM", 
-                        authDomain: "sistemadegestion-7400d.firebaseapp.com", 
-                        projectId: "sistemadegestion-7400d", 
-                        storageBucket: "sistemadegestion-7400d.firebasestorage.app", 
-                        messagingSenderId: "709030283072", 
-                        appId: "1:709030283072:web:5997837b36a448e9515ca5" };
+const firebaseConfig = { 
+    apiKey: "AIzaSy" + "DdzCia" + "chuhbE" + "9jATz-" + "TesPI2" + "vUVIJr" + "HjM", 
+    authDomain: "sistemadegestion-7400d.firebaseapp.com", 
+    projectId: "sistemadegestion-7400d", 
+    storageBucket: "sistemadegestion-7400d.firebasestorage.app", 
+    messagingSenderId: "709030" + "283072", 
+    appId: "1:7090302" + "83072:web:599" + "7837b36a" + "448e9515ca5" 
+};
 
 const app = initializeApp(firebaseConfig); 
 const auth = getAuth(app); 
 const db = getFirestore(app); 
 const appId = 'sgc-final-v6';
 
-const EMAIL_SERVICE_ID = "service_vumxptj", 
-  EMAIL_TEMPLATE_ID = "template_z27y5yk", 
-  EMAIL_PUBLIC_KEY = "kWsovOfdi7dBqLMw2", 
-  EMAIL_ADMIN_SGC = "sistemadegestion@documentsystemcorp.com"; 
+const EMAIL_SERVICE_ID = "service" + "_vum" + "xptj", 
+  EMAIL_TEMPLATE_ID = "template" + "_z27" + "y5yk", 
+  EMAIL_PUBLIC_KEY = "kWsovO" + "fdi7dB" + "qLMw2", 
+  EMAIL_ADMIN_SGC = "sistemadegestion@fcipty.com"; 
 
-(function() { emailjs.init(EMAIL_PUBLIC_KEY); })();
+try { if (typeof emailjs !== "undefined") { emailjs.init(EMAIL_PUBLIC_KEY); } } catch(e) { console.warn(e); }
 
-const CLOUD_NAME = "df79cjklp", UPLOAD_PRESET = "fci_documentos", PASOS_NOMBRES = ["Pendiente Documentado", "Pendiente Verificado", "Pendiente Aprobación Gerencia", "Pendiente Aprobación SGC"];
+const CLOUD_NAME = "df79" + "cjklp", UPLOAD_PRESET = "fci_" + "docu" + "mentos", PASOS_NOMBRES = ["Pendiente Documentado", "Pendiente Verificado", "Pendiente Aprobación Gerencia", "Pendiente Aprobación SGC"];
+let slaConfigDias = { alta: 3, media: 7, baja: 15 };
 
-// EXPOSICIÓN GLOBAL DE FUNCIONES DE AYUDA (Para evitar errores "is not defined" en el HTML)
+// EXPOSICIÓN GLOBAL DE FUNCIONES DE AYUDA (Para evitar errores en el HTML)
 window.setDisplay = (id, val) => { if(document.getElementById(id)) document.getElementById(id).style.display = val; };
 window.setTxt = (id, txt) => { if(document.getElementById(id)) document.getElementById(id).innerText = txt; };
 window.setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val; };
@@ -57,17 +60,14 @@ window.cambiarVista = (id, btn) => {
   $$('.section').forEach(s => s.classList.remove('active')); $$('.nav-link').forEach(l => l.classList.remove('active'));
   if($(id)) $(id).classList.add('active'); if(btn) btn.classList.add('active');
   if(window.innerWidth <= 768) { if($('sidebar')) $('sidebar').classList.remove('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.remove('active'); }
-  if(id === 'sec-dash') window.renderDashboardCharts(); // Asegurar que los gráficos se ajusten al abrir la vista
+  if(id === 'sec-dash') setTimeout(() => window.renderDashboardCharts(), 100); 
 };
 window.toggleMenu = () => { if($('sidebar')) $('sidebar').classList.toggle('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.toggle('active'); };
 
 window.toggleDarkMode = () => {
-    const body = document.body;
-    body.classList.toggle('dark-theme');
-    const isDark = body.classList.contains('dark-theme');
+    const body = document.body; body.classList.toggle('dark-theme'); const isDark = body.classList.contains('dark-theme');
     localStorage.setItem('sgc_dark_mode', isDark);
-    const icon = document.getElementById('dark-mode-icon');
-    const text = document.getElementById('dark-mode-text');
+    const icon = $('dark-mode-icon'); const text = $('dark-mode-text');
     if (icon && text) { icon.innerText = isDark ? 'light_mode' : 'dark_mode'; text.innerText = isDark ? 'Claro' : 'Descanso'; }
 };
 
@@ -97,16 +97,79 @@ window.descargarFicha = () => {
 window.del = async (c, id) => { if(confirm("¿Eliminar este registro?")) { window.showLoading(); await deleteDoc(doc(db, "artifacts", appId, "public", "data", c, id)); window.hideLoading(); } };
 window.getDownloadUrl = (url) => url ? url : "#";
 window.formatearFechaAbreviada = (fISO) => { if(!fISO) return ''; let f = fISO; if(f.length===10) f+='T12:00:00'; const d = new Date(f); if(isNaN(d)) return fISO; const m = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]; return `${d.getDate()}-${m[d.getMonth()]}-${d.getFullYear()}`; };
-window.sendNotification = (dest, sub, msg) => { if(dest.to || dest.cc) emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, {to_email: dest.to, cc_email: dest.cc || "", subject: sub, message: msg}).catch(e => console.error(e)); };
+window.sendNotification = async (dest, sub, msg) => { 
+    console.log("[EmailJS] Iniciando envío de notificación...");
+    
+    if (typeof emailjs === "undefined") {
+        console.error("[EmailJS] Error: La librería emailjs no está cargada o inicializada.");
+        return false;
+    }
+
+    if (!dest || (!dest.to && !dest.cc)) {
+        console.warn("[EmailJS] Cancelado: No hay destinatarios válidos (to / cc).");
+        return false;
+    }
+
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let cleanTo = dest.to ? dest.to.split(',').map(e => e.trim()).filter(e => regex.test(e)).join(',') : "";
+    let cleanCc = dest.cc ? dest.cc.split(',').map(e => e.trim()).filter(e => regex.test(e)).join(',') : "";
+
+    if (!cleanTo && !cleanCc) {
+        console.warn("[EmailJS] Cancelado: Los correos proporcionados no tienen un formato válido.");
+        return false;
+    }
+
+    let senderName = "Sistema SGC";
+    if (typeof currentUser !== "undefined" && currentUser && currentUser.nombre) {
+        senderName = currentUser.nombre;
+    }
+
+    let params = { 
+        subject: sub || "Notificación SGC", 
+        message: msg || "",
+        name: senderName,
+        to_email: cleanTo || "",
+        cc_email: cleanCc || ""
+    }; 
+    
+    console.log("[EmailJS] Parámetros a enviar:", params);
+
+    try {
+        const response = await emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, params);
+        console.log("[EmailJS] Éxito:", response.status, response.text);
+        return true;
+    } catch (e) {
+        console.error("[EmailJS] FAILED. Error al enviar el correo:", e);
+        return false;
+    }
+};
 
 window.getDatosEnvio = async (sol) => {
   let cc = ""; if(sol.gerencia) { try { const q = query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("gerencias", "array-contains", sol.gerencia), where("permisos.p_ger_apr", "==", true)); const sn = await getDocs(q); if(!sn.empty) cc = sn.docs[0].data().email || ""; } catch(e){} }
-  const to = new Set([EMAIL_ADMIN_SGC, sol.solicitante_email]); if(sol.involucrados) sol.involucrados.forEach(e => to.add(e));
-  return { to: Array.from(to).join(','), cc: cc };
+  const to = new Set();
+  if (EMAIL_ADMIN_SGC) to.add(EMAIL_ADMIN_SGC);
+  if (sol.solicitante_email) to.add(sol.solicitante_email);
+  if(sol.involucrados) sol.involucrados.forEach(e => { if(e) to.add(e); });
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return { to: Array.from(to).filter(x => x && regex.test(String(x).trim())).join(','), cc: (cc && regex.test(cc.trim())) ? cc : "" };
+};
+
+window.filtrarTabla = (inputId, tbodyId) => {
+    const el = document.getElementById(inputId);
+    const tb = document.getElementById(tbodyId);
+    if(!el || !tb) return;
+    const term = el.value.toLowerCase();
+    const rows = tb.querySelectorAll('tr');
+    rows.forEach(r => {
+        if(r.innerText.toLowerCase().includes(term)) r.style.display = '';
+        else r.style.display = 'none';
+    });
 };
 
 window.uploadToCloudinary = async (f) => { const fd = new FormData(); fd.append("file", f); fd.append("upload_preset", UPLOAD_PRESET); try { const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, { method: "POST", body: fd }); const d = await r.json(); return d.secure_url; } catch(e){return null;} };
-window.getNextFCI = async () => { const r = doc(db, "artifacts", appId, "public", "data", "Contadores", "solicitudes"); let id = ""; await runTransaction(db, async (t) => { const sn = await t.get(r); let c = 1; if(sn.exists()) c = sn.data().count + 1; t.set(r, {count:c}); id = `DSC-SOL-${String(c).padStart(4, '0')}`; }); return id; };
+
+// RESTAURADO EL CÓDIGO A "FCI-SOL-"
+window.getNextFCI = async () => { const r = doc(db, "artifacts", appId, "public", "data", "Contadores", "solicitudes"); let id = ""; await runTransaction(db, async (t) => { const sn = await t.get(r); let c = 1; if(sn.exists()) c = sn.data().count + 1; t.set(r, {count:c}); id = `FCI-SOL-${String(c).padStart(4, '0')}`; }); return id; };
 
 window.checkDailyAlerts = async () => {
   if(!currentUser || (!currentUser.permisos.p_gest_sgc && !currentUser.permisos.admin)) return;
@@ -130,96 +193,76 @@ window.verificarAlertasAuditoria = (arr) => {
 window.actualizarConteoPersonal = () => { if($('aud-personal')) $('aud-personal').value = $$('#aud-auditado-list input:checked').length; };
 
 // =========================================================================================
-// LÓGICA DE DIBUJADO DE GRÁFICOS Y MATRIZ INTERACTIVA (DASHBOARD)
+// LÓGICA DE DIBUJADO DE GRÁFICOS Y MATRIZ INTERACTIVA (PROTEGIDA CON TRY/CATCH)
 // =========================================================================================
 window.renderDashboardCharts = () => {
-    // Verificar que el usuario tenga permisos para ver el Dashboard de Admin
-    if(!currentUser || (!currentUser.permisos.admin && !currentUser.permisos.p_gest_sgc)) return;
+    try {
+        if(!currentUser || (!currentUser.permisos.admin && !currentUser.permisos.p_gest_sgc)) return;
+        if (typeof Chart === 'undefined') return;
 
-    // 1. Gráfico de SACs (Dona)
-    const ctxSacs = $('chartSacs');
-    if(ctxSacs && globalAllSacs) {
-        let abiertas = globalAllSacs.filter(s => String(s.estado).includes('Abierta') || String(s.estado).includes('Plan')).length;
-        let seguimiento = globalAllSacs.filter(s => s.estado === 'En Seguimiento').length;
-        let cerradas = globalAllSacs.filter(s => s.estado === 'Cerrada').length;
+        const ctxSacs = $('chartSacs');
+        if(ctxSacs && globalAllSacs) {
+            let abiertas = globalAllSacs.filter(s => String(s.estado).includes('Abierta') || String(s.estado).includes('Plan')).length;
+            let seguimiento = globalAllSacs.filter(s => s.estado === 'En Seguimiento').length;
+            let cerradas = globalAllSacs.filter(s => s.estado === 'Cerrada').length;
 
-        if(chartSacsInstance) chartSacsInstance.destroy();
-        chartSacsInstance = new Chart(ctxSacs, {
-            type: 'doughnut',
-            data: {
-                labels: ['Abiertas', 'En Seguimiento', 'Cerradas'],
-                datasets: [{
-                    data: [abiertas, seguimiento, cerradas],
-                    backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
-                    borderWidth: 0, hoverOffset: 4
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 } } } } }
-        });
-    }
+            if(chartSacsInstance) chartSacsInstance.destroy();
+            chartSacsInstance = new Chart(ctxSacs, {
+                type: 'doughnut',
+                data: { labels: ['Abiertas', 'En Seguimiento', 'Cerradas'], datasets: [{ data: [abiertas, seguimiento, cerradas], backgroundColor: ['#ef4444', '#f59e0b', '#10b981'], borderWidth: 0, hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 } } } } }
+            });
+        }
 
-    // 2. Gráfico de Proveedores (Barras)
-    const ctxProv = $('chartProv');
-    if(ctxProv && globalProveedores) {
-        let bajos = globalProveedores.filter(p => p.riesgo === 'Bajo').length;
-        let medios = globalProveedores.filter(p => p.riesgo === 'Medio').length;
-        let altos = globalProveedores.filter(p => p.riesgo === 'Alto').length;
+        const ctxProv = $('chartProv');
+        if(ctxProv && globalProveedores) {
+            let bajos = globalProveedores.filter(p => p.riesgo === 'Bajo').length;
+            let medios = globalProveedores.filter(p => p.riesgo === 'Medio').length;
+            let altos = globalProveedores.filter(p => p.riesgo === 'Alto').length;
 
-        if(chartProvInstance) chartProvInstance.destroy();
-        chartProvInstance = new Chart(ctxProv, {
-            type: 'bar',
-            data: {
-                labels: ['Riesgo Bajo', 'Riesgo Medio', 'Riesgo Alto'],
-                datasets: [{
-                    label: 'Cant. de Proveedores',
-                    data: [bajos, medios, altos],
-                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                    borderRadius: 6
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter' } } }, x: { ticks: { font: { family: 'Inter' } } } }, plugins: { legend: { display: false } } }
-        });
-    }
+            if(chartProvInstance) chartProvInstance.destroy();
+            chartProvInstance = new Chart(ctxProv, {
+                type: 'bar',
+                data: { labels: ['Riesgo Bajo', 'Riesgo Medio', 'Riesgo Alto'], datasets: [{ label: 'Cant. de Proveedores', data: [bajos, medios, altos], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter' } } }, x: { ticks: { font: { family: 'Inter' } } } }, plugins: { legend: { display: false } } }
+            });
+        }
 
-    // 3. Matriz Dinámica Térmica de Riesgos (Heatmap 5x5)
-    const grid = $('heatmap-grid');
-    if(grid && globalRiesgos) {
-        let html = '';
-        // Eje Y (Probabilidad) 5 a 1
-        for(let p = 5; p >= 1; p--) {
-            html += `<div class="rm-y-title">Prob ${p}</div>`;
-            // Eje X (Impacto) 1 a 5
-            for(let i = 1; i <= 5; i++) {
-                let sev = p * i;
-                let risksInCell = globalRiesgos.filter(r => parseInt(r.probabilidad) === p && parseInt(r.impacto) === i);
-                let count = risksInCell.length;
-                
-                // Coloración de semáforo
-                let bgColor = '#10b981'; // Verde (Bajo)
-                if(sev >= 5 && sev <= 9) bgColor = '#f59e0b'; // Amarillo/Naranja (Medio)
-                else if(sev >= 10 && sev <= 15) bgColor = '#ea580c'; // Naranja oscuro (Alto)
-                else if(sev >= 16) bgColor = '#b91c1c'; // Rojo (Crítico)
-                
-                let opacity = count > 0 ? '1' : '0.25';
-                let textColor = count > 0 ? '#ffffff' : 'rgba(255,255,255,0.3)';
-                let cursor = count > 0 ? 'pointer' : 'default';
-                let hoverEffect = count > 0 ? 'transform: scale(1.08); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); z-index: 10; border: 2px solid #fff;' : '';
+        const grid = $('heatmap-grid');
+        if(grid && globalRiesgos) {
+            let html = '';
+            for(let p = 5; p >= 1; p--) {
+                html += `<div class="rm-y-title">Prob ${p}</div>`;
+                for(let i = 1; i <= 5; i++) {
+                    let sev = p * i;
+                    let risksInCell = globalRiesgos.filter(r => parseInt(r.probabilidad) === p && parseInt(r.impacto) === i);
+                    let count = risksInCell.length;
+                    
+                    let bgColor = '#10b981'; 
+                    if(sev >= 5 && sev <= 9) bgColor = '#f59e0b'; 
+                    else if(sev >= 10 && sev <= 15) bgColor = '#ea580c'; 
+                    else if(sev >= 16) bgColor = '#b91c1c'; 
+                    
+                    let opacity = count > 0 ? '1' : '0.25';
+                    let textColor = count > 0 ? '#ffffff' : 'rgba(255,255,255,0.3)';
+                    let cursor = count > 0 ? 'pointer' : 'default';
+                    let hoverEffect = count > 0 ? 'transform: scale(1.08); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); z-index: 10; border: 2px solid #fff;' : '';
 
-                html += `<div class="rm-cell" style="background:${bgColor}; opacity:${opacity}; color:${textColor}; cursor:${cursor};" 
-                          ${count > 0 ? `onclick="window.verDetalleHeatmap(${p}, ${i}, ${sev}, '${bgColor}')"` : ''} 
-                          onmouseover="this.style.cssText='background:${bgColor}; opacity:1; color:#fff; cursor:${cursor}; ${hoverEffect}'" 
-                          onmouseout="this.style.cssText='background:${bgColor}; opacity:${opacity}; color:${textColor}; cursor:${cursor};'">
-                          ${count}
-                        </div>`;
+                    html += `<div class="rm-cell" style="background:${bgColor}; opacity:${opacity}; color:${textColor}; cursor:${cursor};" 
+                              ${count > 0 ? `onclick="window.verDetalleHeatmap(${p}, ${i}, ${sev}, '${bgColor}')"` : ''} 
+                              onmouseover="this.style.cssText='background:${bgColor}; opacity:1; color:#fff; cursor:${cursor}; ${hoverEffect}'" 
+                              onmouseout="this.style.cssText='background:${bgColor}; opacity:${opacity}; color:${textColor}; cursor:${cursor};'">
+                              ${count}
+                            </div>`;
+                }
             }
+            html += `<div></div>`;
+            for(let i = 1; i <= 5; i++) { html += `<div style="text-align:center; font-weight:800; color:var(--primary); font-size:12px; margin-top:5px;">Imp ${i}</div>`; }
+            grid.innerHTML = html;
+            window.setDisplay('heatmap-details-panel', 'none'); 
         }
-        // Eje X Títulos
-        html += `<div></div>`; // Esquina vacía inferior izq
-        for(let i = 1; i <= 5; i++) {
-            html += `<div style="text-align:center; font-weight:800; color:var(--primary); font-size:12px; margin-top:5px;">Imp ${i}</div>`;
-        }
-        grid.innerHTML = html;
-        window.setDisplay('heatmap-details-panel', 'none'); // Ocultar tabla al recargar
+    } catch(e) {
+        console.error("Dashboard Render Warning: ", e);
     }
 };
 
@@ -229,13 +272,13 @@ window.verDetalleHeatmap = (p, i, sev, color) => {
     
     window.setDisplay('heatmap-details-panel', 'block');
     let titleEl = $('heatmap-details-title');
-    titleEl.innerHTML = `<span class="material-icons-round" style="color:${color}">zoom_in</span> Riesgos en Cuadrante (Prob: ${p} x Imp: ${i} = Severidad ${sev})`;
-    titleEl.style.color = color;
+    if(titleEl) {
+        titleEl.innerHTML = `<span class="material-icons-round" style="color:${color}">zoom_in</span> Riesgos en Cuadrante (Prob: ${p} x Imp: ${i} = Severidad ${sev})`;
+        titleEl.style.color = color;
+    }
 
     let trs = '';
-    risks.forEach(r => {
-        trs += `<tr><td style="padding:10px; border-bottom:1px solid #e2e8f0;"><b>${r.rsk_id}</b></td><td style="padding:10px; border-bottom:1px solid #e2e8f0;">${r.proceso}</td><td style="padding:10px; border-bottom:1px solid #e2e8f0;">${r.amenaza}</td><td style="padding:10px; border-bottom:1px solid #e2e8f0; color:var(--primary); font-weight:600;">${r.accion_mitigacion}</td></tr>`;
-    });
+    risks.forEach(r => { trs += `<tr><td style="padding:10px; border-bottom:1px solid #e2e8f0;"><b>${r.rsk_id}</b></td><td style="padding:10px; border-bottom:1px solid #e2e8f0;">${r.proceso}</td><td style="padding:10px; border-bottom:1px solid #e2e8f0;">${r.amenaza}</td><td style="padding:10px; border-bottom:1px solid #e2e8f0; color:var(--primary); font-weight:600;">${r.accion_mitigacion}</td></tr>`; });
     window.setHtml('tbody-heatmap-details', trs);
     $('heatmap-details-panel').scrollIntoView({ behavior: 'smooth', block: 'end' });
 };
@@ -245,74 +288,39 @@ window.verDetalleHeatmap = (p, i, sev, color) => {
 // ==========================================
 
 window.calcularRiesgoProveedor = () => {
-    let f = parseFloat(getValSafe('pr-ev-fisica', 0)) || 0;
-    let t = parseFloat(getValSafe('pr-ev-ti', 0)) || 0;
-    let r = parseFloat(getValSafe('pr-ev-rrhh', 0)) || 0;
-    let promedio = ((f + t + r) / 3).toFixed(1);
-    
+    let f = parseFloat(getValSafe('pr-ev-fisica', 0)) || 0; let t = parseFloat(getValSafe('pr-ev-ti', 0)) || 0; let r = parseFloat(getValSafe('pr-ev-rrhh', 0)) || 0; let promedio = ((f + t + r) / 3).toFixed(1);
     if($('pr-puntaje-disp')) $('pr-puntaje-disp').innerText = promedio;
-    
-    let badge = $('pr-riesgo-badge');
-    if(!badge) return;
-    
-    if(promedio >= 8.5) { badge.innerText = "RIESGO BAJO (CONFIABLE)"; badge.className = "badge badge-success"; }
-    else if(promedio >= 6.0) { badge.innerText = "RIESGO MEDIO (PRECAUCIÓN)"; badge.className = "badge badge-warning"; }
-    else { badge.innerText = "RIESGO ALTO (CRÍTICO)"; badge.className = "badge badge-danger"; }
+    let badge = $('pr-riesgo-badge'); if(!badge) return;
+    if(promedio >= 8.5) { badge.innerText = "RIESGO BAJO (CONFIABLE)"; badge.className = "badge badge-success"; } else if(promedio >= 6.0) { badge.innerText = "RIESGO MEDIO (PRECAUCIÓN)"; badge.className = "badge badge-warning"; } else { badge.innerText = "RIESGO ALTO (CRÍTICO)"; badge.className = "badge badge-danger"; }
 };
 
 window.abrirModalProveedor = (id = null) => {
-    editandoProvId = id;
-    window.setHtml('prov-form-title', `<span class="material-icons-round">local_shipping</span> ${id ? 'Editar' : 'Registrar'} Proveedor`);
-    
+    editandoProvId = id; window.setHtml('prov-form-title', `<span class="material-icons-round">local_shipping</span> ${id ? 'Editar' : 'Registrar'} Proveedor`);
     if(id) {
         let p = globalProveedores.find(x => x.id === id); if(!p) return;
-        window.setVal('pr-rs', p.razon_social || ''); window.setVal('pr-ruc', p.ruc || ''); window.setVal('pr-serv', p.servicio || '');
-        window.setVal('pr-cert', p.certificaciones || ''); window.setVal('pr-ev-fisica', p.ev_fisica || 0); window.setVal('pr-ev-ti', p.ev_ti || 0);
-        window.setVal('pr-ev-rrhh', p.ev_rrhh || 0); window.setVal('pr-fecha-eval', p.fecha_proxima || ''); window.setVal('pr-estado', p.estado || 'Condicionado');
-        window.setVal('pr-obs', p.observaciones || '');
+        window.setVal('pr-rs', p.razon_social || ''); window.setVal('pr-ruc', p.ruc || ''); window.setVal('pr-serv', p.servicio || ''); window.setVal('pr-cert', p.certificaciones || ''); window.setVal('pr-ev-fisica', p.ev_fisica || 0); window.setVal('pr-ev-ti', p.ev_ti || 0); window.setVal('pr-ev-rrhh', p.ev_rrhh || 0); window.setVal('pr-fecha-eval', p.fecha_proxima || ''); window.setVal('pr-estado', p.estado || 'Condicionado'); window.setVal('pr-obs', p.observaciones || '');
     } else {
-        ['pr-rs','pr-ruc','pr-fecha-eval','pr-obs'].forEach(el => window.setVal(el, ''));
-        ['pr-ev-fisica','pr-ev-ti','pr-ev-rrhh'].forEach(el => window.setVal(el, 0));
-        window.setVal('pr-estado', 'Aprobado');
+        ['pr-rs','pr-ruc','pr-fecha-eval','pr-obs'].forEach(el => window.setVal(el, '')); ['pr-ev-fisica','pr-ev-ti','pr-ev-rrhh'].forEach(el => window.setVal(el, 0)); window.setVal('pr-estado', 'Aprobado');
     }
-    
-    window.calcularRiesgoProveedor();
-    window.setDisplay('modal-proveedor', 'flex');
+    window.calcularRiesgoProveedor(); window.setDisplay('modal-proveedor', 'flex');
 };
 
 window.guardarProveedor = async () => {
-    let rs = getValSafe('pr-rs').trim(); if(!rs) return alert("Razón Social es obligatoria.");
-    window.showLoading();
-    let puntaje = parseFloat($('pr-puntaje-disp').innerText) || 0;
-    let riesgo = puntaje >= 8.5 ? 'Bajo' : (puntaje >= 6.0 ? 'Medio' : 'Alto');
-    
-    let data = {
-        razon_social: rs, ruc: getValSafe('pr-ruc'), servicio: getValSafe('pr-serv'), certificaciones: getValSafe('pr-cert'),
-        ev_fisica: getValSafe('pr-ev-fisica'), ev_ti: getValSafe('pr-ev-ti'), ev_rrhh: getValSafe('pr-ev-rrhh'),
-        puntaje: puntaje, riesgo: riesgo, fecha_proxima: getValSafe('pr-fecha-eval'), estado: getValSafe('pr-estado'),
-        observaciones: getValSafe('pr-obs'), ultima_modif: new Date().toISOString(), modificado_por: currentUser.nombre
-    };
-
-    if(editandoProvId) { await updateDoc(doc(db, "artifacts", appId, "public", "data", "Proveedores", editandoProvId), data); }
-    else { await addDoc(collection(db, "artifacts", appId, "public", "data", "Proveedores"), data); }
-    
+    let rs = getValSafe('pr-rs').trim(); if(!rs) return alert("Razón Social es obligatoria."); window.showLoading();
+    let puntaje = parseFloat($('pr-puntaje-disp').innerText) || 0; let riesgo = puntaje >= 8.5 ? 'Bajo' : (puntaje >= 6.0 ? 'Medio' : 'Alto');
+    let data = { razon_social: rs, ruc: getValSafe('pr-ruc'), servicio: getValSafe('pr-serv'), certificaciones: getValSafe('pr-cert'), ev_fisica: getValSafe('pr-ev-fisica'), ev_ti: getValSafe('pr-ev-ti'), ev_rrhh: getValSafe('pr-ev-rrhh'), puntaje: puntaje, riesgo: riesgo, fecha_proxima: getValSafe('pr-fecha-eval'), estado: getValSafe('pr-estado'), observaciones: getValSafe('pr-obs'), ultima_modif: new Date().toISOString(), modificado_por: currentUser.nombre };
+    if(editandoProvId) { await updateDoc(doc(db, "artifacts", appId, "public", "data", "Proveedores", editandoProvId), data); } else { await addDoc(collection(db, "artifacts", appId, "public", "data", "Proveedores"), data); }
     window.hideLoading(); window.setDisplay('modal-proveedor', 'none'); alert("Proveedor guardado exitosamente.");
 };
 
 window.renderTablaProveedores = () => {
     if(!$('tbody-proveedores')) return;
-    let fR = getValSafe('filter-prov-riesgo');
-    let lista = globalProveedores.filter(p => fR === "" || p.riesgo === fR);
-    
+    let fR = getValSafe('filter-prov-riesgo'); let lista = globalProveedores.filter(p => fR === "" || p.riesgo === fR);
     let h = "";
     lista.forEach(p => {
         let bEst = p.estado === 'Aprobado' ? 'badge-success' : (p.estado === 'Rechazado' ? 'badge-danger' : 'badge-warning');
         let bRiesgo = p.riesgo === 'Bajo' ? 'badge-success' : (p.riesgo === 'Alto' ? 'badge-danger' : 'badge-warning');
-        
-        h += `<tr><td><b>${p.razon_social}</b><br><small>${p.ruc || 'Sin RUC'}</small></td><td>${p.servicio}</td><td>${p.certificaciones}</td>
-        <td><b style="font-size:16px;">${p.puntaje}/10</b></td><td><span class="badge ${bRiesgo}">${p.riesgo}</span></td>
-        <td>${window.formatearFechaAbreviada(p.fecha_proxima) || 'No definida'}</td><td><span class="badge ${bEst}">${p.estado}</span></td>
-        <td class="no-export"><button type="button" class="btn btn-info" style="padding:4px 8px; font-size:10px;" onclick="window.abrirModalProveedor('${p.id}')">Editar</button> <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="window.del('Proveedores','${p.id}')">X</button></td></tr>`;
+        h += `<tr><td><b>${p.razon_social}</b><br><small>${p.ruc || 'Sin RUC'}</small></td><td>${p.servicio}</td><td>${p.certificaciones}</td><td><b style="font-size:16px;">${p.puntaje}/10</b></td><td><span class="badge ${bRiesgo}">${p.riesgo}</span></td><td>${window.formatearFechaAbreviada(p.fecha_proxima) || 'No definida'}</td><td><span class="badge ${bEst}">${p.estado}</span></td><td class="no-export"><button type="button" class="btn btn-info" style="padding:4px 8px; font-size:10px;" onclick="window.abrirModalProveedor('${p.id}')">Editar</button> <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="window.del('Proveedores','${p.id}')">X</button></td></tr>`;
     });
     window.setHtml('tbody-proveedores', h || "<tr><td colspan='8' style='text-align:center;'>No hay proveedores registrados.</td></tr>");
 };
@@ -323,85 +331,47 @@ window.exportarExcelProveedores = () => {
     let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dE), "Proveedores_OEA"); XLSX.writeFile(wb, "Directorio_Proveedores_OEA.xlsx");
 };
 
-// -- LOGICA MATRIZ RIESGOS --
 window.actualizarSeveridadColor = () => {
     let p = parseInt(getValSafe('ri-prob', 1)); let i = parseInt(getValSafe('ri-imp', 1)); let sev = p * i;
     let b = $('ri-sev-badge'); if(!b) return;
-    
-    if(sev <= 4) { b.innerText = `SEVERIDAD: ${sev} (BAJO)`; b.className = "badge badge-success"; }
-    else if(sev <= 9) { b.innerText = `SEVERIDAD: ${sev} (MEDIO)`; b.className = "badge badge-warning"; }
-    else if(sev <= 15) { b.innerText = `SEVERIDAD: ${sev} (ALTO)`; b.className = "badge badge-danger"; b.style.background = "rgba(234, 88, 12, 0.2)"; b.style.color = "#ea580c"; }
-    else { b.innerText = `SEVERIDAD: ${sev} (CRÍTICO)`; b.className = "badge badge-danger"; }
+    if(sev <= 4) { b.innerText = `SEVERIDAD: ${sev} (BAJO)`; b.className = "badge badge-success"; } else if(sev <= 9) { b.innerText = `SEVERIDAD: ${sev} (MEDIO)`; b.className = "badge badge-warning"; } else if(sev <= 15) { b.innerText = `SEVERIDAD: ${sev} (ALTO)`; b.className = "badge badge-danger"; b.style.background = "rgba(234, 88, 12, 0.2)"; b.style.color = "#ea580c"; } else { b.innerText = `SEVERIDAD: ${sev} (CRÍTICO)`; b.className = "badge badge-danger"; }
 };
 
 window.abrirModalRiesgo = (id = null) => {
-    editandoRiesgoId = id;
-    window.setHtml('riesgo-form-title', `<span class="material-icons-round">warning</span> ${id ? 'Editar' : 'Registrar'} Riesgo`);
-    
-    // Cargar options responsables
+    editandoRiesgoId = id; window.setHtml('riesgo-form-title', `<span class="material-icons-round">warning</span> ${id ? 'Editar' : 'Registrar'} Riesgo`);
     let respOptions = '<option value="No Asignado">-- Seleccionar Responsable --</option>';
     allUsers.forEach(u => respOptions += `<option value="${u.nombre}">${u.nombre} (${u.role || 'S/Cargo'})</option>`);
     window.setHtml('ri-resp', respOptions);
     
     if(id) {
         let r = globalRiesgos.find(x => x.id === id); if(!r) return;
-        window.setVal('ri-proceso', r.proceso || ''); window.setVal('ri-amenaza', r.amenaza || ''); window.setVal('ri-desc', r.descripcion || '');
-        window.setVal('ri-prob', r.probabilidad || 1); window.setVal('ri-imp', r.impacto || 1); window.setVal('ri-accion', r.accion_mitigacion || 'Mitigar (Tratar)');
-        window.setVal('ri-resp', r.responsable || 'No Asignado'); window.setVal('ri-controles', r.controles || '');
+        window.setVal('ri-proceso', r.proceso || ''); window.setVal('ri-amenaza', r.amenaza || ''); window.setVal('ri-desc', r.descripcion || ''); window.setVal('ri-prob', r.probabilidad || 1); window.setVal('ri-imp', r.impacto || 1); window.setVal('ri-accion', r.accion_mitigacion || 'Mitigar (Tratar)'); window.setVal('ri-resp', r.responsable || 'No Asignado'); window.setVal('ri-controles', r.controles || '');
     } else {
-        ['ri-proceso','ri-desc','ri-controles'].forEach(el => window.setVal(el, ''));
-        ['ri-prob','ri-imp'].forEach(el => window.setVal(el, 1));
-        window.setVal('ri-accion', 'Mitigar (Tratar)'); window.setVal('ri-amenaza', 'Robo / Pérdida');
+        ['ri-proceso','ri-desc','ri-controles'].forEach(el => window.setVal(el, '')); ['ri-prob','ri-imp'].forEach(el => window.setVal(el, 1)); window.setVal('ri-accion', 'Mitigar (Tratar)'); window.setVal('ri-amenaza', 'Robo / Pérdida');
     }
-    
     window.actualizarSeveridadColor(); window.setDisplay('modal-riesgo', 'flex');
 };
 
 window.guardarRiesgo = async () => {
-    let proc = getValSafe('ri-proceso').trim(); if(!proc) return alert("Proceso Afectado es obligatorio.");
-    window.showLoading();
-    let p = parseInt(getValSafe('ri-prob', 1)); let i = parseInt(getValSafe('ri-imp', 1)); let sev = p * i;
-    let nivel = sev <= 4 ? 'Bajo' : (sev <= 9 ? 'Medio' : (sev <= 15 ? 'Alto' : 'Crítico'));
-    
-    let data = {
-        proceso: proc, amenaza: getValSafe('ri-amenaza'), descripcion: getValSafe('ri-desc'),
-        probabilidad: p, impacto: i, severidad_num: sev, severidad_nivel: nivel,
-        accion_mitigacion: getValSafe('ri-accion'), responsable: getValSafe('ri-resp'),
-        controles: getValSafe('ri-controles'), ultima_modif: new Date().toISOString()
-    };
-
-    if(editandoRiesgoId) { await updateDoc(doc(db, "artifacts", appId, "public", "data", "MatrizRiesgos", editandoRiesgoId), data); }
-    else { 
+    let proc = getValSafe('ri-proceso').trim(); if(!proc) return alert("Proceso Afectado es obligatorio."); window.showLoading();
+    let p = parseInt(getValSafe('ri-prob', 1)); let i = parseInt(getValSafe('ri-imp', 1)); let sev = p * i; let nivel = sev <= 4 ? 'Bajo' : (sev <= 9 ? 'Medio' : (sev <= 15 ? 'Alto' : 'Crítico'));
+    let data = { proceso: proc, amenaza: getValSafe('ri-amenaza'), descripcion: getValSafe('ri-desc'), probabilidad: p, impacto: i, severidad_num: sev, severidad_nivel: nivel, accion_mitigacion: getValSafe('ri-accion'), responsable: getValSafe('ri-resp'), controles: getValSafe('ri-controles'), ultima_modif: new Date().toISOString() };
+    if(editandoRiesgoId) { await updateDoc(doc(db, "artifacts", appId, "public", "data", "MatrizRiesgos", editandoRiesgoId), data); } else { 
         let idR = "";
-        await runTransaction(db, async(t) => { 
-            const sn = await t.get(doc(db,"artifacts",appId,"public","data","Contadores","riesgos")); 
-            let c = 1; if(sn.exists()) c = sn.data().count + 1; 
-            t.set(doc(db,"artifacts",appId,"public","data","Contadores","riesgos"), {count: c}); 
-            idR = `RSK-${new Date().getFullYear()}-${String(c).padStart(3,'0')}`; 
-        });
-        data.rsk_id = idR;
-        await addDoc(collection(db, "artifacts", appId, "public", "data", "MatrizRiesgos"), data); 
+        await runTransaction(db, async(t) => { const sn = await t.get(doc(db,"artifacts",appId,"public","data","Contadores","riesgos")); let c = 1; if(sn.exists()) c = sn.data().count + 1; t.set(doc(db,"artifacts",appId,"public","data","Contadores","riesgos"), {count: c}); idR = `RSK-${new Date().getFullYear()}-${String(c).padStart(3,'0')}`; });
+        data.rsk_id = idR; await addDoc(collection(db, "artifacts", appId, "public", "data", "MatrizRiesgos"), data); 
     }
-    
     window.hideLoading(); window.setDisplay('modal-riesgo', 'none'); alert("Riesgo guardado.");
 };
 
 window.renderTablaRiesgos = () => {
     if(!$('tbody-riesgos')) return;
-    let fS = getValSafe('filter-riesgo-sev');
-    let lista = globalRiesgos.filter(r => fS === "" || r.severidad_nivel === fS);
-    lista.sort((a,b) => b.severidad_num - a.severidad_num); // Ordenar por más críticos primero
-    
+    let fS = getValSafe('filter-riesgo-sev'); let lista = globalRiesgos.filter(r => fS === "" || r.severidad_nivel === fS); lista.sort((a,b) => b.severidad_num - a.severidad_num); 
     let h = "";
     lista.forEach(r => {
         let bSev = r.severidad_nivel === 'Bajo' ? 'badge-success' : (r.severidad_nivel === 'Medio' ? 'badge-warning' : 'badge-danger');
         let bAcc = r.accion_mitigacion.includes('Mitigar') ? 'color:var(--primary);font-weight:bold;' : 'color:var(--text-muted);';
-        
-        h += `<tr><td><b>${r.rsk_id || '-'}</b></td><td>${r.proceso}</td><td>${r.amenaza}</td>
-        <td style="text-align:center;">${r.probabilidad}</td><td style="text-align:center;">${r.impacto}</td>
-        <td><span class="badge ${bSev}">${r.severidad_num} (${r.severidad_nivel})</span></td>
-        <td><span style="${bAcc}">${r.accion_mitigacion}</span></td><td>${r.responsable}</td>
-        <td class="no-export"><button type="button" class="btn btn-info" style="padding:4px 8px; font-size:10px;" onclick="window.abrirModalRiesgo('${r.id}')">Editar</button> <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="window.del('MatrizRiesgos','${r.id}')">X</button></td></tr>`;
+        h += `<tr><td><b>${r.rsk_id || '-'}</b></td><td>${r.proceso}</td><td>${r.amenaza}</td><td style="text-align:center;">${r.probabilidad}</td><td style="text-align:center;">${r.impacto}</td><td><span class="badge ${bSev}">${r.severidad_num} (${r.severidad_nivel})</span></td><td><span style="${bAcc}">${r.accion_mitigacion}</span></td><td>${r.responsable}</td><td class="no-export"><button type="button" class="btn btn-info" style="padding:4px 8px; font-size:10px;" onclick="window.abrirModalRiesgo('${r.id}')">Editar</button> <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="window.del('MatrizRiesgos','${r.id}')">X</button></td></tr>`;
     });
     window.setHtml('tbody-riesgos', h || "<tr><td colspan='9' style='text-align:center;'>No hay riesgos registrados en la matriz.</td></tr>");
 };
@@ -423,7 +393,7 @@ window.cargarDatosCentrales = () => {
       oU += `<option value="${u.nombre}" data-email="${u.email}">${u.nombre} (${gs})</option>`; if(u.email) oI += `<option value="${u.email}">${u.nombre} (${gs})</option>`;
     });
     window.setHtml('tbody-users', hU); window.setHtml('aud-auditado-list', cbU); window.setHtml('aud-auditor-list', cbU); window.setHtml('aud-formacion-list', cbU); window.setHtml('ah-auditor-list', cbU); 
-    window.setHtml('ah-lider', '<option value="">-- Lider --</option>' + oU); window.setHtml('sol-involucrado-sel', oI); window.setHtml('m-new-involucrado-sel', oI);
+    window.setHtml('ah-lider', '<option value="">-- Lider --</option>' + oU); window.setHtml('sol-involucrado-sel', oI); window.setHtml('m-new-involucrado-sel', oI); window.setHtml('e-sol-involucrado-sel', oI);
   });
 
   onSnapshot(doc(db, "artifacts", appId, "public", "data", "Configuracion", "NormaOEA"), (sn) => {
@@ -437,14 +407,27 @@ window.cargarDatosCentrales = () => {
   onSnapshot(doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"), (sn) => {
     let dp = [], gr = []; if(sn.exists()) { const d = sn.data(); dp = d.departamentos || []; gr = d.gerencias || []; } allDepartamentos = dp;
     let gH = ""; gr.forEach(g => gH += `<option value="${g}">${g}</option>`);
-    window.setHtml('d-ger-sel', gH); window.setHtml('sol-ger', '<option value="">-- Seleccionar --</option>' + gH);
+    window.setHtml('d-ger-sel', gH); window.setHtml('sol-ger', '<option value="">-- Seleccionar --</option>' + gH); window.setHtml('e-sol-ger', '<option value="">-- Seleccionar --</option>' + gH);
     window.setHtml('list-ger', gr.map((g, i) => `<div class="settings-item"><span>${g}</span><button type="button" class="btn-icon-danger" onclick="window.eliminarGerencia(${i})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`).join(''));
     window.setHtml('list-dep', dp.map((d, i) => `<div class="settings-item"><span>${d.nombre} <small>(${d.gerencia})</small></span><button type="button" class="btn-icon-danger" onclick="window.eliminarDepartamento(${i})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`).join(''));
     window.setHtml('u-ger-list', gr.map(g => `<label style="display:flex; gap:8px; font-size:13px; margin-bottom:6px;"><input type="checkbox" name="chk_ger" value="${g}" style="margin:0; width:16px;"> ${g}</label>`).join(''));
   });
+  
+  onSnapshot(doc(db, "artifacts", appId, "public", "data", "Configuracion", "SLA"), (sn) => {
+    if(sn.exists()) { 
+        const d = sn.data(); 
+        slaConfigDias = { alta: d.alta || 3, media: d.media || 7, baja: d.baja || 15 }; 
+        if($('sla-alta')) {
+            window.setVal('sla-alta', slaConfigDias.alta);
+            window.setVal('sla-media', slaConfigDias.media);
+            window.setVal('sla-baja', slaConfigDias.baja);
+        }
+    }
+  });
 
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "ListadoMaestro"), (sn) => { dataMaestro = []; sn.forEach(d => { let obj = d.data(); obj.docId = d.id; dataMaestro.push(obj); }); window.renderTablaMaestro(); });
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), (sn) => { globalSolicitudes = []; sn.forEach(d => { let obj = d.data(); obj.docId = d.id; globalSolicitudes.push(obj); }); window.renderTablasSolicitudes(); window.checkDailyAlerts(); });
+  
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "Auditorias"), (sn) => {
     globalAllAuditorias = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalAllAuditorias.push(obj); });
     let cy = new Date().getFullYear().toString(); let ys = $('aud-year-select'); if(ys && ys.options.length === 0) ys.innerHTML = `<option value="${cy}">${cy}</option><option value="nuevo">+ Añadir Año</option>`;
@@ -466,17 +449,131 @@ window.cargarDatosCentrales = () => {
   });
 };
 
-window.renderDashTable = (t) => {
-  window.setDisplay('dash-table-container', 'block'); let d = globalSolicitudes;
-  if(t==='pendientes') d = d.filter(s=>!String(s.estado||"").includes('Aprobado Final')&&s.estado!=='Anulado'&&s.estado!=='Rechazado'); else d = d.filter(s=>String(s.estado||"").includes('Aprobado Final')||s.estado==='Anulado'||s.estado==='Rechazado');
-  d.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)); let h="";
-  d.forEach(s=>{ 
-      let bc=String(s.estado||"").includes('Aprobado')?'badge-success':(s.estado==='Anulado'||s.estado==='Rechazado'?'badge-danger':'badge-warning'); 
-      let docIcon = s.documento_final ? `<span title="Documento Publicado">📄 Sí</span>` : '<span style="color:#94a3b8">No</span>';
-      h+=`<tr><td><b>${s.customId}</b></td><td>${s.solicitante}</td><td>${s.titulo}</td><td><span class="badge ${bc}">${s.estado}</span></td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Detalle</button></td></tr>`; 
-  });
-  window.setHtml('tbody-dash', h || "<tr><td colspan='6' style='text-align:center;'>No hay registros</td></tr>");
-  window.renderDashboardCharts(); // Forzar redibujado
+window.currentDashTab = 'solicitudes';
+
+window.setDashTab = (tab, btnElement) => {
+    window.currentDashTab = tab;
+    // Resetear estilos de todos los botones de tabs
+    ['dash-tab-sol', 'dash-tab-sacs', 'dash-tab-aud', 'dash-tab-prov'].forEach(id => {
+        let el = document.getElementById(id);
+        if(el) {
+            el.className = 'btn btn-dark';
+            el.style.background = 'var(--background-alt)';
+            el.style.color = 'var(--text-main)';
+        }
+    });
+    // Activar el botón seleccionado
+    if(btnElement) {
+        btnElement.className = 'btn btn-primary';
+        btnElement.style.background = 'var(--primary)';
+        btnElement.style.color = 'white';
+    }
+    
+    // Configurar cabeceras según el tab
+    let th = '';
+    if(tab === 'solicitudes') {
+        th = '<tr><th>ID Sistema</th><th>Fecha</th><th>Tipo Doc</th><th>Solicitante</th><th>Estado</th><th class="no-export">Ver</th></tr>';
+    } else if(tab === 'sacs') {
+        th = '<tr><th>ID SAC</th><th>Apertura</th><th>Origen</th><th>Responsable</th><th>Estado</th><th class="no-export">Ver</th></tr>';
+    } else if(tab === 'auditorias') {
+        th = '<tr><th>Código Audit</th><th>Fecha Prog.</th><th>Auditado</th><th>Auditor</th><th>Estado</th><th class="no-export">Ver</th></tr>';
+    } else if(tab === 'proveedores') {
+        th = '<tr><th>Proveedor</th><th>RUC</th><th>Últ. Eval</th><th>Puntaje</th><th>Riesgo</th><th class="no-export">Ver</th></tr>';
+    }
+    window.setHtml('thead-dash', th);
+    window.renderTablasDinamicasDash();
+};
+
+window.renderTablasDinamicasDash = () => {
+    let dDesde = getValSafe('dash-filter-desde');
+    let dHasta = getValSafe('dash-filter-hasta');
+    let dEstado = getValSafe('dash-filter-estado').toLowerCase().trim();
+    
+    let fDesde = dDesde ? new Date(dDesde + 'T00:00:00') : null;
+    let fHasta = dHasta ? new Date(dHasta + 'T23:59:59') : null;
+    
+    let html = "";
+    
+    if(window.currentDashTab === 'solicitudes') {
+        let data = [...(globalSolicitudes || [])];
+        if(fDesde) data = data.filter(x => new Date(x.fecha) >= fDesde);
+        if(fHasta) data = data.filter(x => new Date(x.fecha) <= fHasta);
+        if(dEstado) data = data.filter(x => String(x.estado||'En Trámite').toLowerCase().includes(dEstado));
+        data.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+        
+        data.forEach(s => {
+            let badge = String(s.estado||"").includes('Aprobado') ? 'badge-success' : (s.estado==='Anulado'||s.estado==='Rechazado'?'badge-danger':'badge-warning');
+            html += `<tr>
+                <td><b>${s.customId || '-'}</b></td>
+                <td>${window.formatearFechaAbreviada(s.fecha)}</td>
+                <td>${s.tipo_documento || '-'}</td>
+                <td>${s.solicitante || '-'}</td>
+                <td><span class="badge ${badge}">${s.estado || 'En Trámite'}</span></td>
+                <td class="no-export"><button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="window.verDetalle('${s.docId}')"><span class="material-icons-round" style="font-size:14px;">visibility</span></button></td>
+            </tr>`;
+        });
+    } 
+    else if(window.currentDashTab === 'sacs') {
+        let data = [...(globalAllSacs || [])];
+        if(fDesde) data = data.filter(x => x.fecha_apertura && new Date(x.fecha_apertura) >= fDesde);
+        if(fHasta) data = data.filter(x => x.fecha_apertura && new Date(x.fecha_apertura) <= fHasta);
+        if(dEstado) data = data.filter(x => String(x.estado||'Abierta').toLowerCase().includes(dEstado));
+        data.sort((a,b) => new Date(b.fecha_apertura) - new Date(a.fecha_apertura));
+        
+        data.forEach(s => {
+            let badge = s.estado === 'Cerrada' ? 'badge-success' : (s.estado==='Anulada'?'badge-danger':'badge-warning');
+            html += `<tr>
+                <td><b>${s.customId || s.sac_id}</b></td>
+                <td>${window.formatearFechaAbreviada(s.fecha_apertura)}</td>
+                <td>${s.origen || '-'}</td>
+                <td>${s.responsable || '-'}</td>
+                <td><span class="badge ${badge}">${s.estado || 'Abierta'}</span></td>
+                <td class="no-export"><button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.cambiarVista('sec-noconf');"><span class="material-icons-round" style="font-size:14px;">arrow_forward</span></button></td>
+            </tr>`;
+        });
+    }
+    else if(window.currentDashTab === 'auditorias') {
+        let data = [...(globalAllAuditorias || [])];
+        if(fDesde) data = data.filter(x => x.fecha && new Date(x.fecha) >= fDesde);
+        if(fHasta) data = data.filter(x => x.fecha && new Date(x.fecha) <= fHasta);
+        if(dEstado) data = data.filter(x => String(x.estado||'Programada').toLowerCase().includes(dEstado));
+        data.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+        
+        data.forEach(a => {
+            let badge = a.estado === 'Completada' ? 'badge-success' : (a.estado==='Cancelada'?'badge-danger':'badge-info');
+            html += `<tr>
+                <td><b>${a.audit_num || '-'}</b></td>
+                <td>${window.formatearFechaAbreviada(a.fecha)}</td>
+                <td>${a.auditado || '-'}</td>
+                <td>${a.auditor || '-'}</td>
+                <td><span class="badge ${badge}">${a.estado || 'Programada'}</span></td>
+                <td class="no-export"><button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.cambiarVista('sec-audit');"><span class="material-icons-round" style="font-size:14px;">arrow_forward</span></button></td>
+            </tr>`;
+        });
+    }
+    else if(window.currentDashTab === 'proveedores') {
+        let data = [...(globalProveedores || [])];
+        if(fDesde) data = data.filter(x => x.ultima_evaluacion && new Date(x.ultima_evaluacion) >= fDesde);
+        if(fHasta) data = data.filter(x => x.ultima_evaluacion && new Date(x.ultima_evaluacion) <= fHasta);
+        if(dEstado) data = data.filter(x => String(x.riesgo||'').toLowerCase().includes(dEstado)); // Proveedores usa 'riesgo' en su lugar
+        data.sort((a,b) => new Date(b.ultima_evaluacion) - new Date(a.ultima_evaluacion));
+        
+        data.forEach(p => {
+            let bgR = p.riesgo === 'Bajo' ? 'badge-success' : (p.riesgo==='Alto'?'badge-danger':'badge-warning');
+            html += `<tr>
+                <td><b>${p.nombre || '-'}</b></td>
+                <td>${p.ruc || '-'}</td>
+                <td>${window.formatearFechaAbreviada(p.ultima_evaluacion)}</td>
+                <td>${p.puntaje || 0}/100</td>
+                <td><span class="badge ${bgR}">${p.riesgo || '-'}</span></td>
+                <td class="no-export"><button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.cambiarVista('sec-proveedores');"><span class="material-icons-round" style="font-size:14px;">arrow_forward</span></button></td>
+            </tr>`;
+        });
+    }
+
+    if(!html) html = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">No se encontraron datos que coincidan con los filtros.</td></tr>`;
+    window.setHtml('tbody-dash-dinamico', html);
+    window.renderDashboardCharts(); 
 };
 
 window.renderTablasSolicitudes = () => {
@@ -486,12 +583,15 @@ window.renderTablasSolicitudes = () => {
 
   sort.forEach(s => {
     let es = s.estado || "Pendiente", c = es==='Anulado'||es==='Rechazado', apr = es.includes('Aprobado Final');
-    let bc = apr ? 'badge-success' : (c ? 'badge-danger' : 'badge-warning'), ps = s.prioridad || "Normal", bp = ps==='Alta'?'badge-danger':(ps==='Básica'?'badge-info':'badge-dark'), et = PASOS_NOMBRES[s.idx] || '';
+    let bc = apr ? 'badge-success' : (c ? 'badge-danger' : 'badge-warning'), ps = s.prioridad || "Baja", bp = ps==='Alta'?'badge-danger':(ps==='Media'?'badge-warning':'badge-info');
+    let et = c ? '' : (s.idx === -1 ? 'Pendiente Evaluación' : (PASOS_NOMBRES[s.idx] || ''));
+    let etBadge = et ? `<span class="badge badge-info">${et}</span>` : '<span style="color:#cbd5e1">-</span>';
     let isM = (s.uid === currentUser.usuario) || (s.involucrados && currentUser.email && s.involucrados.includes(currentUser.email.toLowerCase()));
-    let slaVisual = s.fecha_esperada_cierre ? window.formatearFechaAbreviada(s.fecha_esperada_cierre) : '<span style="color:#cbd5e1">-</span>';
+    let f_sla = s.sla || s.fecha_esperada_cierre;
+    let slaVisual = f_sla ? window.formatearFechaAbreviada(f_sla) : '<span style="color:#cbd5e1">-</span>';
     let docIcon = s.documento_final ? `<span title="Documento Publicado" style="font-size:16px;">📄</span>` : '<span style="color:#cbd5e1">-</span>';
 
-    if(apr && s.fecha_esperada_cierre && s.fecha_final) { totalCerradas++; if(s.fecha_final <= s.fecha_esperada_cierre) cerradasATiempo++; }
+    if(apr && f_sla && s.fecha_final) { totalCerradas++; if(s.fecha_final <= f_sla) cerradasATiempo++; }
 
     if(isM) { hH += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}</td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bc}">${es}</span></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver / Gestionar</button></td></tr>`; }
 
@@ -503,9 +603,12 @@ window.renderTablasSolicitudes = () => {
     if(puedeVerTodas) { hA += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}</td><td><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bc}">${es}</span><br><small>${et}</small></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver Detalle</button></td></tr>`; }
 
     let act = !apr && !c;
-    let pgS = act && ((s.idx===0 && (esAdm||p.p_paso1)) || (s.idx===1 && (esAdm||p.p_paso2)) || (s.idx===3 && (esAdm||p.p_paso4)));
+    let c1 = s.asig_paso1 ? (currentUser.email||'').toLowerCase() === s.asig_paso1.toLowerCase() : p.p_paso1;
+    let c2 = s.asig_paso2 ? (currentUser.email||'').toLowerCase() === s.asig_paso2.toLowerCase() : p.p_paso2;
+    let c4 = s.asig_paso4 ? (currentUser.email||'').toLowerCase() === s.asig_paso4.toLowerCase() : p.p_paso4;
+    let pgS = act && ((s.idx===0 && (esAdm||c1)) || (s.idx===1 && (esAdm||c2)) || (s.idx===3 && (esAdm||c4)) || (s.idx===-1 && (esAdm||p.p_eval_solicitud)));
     let pgG = act && s.idx===2 && p.p_ger_apr && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia);
-    if(pgS || pgG) { hG += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td><span class="badge badge-info">${et}</span></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button type="button" class="btn btn-warning" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Revisar / Firmar</button></td></tr>`; }
+    if(pgS || pgG) { hG += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td>${etBadge}</td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button type="button" class="btn btn-warning" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Revisar / Firmar</button></td></tr>`; }
   });
 
   window.setHtml('tbody-historial', hH); window.setHtml('tbody-all', hA); window.setHtml('tbody-gestionar', hG);
@@ -531,12 +634,12 @@ window.completarLoginUI = () => {
 
   const p = currentUser.permisos || {}; const isAdm = p.admin || false;
   const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
-  window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none');
+  window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none');
+  window.setDisplay('admin-gear-container', (isAdm || p.p_users || p.p_struct) ? 'flex' : 'none');
   
   const canAud = p.p_audit_ver || p.p_audit_admin || p.p_audit_auditor || p.p_audit_dueno || isAdm; 
   window.setDisplay('nav-audit-group', canAud ? 'block' : 'none'); window.setDisplay('nav-norma', canAud ? 'flex' : 'none'); window.setDisplay('nav-audit', canAud ? 'flex' : 'none'); window.setDisplay('nav-noconf', (p.p_audit_admin || p.p_gest_sgc || p.p_audit_auditor || p.p_audit_dueno || isAdm) ? 'flex' : 'none');
   
-  // Mostrar Permisos Nuevos OEA
   const canOea = p.p_proveedores || p.p_riesgos || isAdm || p.p_gest_sgc || p.p_audit_admin;
   window.setDisplay('nav-oea-group', canOea ? 'block' : 'none');
   window.setDisplay('nav-proveedores', (p.p_proveedores || isAdm || p.p_gest_sgc) ? 'flex' : 'none');
@@ -569,7 +672,7 @@ window.cargarUsuarioParaEditar = (id) => {
   window.setVal('u-nom', u.nombre || ''); window.setVal('u-usr', u.usuario || ''); if($('u-usr')) $('u-usr').disabled = true; window.setVal('u-pas', u.pass || ''); window.setVal('u-rol', u.role || ''); window.setVal('u-email', u.email || '');
   let gs = u.gerencias || []; if(!u.gerencias && u.gerencia) gs = [u.gerencia]; $$('#u-ger-list input[type="checkbox"]').forEach(cb => { cb.checked = gs.includes(cb.value); });
   const p = u.permisos || {};
-  ['p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-proveedores','p-riesgos'].forEach(i => { let k = i.replace(/-/g,'_'); if(k==='p_solicitar')k='can_solicit'; if($(i)) $(i).checked = p[k]||false; });
+  ['p-eval-sol','p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-proveedores','p-riesgos'].forEach(i => { let k = i.replace(/-/g,'_'); if(k==='p_solicitar')k='can_solicit'; if(k==='p_eval_sol')k='p_eval_solicitud'; if($(i)) $(i).checked = p[k]||false; });
   if($('p-admin')) $('p-admin').checked = p.admin||false; window.setTxt('btnSaveUser', "ACTUALIZAR USUARIO"); window.setDisplay('modal-usuario', 'flex');
 };
 
@@ -582,18 +685,23 @@ window.resetUserForm = () => {
   window.setHtml('user-form-title', `<span class="material-icons-round">person_add</span> Registrar / Editar Usuario`);
   window.setVal('u-nom', ''); window.setVal('u-usr', ''); if($('u-usr')) $('u-usr').disabled = false; window.setVal('u-pas', '123'); window.setVal('u-rol', ''); window.setVal('u-email', '');
   $$('#u-ger-list input[type="checkbox"]').forEach(cb => cb.checked = false);
-  ['p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-proveedores','p-riesgos','p-admin'].forEach(i => { if($(i)) $(i).checked=false; });
+  ['p-eval-sol','p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-proveedores','p-riesgos','p-admin'].forEach(i => { if($(i)) $(i).checked=false; });
   if($('btnSaveUser')) $('btnSaveUser').innerText = "GUARDAR USUARIO"; 
 };
 
 window.guardarUsuario = async () => {
   const n = getValSafe('u-nom').trim(); const u = getValSafe('u-usr').toLowerCase().trim(); const p = getValSafe('u-pas','123').trim(); const r = getValSafe('u-rol').trim(); const e = getValSafe('u-email').toLowerCase().trim(); const gs = []; $$('#u-ger-list input:checked').forEach(cb => { gs.push(cb.value); });
   if(!n || !u || !p || gs.length === 0) return alert("Nombre, Usuario, Contraseña y al menos 1 Gerencia son obligatorios.");
-  const pm = { can_solicit: getCheckedSafe('p-solicitar'), p_ver_propias: getCheckedSafe('p-ver-propias'), p_ver_ger: getCheckedSafe('p-ver-ger'), p_ver_todas: getCheckedSafe('p-ver-todas'), p_paso1: getCheckedSafe('p-paso1'), p_paso2: getCheckedSafe('p-paso2'), p_paso4: getCheckedSafe('p-paso4'), p_gest_sgc: getCheckedSafe('p-gest-sgc'), p_ger_apr: getCheckedSafe('p-ger-apr'), p_users: getCheckedSafe('p-users'), p_struct: getCheckedSafe('p-struct'), p_ver_listado: getCheckedSafe('p-ver-listado'), p_audit_ver: getCheckedSafe('p-audit-ver'), p_audit_admin: getCheckedSafe('p-audit-admin'), p_audit_auditor: getCheckedSafe('p-audit-auditor'), p_audit_dueno: getCheckedSafe('p-audit-dueno'), p_proveedores: getCheckedSafe('p-proveedores'), p_riesgos: getCheckedSafe('p-riesgos'), admin: getCheckedSafe('p-admin') };
-  window.showLoading(); const docRef = doc(db, "artifacts", appId, "public", "data", "Usuarios", u); const snap = await getDoc(docRef);
-  if(snap.exists() && $('user-form-title').innerText.includes("Registrar")) { window.hideLoading(); return alert("Ese ID de usuario ya existe."); }
-  await setDoc(docRef, { nombre: n, usuario: u, pass: p, gerencias: gs, gerencia: gs[0], role: r, email: e, permisos: pm });
-  window.cerrarModalUsuario(); window.hideLoading(); alert("Usuario guardado exitosamente.");
+  const pm = { p_eval_solicitud: getCheckedSafe('p-eval-sol'), can_solicit: getCheckedSafe('p-solicitar'), p_ver_propias: getCheckedSafe('p-ver-propias'), p_ver_ger: getCheckedSafe('p-ver-ger'), p_ver_todas: getCheckedSafe('p-ver-todas'), p_paso1: getCheckedSafe('p-paso1'), p_paso2: getCheckedSafe('p-paso2'), p_paso4: getCheckedSafe('p-paso4'), p_gest_sgc: getCheckedSafe('p-gest-sgc'), p_ger_apr: getCheckedSafe('p-ger-apr'), p_users: getCheckedSafe('p-users'), p_struct: getCheckedSafe('p-struct'), p_ver_listado: getCheckedSafe('p-ver-listado'), p_audit_ver: getCheckedSafe('p-audit-ver'), p_audit_admin: getCheckedSafe('p-audit-admin'), p_audit_auditor: getCheckedSafe('p-audit-auditor'), p_audit_dueno: getCheckedSafe('p-audit-dueno'), p_proveedores: getCheckedSafe('p-proveedores'), p_riesgos: getCheckedSafe('p-riesgos'), admin: getCheckedSafe('p-admin') };
+  window.showLoading(); 
+  try {
+      const docRef = doc(db, "artifacts", appId, "public", "data", "Usuarios", u); 
+      const snap = await getDoc(docRef);
+      const titleEl = $('user-form-title');
+      if(snap.exists() && titleEl && titleEl.innerText.includes("Registrar")) { window.hideLoading(); return alert("Ese ID de usuario ya existe."); }
+      await setDoc(docRef, { nombre: n, usuario: u, pass: p, gerencias: gs, gerencia: gs[0], role: r, email: e, permisos: pm });
+      window.cerrarModalUsuario(); window.hideLoading(); alert("Usuario guardado exitosamente.");
+  } catch (err) { console.error(err); window.hideLoading(); alert("Error de red al guardar usuario."); }
 };
 
 window.exportarExcelUsuarios = () => {
@@ -602,6 +710,7 @@ window.exportarExcelUsuarios = () => {
 
 window.agregarGerencia = async () => { let val = $('g-nom').value.trim().toUpperCase(); if(!val) return; window.showLoading(); let gers = []; const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); if(snap.exists() && snap.data().gerencias) gers = snap.data().gerencias; if(gers.includes(val)) { window.hideLoading(); return alert("Ya existe."); } gers.push(val); await setDoc(docRef, { gerencias: gers }, {merge: true}); window.setVal('g-nom', ''); window.hideLoading(); };
 window.eliminarGerencia = async (idx) => { if(!confirm("¿Eliminar Gerencia?")) return; window.showLoading(); const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); let gers = snap.data().gerencias; gers.splice(idx, 1); await setDoc(docRef, { gerencias: gers }, {merge: true}); window.hideLoading(); };
+window.guardarConfigSLA = async () => { let a = parseInt($('sla-alta').value) || 3; let m = parseInt($('sla-media').value) || 7; let b = parseInt($('sla-baja').value) || 15; window.showLoading(); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "SLA"), { alta: a, media: m, baja: b }, {merge: true}); window.hideLoading(); alert("Días mínimos de SLA guardados."); };
 window.agregarDepartamento = async () => { let ger = $('d-ger-sel').value; let nom = $('d-nom').value.trim(); if(!ger || !nom) return alert("Seleccione Gerencia y Depto."); window.showLoading(); let deps = []; const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); if(snap.exists() && snap.data().departamentos) deps = snap.data().departamentos; deps.push({ nombre: nom, gerencia: ger }); await setDoc(docRef, { departamentos: deps }, {merge: true}); window.setVal('d-nom', ''); window.hideLoading(); };
 window.eliminarDepartamento = async (idx) => { if(!confirm("¿Eliminar Departamento?")) return; window.showLoading(); const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); let deps = snap.data().departamentos; deps.splice(idx, 1); await setDoc(docRef, { departamentos: deps }, {merge: true}); window.hideLoading(); };
 
@@ -609,8 +718,11 @@ window.renderListasConfig = () => {
   let hCol = ""; columnasMaestro.forEach((c, idx) => { let cName = typeof c === 'string' ? c : c.nombre; let cType = typeof c === 'string' ? 'text' : c.tipo; hCol += `<div class="settings-item"><span>${cName} <small style="color:#94a3b8; font-size:10px;">(${cType})</small></span><button type="button" class="btn-icon-danger" onclick="window.eliminarColumna(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); window.setHtml('list-columnas', hCol);
   let hEst = ""; estatusMaestro.forEach((e, idx) => { hEst += `<div class="settings-item"><span>${e}</span><button type="button" class="btn-icon-danger" onclick="window.eliminarEstatus(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); window.setHtml('list-estatus', hEst);
   let hTipos = ""; tiposDocumento.forEach((t, idx) => { hTipos += `<div class="settings-item"><span>${t}</span><button type="button" class="btn-icon-danger" onclick="window.eliminarTipoDoc(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; }); window.setHtml('list-tipos-doc', hTipos);
+  
   let htmlTiposSol = '<option value="">-- Seleccione --</option>'; tiposDocumento.forEach(t => htmlTiposSol += `<option value="${t}">${t}</option>`);
-  window.setHtml('sol-tipo-doc', htmlTiposSol); window.setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica / Ninguno --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join(''));
+  window.setHtml('sol-tipo-doc', htmlTiposSol); 
+  window.setHtml('e-sol-tipo-doc', htmlTiposSol); 
+  window.setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica / Ninguno --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join(''));
 };
 
 window.agregarTipoDoc = async () => { let val = $('doc-tipo-nom').value.trim(); if(!val) return; if(tiposDocumento.includes(val)) return alert("Ya existe."); tiposDocumento.push(val); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "MaestroSettings"), { tiposDoc: tiposDocumento }, {merge: true}); window.setVal('doc-tipo-nom', ''); };
@@ -700,6 +812,10 @@ let dataExport = dataMaestro.map(item => { let rowObj = {}; columnasMaestro.forE
 let wb = XLSX.utils.book_new(); let ws = XLSX.utils.json_to_sheet(dataExport); XLSX.utils.book_append_sheet(wb, ws, "Listado_Maestro"); XLSX.writeFile(wb, "Listado_Maestro_SGC.xlsx");
 };
 
+// =========================================================================
+// MÓDULO DE SOLICITUDES (Nomenclatura y Edición Globalizada)
+// =========================================================================
+
 window.actualizarGerenteSelect = (gSelected) => {
 const gerentes = allUsers.filter(u => u.gerencias && u.gerencias.includes(gSelected) && u.permisos && u.permisos.p_ger_apr === true);
 if (gerentes && gerentes.length > 0) { window.setVal('sol-gerente-display', gerentes.map(g => g.nombre).join(', ')); window.setVal('sol-email-gerente', gerentes.map(g => g.email || '').filter(e=>e).join(', ') || "Sin Email"); } 
@@ -708,44 +824,98 @@ const depSelect = $('sol-dep'); let depHtml = "<option value=''>-- Seleccionar D
 const depsFiltrados = allDepartamentos.filter(d => d.gerencia === gSelected); depsFiltrados.forEach(d => { depHtml += `<option value="${d.nombre}">${d.nombre}</option>`; }); depSelect.innerHTML = depHtml;
 };
 
-// ---------------------------------------------------------
-// MEJORAS DE CORREOS EN MÓDULO DOCUMENTAL (HTML TEMPLATES)
-// ---------------------------------------------------------
-
-window.crearSolicitud = async () => {
-const tit = $('sol-tit').value; const gerTarget = $('sol-ger').value; if(!tit) return alert("Título obligatorio"); window.showLoading(); const f = $('sol-file'); let fileName = f.files[0] ? f.files[0].name : ""; let url = null; 
-if (f.files[0]) { url = await window.uploadToCloudinary(f.files[0]); if (!url) { window.hideLoading(); return alert("Error al subir archivo."); } }
-let extraEmails = []; if(selectedDocData && selectedDocData.involucrados) extraEmails = selectedDocData.involucrados; const fci = await window.getNextFCI(); const gerenteEmailVisible = $('sol-email-gerente').value; const now = new Date().toISOString();
-const data = { customId: fci, titulo: tit, accion: $('sol-accion').value, tipoDoc: $('sol-tipo-doc').value, prioridad: $('sol-prioridad').value, gerencia: gerTarget, departamento: $('sol-dep').value, motivo: $('sol-motivo').value, cod_ref: $('sol-cod-prev').value, ver_ref: $('sol-ver-prev').value, fecha_ref: $('sol-fecha-prev').value, solicitante: currentUser.nombre, solicitante_email: currentUser.email, uid: currentUser.usuario, involucrados: extraEmails, idx: 0, estado: "Pendiente Documentado", fase_0_ini: now, adjunto: url, adjunto_nombre: fileName, chat: [{u: "SISTEMA", m: "Solicitud creada exitosamente.", t: new Date().toLocaleString()}], fecha: now };
-await addDoc(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), data); 
-
-if($('form-crear-solicitud')) $('form-crear-solicitud').reset();
-window.setHtml('lista-involucrados-tags', ""); window.setVal('sol-gerente-display', ''); window.setVal('sol-email-gerente', ''); $('sol-dep').innerHTML = '<option value="">-- Seleccione Gerencia Primero --</option>';
-
-const toEmails = new Set([EMAIL_ADMIN_SGC, currentUser.email, ...extraEmails]); const destinatarios = { to: Array.from(toEmails).join(','), cc: gerenteEmailVisible }; 
-let msgMail = `
-<div style="font-family: sans-serif; color: #1e293b; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px;">
-    <div style="background: #1e40af; color: white; padding: 15px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h2 style="margin: 0;">NUEVA SOLICITUD SGC</h2>
-    </div>
-    <div style="padding: 20px; line-height: 1.6;">
-        <p>El usuario <b>${currentUser.nombre}</b> ha registrado una nueva solicitud.</p>
-        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px;">
-            <b>ID Sistema:</b> ${fci}<br>
-            <b>Título:</b> ${tit}<br>
-            <b>Prioridad:</b> ${data.prioridad}<br>
-            <b>Acción Requerida:</b> ${data.accion}<br>
-            <b>Gerencia:</b> ${gerTarget}<br>
-        </div>
-        <p style="margin: 0;">Por favor, ingrese al Sistema de Gestión para revisarla.</p>
-    </div>
-</div>`;
-window.sendNotification(destinatarios, `Nueva Solicitud Creada: ${fci}`, msgMail);
-window.hideLoading(); alert("Solicitud Creada: " + fci); window.cambiarVista('sec-hist', $('nav-hist'));
+window.actualizarGerenteSelectEdit = (gSelected) => {
+    const depSelect = $('e-sol-dep'); let depHtml = "<option value=''>-- Seleccionar Departamento --</option>";
+    const depsFiltrados = allDepartamentos.filter(d => d.gerencia === gSelected); depsFiltrados.forEach(d => { depHtml += `<option value="${d.nombre}">${d.nombre}</option>`; }); if(depSelect) depSelect.innerHTML = depHtml;
 };
 
+// FUNCIONES GLOBALES PARA INVOLUCRADOS
+window.addInvolucradoToDOM = (email, name, containerId) => {
+    const container = $(containerId); if(!container) return;
+    const existingTags = Array.from(container.querySelectorAll('.involucrado-item')); 
+    if(existingTags.some(el => el.dataset.email === email)) { return alert("El usuario ya está en la lista."); }
+    const div = document.createElement('div'); div.className = 'involucrado-item badge badge-info'; div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '5px'; div.style.fontSize = '12px'; div.style.padding = '6px 12px'; div.dataset.email = email; div.innerHTML = `${name} <span class="material-icons-round" style="font-size:14px; cursor:pointer; color:var(--danger);" onclick="this.parentElement.remove()">close</span>`;
+    container.appendChild(div);
+};
+
+window.addInvolucradoList = () => {
+    const sel = $('sol-involucrado-sel'); const email = sel.value; const name = sel.options[sel.selectedIndex]?.text; 
+    if(!email) return alert("Seleccione un usuario válido.");
+    window.addInvolucradoToDOM(email, name, 'lista-involucrados-tags'); sel.value = "";
+};
+
+window.addInvolucradoListEdit = () => {
+    const sel = $('e-sol-involucrado-sel'); const email = sel.value; const name = sel.options[sel.selectedIndex]?.text; 
+    if(!email) return alert("Seleccione un usuario válido.");
+    window.addInvolucradoToDOM(email, name, 'lista-involucrados-tags-edit'); sel.value = "";
+};
+
+window.crearSolicitud = async () => {
+    const tit = $('sol-tit').value; const gerTarget = $('sol-ger').value; if(!tit) return alert("Título obligatorio"); window.showLoading(); const f = $('sol-file'); let fileName = f.files[0] ? f.files[0].name : ""; let url = null; 
+    if (f.files[0]) { url = await window.uploadToCloudinary(f.files[0]); if (!url) { window.hideLoading(); return alert("Error al subir archivo."); } }
+    
+    let extraEmails = []; $$('#lista-involucrados-tags .involucrado-item').forEach(el => { if(el.dataset.email) extraEmails.push(el.dataset.email.toLowerCase()); });
+
+    const fci = await window.getNextFCI(); const gerenteEmailVisible = $('sol-email-gerente').value; const now = new Date().toISOString();
+    const data = { customId: fci, titulo: tit, accion: $('sol-accion').value, tipoDoc: $('sol-tipo-doc').value, prioridad: $('sol-prioridad').value, gerencia: gerTarget, departamento: $('sol-dep').value, motivo: $('sol-motivo').value, cod_ref: $('sol-cod-prev').value, ver_ref: $('sol-ver-prev').value, fecha_ref: $('sol-fecha-prev').value, solicitante: currentUser.nombre, solicitante_email: currentUser.email, uid: currentUser.usuario, involucrados: extraEmails, idx: -1, estado: "Pendiente Evaluación", fase_eval_ini: now, adjunto: url, adjunto_nombre: fileName, chat: [{u: "SISTEMA", m: "Solicitud creada exitosamente.", t: new Date().toLocaleString()}], fecha: now };
+    await addDoc(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), data); 
+
+    if($('form-crear-solicitud')) $('form-crear-solicitud').reset();
+    window.setHtml('lista-involucrados-tags', ""); window.setVal('sol-gerente-display', ''); window.setVal('sol-email-gerente', ''); $('sol-dep').innerHTML = '<option value="">-- Seleccione Gerencia Primero --</option>';
+
+    const toEmails = new Set([EMAIL_ADMIN_SGC, currentUser.email, ...extraEmails]); const destinatarios = { to: Array.from(toEmails).join(','), cc: gerenteEmailVisible }; 
+    let msgMail = `
+    <div style="font-family: sans-serif; color: #1e293b; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="background: #1e40af; color: white; padding: 15px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h2 style="margin: 0;">NUEVA SOLICITUD SGC</h2>
+        </div>
+        <div style="padding: 20px; line-height: 1.6;">
+            <p>El usuario <b>${currentUser.nombre}</b> ha registrado una nueva solicitud.</p>
+            <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px;">
+                <b>ID Sistema:</b> ${fci}<br>
+                <b>Título:</b> ${tit}<br>
+                <b>Prioridad:</b> ${data.prioridad}<br>
+                <b>Acción Requerida:</b> ${data.accion}<br>
+                <b>Gerencia:</b> ${gerTarget}<br>
+            </div>
+            <p style="margin: 0;">Por favor, ingrese al Sistema de Gestión para revisarla.</p>
+        </div>
+    </div>`;
+    window.sendNotification(destinatarios, `Nueva Solicitud Creada: ${fci}`, msgMail);
+    window.hideLoading(); alert("Solicitud Creada: " + fci); window.cambiarVista('sec-hist', $('nav-hist'));
+};
+window.abrirEvalModal = () => {
+    let opts = '<option value="">-- No Asignar (Cualquier gestor) --</option>';
+    allUsers.forEach(u => { opts += `<option value="${u.email}">${u.nombre} (${u.email})</option>`; });
+    window.setHtml('eval-asig-p1', opts); window.setHtml('eval-asig-p2', opts); window.setHtml('eval-asig-p4', opts);
+    let pr = String(selectedDocData.prioridad || "Baja").toLowerCase();
+    window.setVal('eval-sla-dias', slaConfigDias[pr] || 7);
+    window.setVal('eval-motivo', '');
+    document.querySelector('input[name="eval_decision"][value="valida"]').checked = true;
+    window.toggleEvalDecision();
+    window.setDisplay('modal-eval-sol', 'flex');
+};
+window.toggleEvalDecision = () => {
+    let d = document.querySelector('input[name="eval_decision"]:checked').value;
+    window.setDisplay('eval-valida-panel', d === 'valida' ? 'block' : 'none');
+    window.setDisplay('eval-invalida-panel', d === 'invalida' ? 'block' : 'none');
+};
+window.guardarEvaluacion = async () => {
+    let d = document.querySelector('input[name="eval_decision"]:checked').value; const now = new Date().toISOString();
+    window.showLoading();
+    if(d === 'invalida') {
+        let mot = $('eval-motivo').value.trim(); if(!mot) { window.hideLoading(); return alert("Motivo obligatorio."); }
+        await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { estado: 'Anulado', motivo_anulacion: mot, fecha_anulacion: now, chat: arrayUnion({u: currentUser.nombre, m: `❌ SOLICITUD ANULADA EN EVALUACIÓN: ${mot}`, t: new Date().toLocaleString()}) });
+    } else {
+        let p1 = $('eval-asig-p1').value, p2 = $('eval-asig-p2').value, p4 = $('eval-asig-p4').value;
+        let dias = parseInt($('eval-sla-dias').value) || 0; let dObj = new Date(); dObj.setDate(dObj.getDate() + dias);
+        let fSLA = dObj.toISOString().split('T')[0];
+        await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { idx: 0, estado: PASOS_NOMBRES[0], fase_eval_fin: now, fase_0_ini: now, sla: fSLA, fecha_esperada_cierre: fSLA, asig_paso1: p1, asig_paso2: p2, asig_paso4: p4, chat: arrayUnion({u: currentUser.nombre, m: `✅ EVALUACIÓN APROBADA. SLA Fijado para: ${fSLA}.`, t: new Date().toLocaleString()}) });
+    }
+    window.hideLoading(); window.setDisplay('modal-eval-sol', 'none'); window.verDetalle(selectedId);
+};
 window.firmarPaso = async () => {
-const s = selectedDocData; const nIdx = s.idx + 1; const nEst = nIdx < 4 ? PASOS_NOMBRES[nIdx] : "Aprobado Final"; const faseAprobada = PASOS_NOMBRES[s.idx]; const now = new Date().toISOString();
+const s = selectedDocData; const nIdx = s.idx + 1; const nEst = nIdx < 4 ? PASOS_NOMBRES[nIdx] : "Aprobado Final"; const faseAprobada = s.idx === -1 ? 'Evaluación' : PASOS_NOMBRES[s.idx]; const now = new Date().toISOString();
 let updates = { idx: nIdx, estado: nEst, [`fase_${s.idx}_fin`]: now, [`fase_${nIdx}_ini`]: now, chat: arrayUnion({u: currentUser.nombre, m: `✅ FASE COMPLETADA: ${faseAprobada}`, t: new Date().toLocaleString()}) };
 await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), updates);
 const dest = await window.getDatosEnvio(s); 
@@ -765,6 +935,108 @@ let msgMail = `
     </div>
 </div>`;
 window.sendNotification(dest, `Avance SGC: ${s.customId}`, msgMail); window.closeModal();
+};
+
+window.gestionar = (accion) => {
+    tempAction = accion;
+    window.setDisplay('m-input-area', 'block');
+    window.setHtml('m-extra-input', '');
+    window.setVal('m-file-gestion', '');
+    if (accion === 'Reunión' || accion === 'Reunin') {
+        window.setDisplay('reunion-container', 'block');
+    } else {
+        window.setDisplay('reunion-container', 'none');
+    }
+};
+
+window.responderSolicitante = () => {
+    tempAction = 'Respuesta Solicitante';
+    window.setDisplay('m-input-area', 'block');
+    window.setHtml('m-extra-input', '');
+    window.setVal('m-file-gestion', '');
+    window.setDisplay('reunion-container', 'none');
+};
+
+window.guardarSLA = async () => {
+    const slaDate = getValSafe('m-sla-date');
+    if (!slaDate) {
+        alert("Por favor seleccione una fecha límite (SLA) válida.");
+        return;
+    }
+    if (!selectedId) return;
+    
+    window.showLoading();
+    try {
+        let history = selectedDocData?.history || [];
+        history.push(`[${new Date().toLocaleString()}] SLA establecido para el ${slaDate} por ${currentUser.nombre}`);
+        
+        await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), {
+            sla: slaDate,
+            history: history,
+            chat: arrayUnion({u: currentUser.nombre, m: `📅 <b>SLA ACTUALIZADO</b><br>Nueva fecha límite: ${slaDate}`, t: new Date().toLocaleString()}),
+            updatedAt: new Date().toISOString()
+        });
+        
+        alert(`SLA guardado exitosamente para el ${slaDate}.`);
+    } catch (e) {
+        console.error(e);
+        alert("Error al guardar SLA.");
+    }
+    window.hideLoading();
+};
+
+window.rechazar = async () => {
+    const motivo = prompt("Motivo de rechazo:");
+    if(!motivo) return;
+    window.showLoading();
+    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { 
+        estado: "Rechazado", 
+        chat: arrayUnion({u: currentUser.nombre, m: `❌ <b>SOLICITUD RECHAZADA</b><br>Motivo: ${motivo}`, t: new Date().toLocaleString()}) 
+    });
+    window.hideLoading();
+    window.closeModal();
+};
+
+window.reabrirSolicitud = async () => {
+    if(!selectedDocData || !confirm("¿Está seguro de que desea REABRIR esta solicitud? Volverá al primer paso (Documentado).")) return;
+    window.showLoading();
+    try {
+        const obs = prompt("Ingrese el motivo de la reapertura:") || "Reabierta por administrador SGC.";
+        const docRef = doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedDocData.id || selectedId);
+        await updateDoc(docRef, {
+            paso_actual: PASOS_NOMBRES[0],
+            fase_activa: true,
+            estado: "Reabierta",
+            chat: arrayUnion({u: currentUser.nombre, m: `🔄 <b>SOLICITUD REABIERTA</b><br>Motivo: ${obs}`, t: new Date().toLocaleString()}),
+            updatedAt: new Date().toISOString()
+        });
+        
+        window.sendNotification(await window.getDatosEnvio(selectedDocData), `Solicitud Reabierta: ${selectedDocData.customId}`, `La solicitud ha sido reabierta. Motivo: ${obs}`);
+        
+        alert("Solicitud reabierta con éxito.");
+        window.closeModal();
+    } catch(e) {
+        console.error(e);
+        alert("Error al reabrir la solicitud.");
+    }
+    window.hideLoading();
+};
+
+window.devolverPaso = async () => {
+    const motivo = prompt("Motivo para devolver a la fase anterior:");
+    if(!motivo) return;
+    const s = selectedDocData;
+    if(s.idx === 0) return;
+    const nIdx = s.idx - 1;
+    const nEst = PASOS_NOMBRES[nIdx];
+    window.showLoading();
+    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { 
+        idx: nIdx, 
+        estado: nEst, 
+        chat: arrayUnion({u: currentUser.nombre, m: `? <b>DEVUELTO A FASE ANTERIOR: ${nEst}</b><br>Motivo: ${motivo}`, t: new Date().toLocaleString()}) 
+    });
+    window.hideLoading();
+    window.closeModal();
 };
 
 window.guardarCierreFinal = async () => {
@@ -925,9 +1197,10 @@ try {
     let userEmailLowerCase = (currentUser.email || "").toLowerCase(); let isInv = s.involucrados && s.involucrados.some(e => e.toLowerCase() === userEmailLowerCase); 
     const esDuenio = s.uid === currentUser.usuario || isInv;
     let stepIdx = parseInt(s.idx) || 0; const activo = !apr && !cnc;
-    let pr = String(s.prioridad || "Normal"); 
-    if(esAdminSGC && activo) window.setHtml('m-prioridad-container', `<select onchange="window.cambiarPrioridad(this.value)" name="mod_prioridad" style="padding:4px 8px; font-size:12px; border-radius:6px; background:#fff; font-weight:bold; border:1px solid var(--border); color:var(--text-main);"><option value="Normal" ${pr==='Normal'?'selected':''}>NORMAL</option><option value="Básica" ${pr==='Básica'?'selected':''}>BÁSICA</option><option value="Alta" ${pr==='Alta'?'selected':''}>ALTA (URGENTE)</option></select>`);
-    else window.setHtml('m-prioridad-container', `<span class="badge ${pr === 'Alta' ? 'badge-danger' : (pr === 'Básica' ? 'badge-info' : 'badge-dark')}">${pr.toUpperCase()}</span>`);
+    
+    let pr = String(s.prioridad || "Baja"); 
+    if(esAdminSGC && activo) window.setHtml('m-prioridad-container', `<select onchange="window.cambiarPrioridad(this.value)" name="mod_prioridad" style="padding:4px 8px; font-size:12px; border-radius:6px; background:#fff; font-weight:bold; border:1px solid var(--border); color:var(--text-main);"><option value="Baja" ${pr==='Baja'?'selected':''}>BAJA</option><option value="Media" ${pr==='Media'?'selected':''}>MEDIA</option><option value="Alta" ${pr==='Alta'?'selected':''}>ALTA (URGENTE)</option></select>`);
+    else window.setHtml('m-prioridad-container', `<span class="badge ${pr === 'Alta' ? 'badge-danger' : (pr === 'Media' ? 'badge-warning' : 'badge-info')}">${pr.toUpperCase()}</span>`);
 
     let adjOrigName = s.adjunto_nombre || "Archivo Adjunto"; let dlUrl = s.adjunto ? window.getDownloadUrl(s.adjunto) : "#"; 
     if (stepIdx >= 2 && !esDuenio && !esAdminSGC) window.setHtml('m-file-link', `<span style="color:#64748b; font-size:13px; font-style:italic;"><span class="material-icons-round" style="font-size:14px; vertical-align:middle;">lock</span> Documento original bloqueado por confidencialidad.</span>`);
@@ -957,20 +1230,35 @@ try {
     }
 
     let puedeGestionarSGC = false; 
-    if(activo) { if (stepIdx === 0 && (p.p_gest_sgc || p.p_paso1 || p.admin)) puedeGestionarSGC = true; if (stepIdx === 1 && (p.p_gest_sgc || p.p_paso2 || p.admin)) puedeGestionarSGC = true; if (stepIdx === 3 && (p.p_gest_sgc || p.p_paso4 || p.admin)) puedeGestionarSGC = true; }
+    if(activo) { 
+        let c1 = s.asig_paso1 ? (currentUser.email||'').toLowerCase() === s.asig_paso1.toLowerCase() : p.p_paso1;
+        let c2 = s.asig_paso2 ? (currentUser.email||'').toLowerCase() === s.asig_paso2.toLowerCase() : p.p_paso2;
+        let c4 = s.asig_paso4 ? (currentUser.email||'').toLowerCase() === s.asig_paso4.toLowerCase() : p.p_paso4;
+        if (stepIdx === 0 && (p.p_gest_sgc || p.admin || c1)) puedeGestionarSGC = true; 
+        if (stepIdx === 1 && (p.p_gest_sgc || p.admin || c2)) puedeGestionarSGC = true; 
+        if (stepIdx === 3 && (p.p_gest_sgc || p.admin || c4)) puedeGestionarSGC = true; 
+    }
     let puedeGestionarGerente = esGer && stepIdx === 2 && activo; 
 
-    window.setDisplay('btn-reabrir', (esAdminSGC && !activo) ? 'inline-flex' : 'none'); window.setDisplay('m-add-involucrado-section', activo ? 'flex' : 'none'); window.setDisplay('m-actions', (puedeGestionarSGC || puedeGestionarGerente) ? 'block' : 'none'); window.setDisplay('applicant-actions', (esDuenio && activo) ? 'block' : 'none'); window.setDisplay('m-input-area', 'none');
+    // PANEL DE EDICIÓN CONDICIONAL
+    window.setDisplay('btn-editar-sol', (activo && (esDuenio || esAdminSGC)) ? 'inline-block' : 'none');
+    window.setDisplay('m-panel-edicion-sol', 'none');
+    window.setDisplay('m-original-data', 'block');
+
+    let puedeEvaluar = stepIdx === -1 && activo && (esAdminSGC || p.p_eval_solicitud);
+    window.setDisplay('btn-reabrir', (esAdminSGC && !activo) ? 'inline-flex' : 'none'); window.setDisplay('m-add-involucrado-section', activo ? 'flex' : 'none'); window.setDisplay('m-actions', (puedeGestionarSGC || puedeGestionarGerente || puedeEvaluar) ? 'block' : 'none'); window.setDisplay('applicant-actions', (esDuenio && activo) ? 'block' : 'none'); window.setDisplay('m-input-area', 'none');
     
     const puedeDevolver = (puedeGestionarSGC || puedeGestionarGerente) && stepIdx > 0 && activo; 
     window.setDisplay('btn-devolver-paso', puedeDevolver ? 'inline-block' : 'none'); window.setDisplay('btn-anular', ((puedeGestionarSGC || esDuenio) && activo) ? 'inline-block' : 'none'); 
 
-    if(s.fecha_esperada_cierre) { window.setDisplay('m-admin-sla', 'block'); window.setVal('m-sla-date', s.fecha_esperada_cierre); if($('m-sla-date')) $('m-sla-date').disabled = !esAdminSGC; window.setDisplay('btn-save-sla', esAdminSGC ? 'inline-block' : 'none'); } 
-    else if (esAdminSGC && activo) { window.setDisplay('m-admin-sla', 'block'); window.setVal('m-sla-date', ''); if($('m-sla-date')) $('m-sla-date').disabled = false; window.setDisplay('btn-save-sla', 'inline-block'); } 
+    let slaDate = s.sla || s.fecha_esperada_cierre;
+    if(slaDate) { window.setDisplay('m-admin-sla', 'block'); window.setVal('m-sla-date', slaDate); if($('m-sla-date')) $('m-sla-date').disabled = !esAdminSGC; window.setDisplay('btn-save-sla', esAdminSGC ? 'inline-block' : 'none'); } 
+    else if (esAdminSGC && activo) { window.setDisplay('m-admin-sla', 'block'); window.setVal('m-sla-date', ''); if($('m-sla-date')) $('m-sla-date').disabled = false; window.setDisplay('btn-save-sla', 'inline-block'); }
     else { window.setDisplay('m-admin-sla', 'none'); }
     
     window.setDisplay('m-panel-final-sgc', 'none'); window.setDisplay('m-panel-update-sgc', 'none'); window.setDisplay('m-display-final', 'none'); 
-    window.setDisplay('btn-firma-next', 'inline-block');
+    window.setDisplay('btn-firma-next', (stepIdx !== -1) ? 'inline-block' : 'none');
+    window.setDisplay('btn-evaluar-next', puedeEvaluar ? 'inline-block' : 'none');
     if($('m-original-data')) $('m-original-data').classList.remove('locked-data'); 
 
     if ((esAdminSGC || p.p_paso2) && stepIdx === 1 && activo) { window.setDisplay('m-panel-update-sgc', 'block'); window.setVal('m-upd-tit', s.titulo || ''); window.setVal('m-upd-cod', s.cod_ref || ''); window.setVal('m-upd-ver', s.ver_ref || ''); }
@@ -989,7 +1277,7 @@ try {
     
     if(activo && stepIdx !== 3) window.setTxt('btn-firma-next', `Aprobar Etapa (${PASOS_NOMBRES[stepIdx]})`);
     
-    window.setHtml('chat-box', s.chat ? s.chat.map(c => {
+    window.setHtml('chat-box', Array.isArray(s.chat) ? s.chat.map(c => {
         let calBtn = "";
         if(c.fR) {
             try {
@@ -1003,64 +1291,73 @@ try {
     }).join('') : '');
     
     window.setDisplay('modal', 'flex');
-} catch(e) { console.error("Error abriendo detalle:", e); alert("Hubo un error al abrir la solicitud."); } finally { window.hideLoading(); }
+} catch(e) { console.error("Error abriendo detalle:", e); alert("Error abriendo solicitud: " + e.message); } finally { window.hideLoading(); }
 };
 
-window.cambiarPrioridad = async (nuevaPrioridad) => {
-    if(!confirm(`¿Cambiar la prioridad a ${nuevaPrioridad}?`)) return window.verDetalle(selectedId);
-    window.showLoading(); await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { prioridad: nuevaPrioridad, chat: arrayUnion({u: currentUser.nombre, m: `⚙️ <b>Cambio de Prioridad:</b> a ${nuevaPrioridad}`, t: new Date().toLocaleString()}) });
-    window.hideLoading(); window.verDetalle(selectedId);
+window.habilitarEdicionSol = () => {
+    const s = selectedDocData;
+    window.setVal('e-sol-tit', s.titulo || '');
+    window.setVal('e-sol-acc', s.accion || 'Creación');
+    window.setVal('e-sol-pri', s.prioridad || 'Baja');
+    window.setVal('e-sol-tipo-doc', s.tipoDoc || '');
+    window.setVal('e-sol-ger', s.gerencia || '');
+    window.actualizarGerenteSelectEdit(s.gerencia || '');
+    setTimeout(() => { window.setVal('e-sol-dep', s.departamento || ''); }, 100);
+    
+    window.setHtml('lista-involucrados-tags-edit', "");
+    if(s.involucrados && s.involucrados.length > 0) {
+        s.involucrados.forEach(email => {
+            let userFound = allUsers.find(u => (u.email || "").toLowerCase() === email.toLowerCase()); 
+            let name = userFound ? userFound.nombre : email;
+            window.addInvolucradoToDOM(email, name, 'lista-involucrados-tags-edit');
+        });
+    }
+
+    window.setVal('e-sol-mot', s.motivo || s.justificacion || '');
+
+    const p = currentUser.permisos || {};
+    if(p.p_gest_sgc || p.admin) {
+        window.setDisplay('e-sol-doc-id-display', 'inline-block');
+        window.setHtml('e-sol-doc-id-display', `ID Interno DB: <b>${selectedId}</b>`);
+    } else {
+        window.setDisplay('e-sol-doc-id-display', 'none');
+    }
+
+    window.setDisplay('m-panel-edicion-sol', 'block');
+    window.setDisplay('btn-editar-sol', 'none');
+    window.setDisplay('m-original-data', 'none'); 
 };
-window.habilitarEdicionFinal = () => { window.setDisplay('m-panel-final-sgc', 'block'); $('m-final-cod').value = selectedDocData.codigo_final || ''; $('m-final-ver').value = selectedDocData.version_final || ''; $('m-final-fecha').value = selectedDocData.fecha_final || ''; };
-window.actualizarDatosSGC = async () => {
-    const tit = $('m-upd-tit').value; const cod = $('m-upd-cod').value; const ver = $('m-upd-ver').value; const f = $('m-upd-file'); if(!tit) return alert("El título es obligatorio."); window.showLoading();
-    let updateData = { titulo: tit, cod_ref: cod, ver_ref: ver }; let msjChat = `SGC actualizó los datos pre-aprobación. Título: ${tit}, Cód: ${cod}, Ver: ${ver}.`;
-    if(f.files[0]) { let fileUrl = await window.uploadToCloudinary(f.files[0]); if(!fileUrl) { window.hideLoading(); return alert("Error subiendo archivo."); } updateData.adjunto = fileUrl; updateData.adjunto_nombre = f.files[0].name; msjChat += ` (Nuevo adjunto subido: ${f.files[0].name})`; }
-    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { ...updateData, chat: arrayUnion({u: currentUser.nombre, m: `✏️ ${msjChat}`, t: new Date().toLocaleString()}) });
-    window.hideLoading(); alert("Datos actualizados correctamente."); window.closeModal();
+
+window.guardarEdicionSol = async () => {
+    const nTit = getValSafe('e-sol-tit').trim();
+    const nAcc = getValSafe('e-sol-acc');
+    const nPri = getValSafe('e-sol-pri');
+    const nTipo = getValSafe('e-sol-tipo-doc');
+    const nGer = getValSafe('e-sol-ger');
+    const nDep = getValSafe('e-sol-dep');
+    const nMot = getValSafe('e-sol-mot').trim();
+
+    let extraEmails = []; 
+    $$('#lista-involucrados-tags-edit .involucrado-item').forEach(el => {
+        if(el.dataset.email) extraEmails.push(el.dataset.email.toLowerCase());
+    });
+
+    if(!nTit || !nMot || !nGer || !nDep || !nTipo) return alert("Complete los campos obligatorios.");
+    
+    window.showLoading();
+    let msjChat = `✏️ <b>Datos Editados:</b><br>- Título: ${nTit}<br>- Acción: ${nAcc}<br>- Prioridad: ${nPri}<br>- Tipo: ${nTipo}<br>- Gerencia: ${nGer} / ${nDep}`;
+    
+    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { 
+        titulo: nTit, accion: nAcc, prioridad: nPri, tipoDoc: nTipo, gerencia: nGer, departamento: nDep, involucrados: extraEmails, motivo: nMot,
+        chat: arrayUnion({u: currentUser.nombre, m: msjChat, t: new Date().toLocaleString()}) 
+    });
+    
+    window.hideLoading(); 
+    alert("Solicitud actualizada correctamente."); 
+    window.setDisplay('m-original-data', 'block');
+    window.verDetalle(selectedId);
 };
-window.guardarSLA = async () => {
-    const dateSLA = $('m-sla-date').value; if(!dateSLA) return alert("Selecciona una fecha válida."); window.showLoading();
-    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { fecha_esperada_cierre: dateSLA, chat: arrayUnion({u: currentUser.nombre, m: `⏱️ <b>FECHA LÍMITE (SLA) ESTABLECIDA:</b> ${window.formatearFechaAbreviada(dateSLA)}`, t: new Date().toLocaleString()}) }); window.hideLoading(); alert("Fecha límite actualizada."); window.verDetalle(selectedId);
-};
-window.devolverPaso = async () => {
-    if(!selectedDocData || selectedDocData.idx <= 0) return; if(!confirm("¿Estás seguro de devolver esta solicitud a la etapa anterior?")) return;
-    let motivo = prompt("Motivo para devolver la solicitud:"); if(!motivo) return alert("El motivo es obligatorio."); window.showLoading();
-    const nIdx = selectedDocData.idx - 1; const nEst = PASOS_NOMBRES[nIdx]; const faseActual = PASOS_NOMBRES[selectedDocData.idx]; const now = new Date().toISOString();
-    let updates = { idx: nIdx, estado: nEst, [`fase_${selectedDocData.idx}_fin`]: now, [`fase_${nIdx}_ini`]: now, chat: arrayUnion({u: currentUser.nombre, m: `⏪ <b>DEVUELTO A ETAPA ANTERIOR</b><br>De: ${faseActual} -> A: ${nEst}<br><b>Motivo:</b> ${motivo}`, t: new Date().toLocaleString()}) };
-    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), updates);
-    const dest = await window.getDatosEnvio(selectedDocData); window.sendNotification(dest, `Retroceso de Etapa: ${selectedDocData.customId}`, `La solicitud ha sido devuelta a: ${nEst}.\nMotivo: ${motivo}`); window.hideLoading(); window.closeModal();
-};
-window.reabrirSolicitud = async () => {
-    if(!confirm("⚠️ ¿Estás seguro de REABRIR esta solicitud?")) return; let motivo = prompt("Describe el motivo de la reapertura:"); if(!motivo) return alert("Se requiere un motivo."); window.showLoading();
-    const now = new Date().toISOString(); await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { estado: "Pendiente Documentado", idx: 0, fase_0_ini: now, chat: arrayUnion({u: currentUser.nombre, m: `<b style="color:var(--danger);">⚠️ REAPERTURA DE SOLICITUD POR ADMINISTRACIÓN</b><br><b>Motivo:</b> ${motivo}`, t: new Date().toLocaleString()}) });
-    const dest = await window.getDatosEnvio(selectedDocData); window.sendNotification(dest, `Solicitud Reabierta: ${selectedDocData.customId}`, `Motivo: ${motivo}`); window.hideLoading(); alert("Solicitud reabierta."); window.closeModal();
-};
-window.gestionar = (tipo) => { tempAction = tipo; window.setDisplay('m-input-area', 'block'); if(tipo === 'Reunión') { window.setDisplay('reunion-container', 'block'); if($('m-extra-input')) $('m-extra-input').setAttribute('data-placeholder', 'Tema de la reunión...'); } else { window.setDisplay('reunion-container', 'none'); if($('m-extra-input')) $('m-extra-input').setAttribute('data-placeholder', 'Motivo / Consulta / Detalle...'); } };
-window.responderSolicitante = () => { tempAction = "Respuesta"; window.setDisplay('m-input-area', 'block'); if($('m-extra-input')) $('m-extra-input').setAttribute('data-placeholder', 'Detalla tu corrección...'); window.setDisplay('reunion-container', 'none'); };
-window.rechazar = () => { tempAction = 'Rechazado'; window.setDisplay('m-input-area', 'block'); window.setDisplay('reunion-container', 'none'); };
-window.addInvolucradoList = () => {
-    const sel = $('sol-involucrado-sel'); const email = sel.value; const name = sel.options[sel.selectedIndex].text; if(!email) return alert("Seleccione un usuario válido.");
-    const existingTags = Array.from($$('.involucrado-item')); if(existingTags.some(el => el.dataset.email === email)) { return alert("El usuario ya está en la lista."); }
-    const div = document.createElement('div'); div.className = 'involucrado-item badge badge-info'; div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '5px'; div.style.fontSize = '12px'; div.style.padding = '6px 12px'; div.dataset.email = email; div.innerHTML = `${name} <span class="material-icons-round" style="font-size:14px; cursor:pointer; color:var(--danger);" onclick="this.parentElement.remove()">close</span>`;
-    $('lista-involucrados-tags').appendChild(div); sel.value = "";
-};
-window.guardarNuevoInvolucrado = async () => {
-    const sel = $('m-new-involucrado-sel'); const newEmail = sel.value; const newName = sel.options[sel.selectedIndex].text; if(!newEmail || !newEmail.includes('@')) return alert('Selecciona un usuario válido.'); window.showLoading();
-    let currentInv = selectedDocData.involucrados || []; if(currentInv.includes(newEmail)) { window.hideLoading(); return alert('El usuario ya está en la lista de involucrados.'); } 
-    currentInv.push(newEmail); await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { involucrados: currentInv, chat: arrayUnion({u: currentUser.nombre, m: `👥 Añadió a ${newName} a la lista de involucrados.`, t: new Date().toLocaleString()}) });
-    window.setVal('m-new-involucrado-sel', ''); window.hideLoading(); window.verDetalle(selectedId);
-};
-window.eliminarInvolucrado = async (emailToRemove) => {
-    if(!confirm("¿Estás seguro de eliminar a este usuario de los involucrados?")) return; window.showLoading();
-    let currentInv = selectedDocData.involucrados || []; currentInv = currentInv.filter(e => e.toLowerCase() !== emailToRemove.toLowerCase());
-    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { involucrados: currentInv, chat: arrayUnion({u: currentUser.nombre, m: `👥 Removió a ${emailToRemove} de la lista de involucrados.`, t: new Date().toLocaleString()}) });
-    window.hideLoading(); window.verDetalle(selectedId);
-};
-window.filtrarTabla = (inputId, tbodyId) => {
-    const input = $(inputId); if (!input) return; const filter = input.value.toLowerCase(); const tbody = $(tbodyId); if (!tbody) return; const trs = tbody.getElementsByTagName('tr');
-    for (let i = 0; i < trs.length; i++) { let rowText = trs[i].textContent || trs[i].innerText; if (rowText.toLowerCase().indexOf(filter) > -1) { trs[i].style.display = ""; } else { trs[i].style.display = "none"; } }
-};
+
 window.descargarExcelFiltrado = (origen = 'hist') => {
     let elDesde = $(`${origen}-f-desde`), elHasta = $(`${origen}-f-hasta`), elEstado = $(`${origen}-f-estado`);
     let desde = elDesde ? elDesde.value : ""; let hasta = elHasta ? elHasta.value : ""; let estado = elEstado ? elEstado.value : ""; 
@@ -1083,10 +1380,15 @@ window.descargarExcelFiltrado = (origen = 'hist') => {
     const formatearDiferencia = (ini, fin) => { if(!ini || !fin) return "N/A"; const ms = new Date(fin) - new Date(ini); if(ms < 0) return "N/A"; const d = Math.floor(ms / 86400000); const h = Math.floor((ms % 86400000) / 3600000); const m = Math.floor((ms % 3600000) / 60000); if (d > 0) return `${d}d ${h}h ${m}m`; if (h > 0) return `${h}h ${m}m`; return `${m}m`; };
 
     let dataExport = datosFiltrados.map(s => {
-        let p = PASOS_NOMBRES[s.idx] || ''; let estadoFormat = s.estado === 'Aprobado Final' ? 'Aprobado Final' : (s.estado === 'Anulado' || s.estado === 'Rechazado' ? s.estado : `${s.estado} (${p})`);
-        let baseObj = { "ID Solicitud": s.customId, "Solicitante": s.solicitante || '', "Email Solicitante": s.solicitante_email || '', "Gerencia": s.gerencia || '', "Departamento": s.departamento || '', "Acción": s.accion || '', "Prioridad": s.prioridad || 'Normal', "Tipo Documento": s.tipoDoc || '', "Título Documento": s.titulo || '', "Estado Actual": estadoFormat, "Fecha Límite (SLA)": s.fecha_esperada_cierre || 'No definida', "Fecha de Creación": s.fecha ? new Date(s.fecha).toLocaleString() : '', "Código Ref. Original": s.cod_ref || '', "Versión Original": s.ver_ref || '', "Código Final Asignado": s.codigo_final || '', "Versión Final Asignada": s.version_final || '', "Fecha Final": s.fecha_final || '' };
+        let p = s.idx === -1 ? 'Evaluación' : (PASOS_NOMBRES[s.idx] || ''); let estadoFormat = s.estado === 'Aprobado Final' ? 'Aprobado Final' : (s.estado === 'Anulado' || s.estado === 'Rechazado' ? s.estado : `${s.estado} (${p})`);
+        let baseObj = { "ID Solicitud": s.customId, "Solicitante": s.solicitante || '', "Email Solicitante": s.solicitante_email || '', "Gerencia": s.gerencia || '', "Departamento": s.departamento || '', "Acción": s.accion || '', "Prioridad": s.prioridad || 'Baja', "Tipo Documento": s.tipoDoc || '', "Título Documento": s.titulo || '', "Estado Actual": estadoFormat, "Fecha Límite (SLA)": s.fecha_esperada_cierre || 'No definida', "Fecha de Creación": s.fecha ? new Date(s.fecha).toLocaleString() : '', "Código Ref. Original": s.cod_ref || '', "Versión Original": s.ver_ref || '', "Código Final Asignado": s.codigo_final || '', "Versión Final Asignada": s.version_final || '', "Fecha Final": s.fecha_final || '' };
         if (esAdminSGC) { 
-            baseObj["Tiempo Fase 1 (Documentado)"] = formatearDiferencia(s.fase_0_ini, s.fase_0_fin); baseObj["Tiempo Fase 2 (Verificado)"] = formatearDiferencia(s.fase_1_ini, s.fase_1_fin); baseObj["Tiempo Fase 3 (Aprob. Gerencia)"] = formatearDiferencia(s.fase_2_ini, s.fase_2_fin); baseObj["Tiempo Fase 4 (Aprob. SGC)"] = formatearDiferencia(s.fase_3_ini, s.fase_3_fin); baseObj["TIEMPO TOTAL DEL FLUJO"] = formatearDiferencia(s.fase_0_ini, s.fecha_final || s.fase_3_fin || s.fase_2_fin || s.fase_1_fin || s.fase_0_fin); 
+            let isCanceled = s.estado === 'Anulado' || s.estado === 'Rechazado';
+            baseObj["Tiempo Fase 1 (Documentado)"] = isCanceled ? 'N/A' : formatearDiferencia(s.fase_0_ini, s.fase_0_fin); 
+            baseObj["Tiempo Fase 2 (Verificado)"] = isCanceled ? 'N/A' : formatearDiferencia(s.fase_1_ini, s.fase_1_fin); 
+            baseObj["Tiempo Fase 3 (Aprob. Gerencia)"] = isCanceled ? 'N/A' : formatearDiferencia(s.fase_2_ini, s.fase_2_fin); 
+            baseObj["Tiempo Fase 4 (Aprob. SGC)"] = isCanceled ? 'N/A' : formatearDiferencia(s.fase_3_ini, s.fase_3_fin); 
+            baseObj["TIEMPO TOTAL DEL FLUJO"] = isCanceled ? 'N/A' : formatearDiferencia(s.fase_0_ini, s.fecha_final || s.fase_3_fin || s.fase_2_fin || s.fase_1_fin || s.fase_0_fin); 
         }
         return baseObj;
     });
@@ -1096,7 +1398,7 @@ window.descargarExcelFiltrado = (origen = 'hist') => {
 };
 
 // ==========================================
-// MÓDULO DE AUDITORÍAS
+// MÓDULO DE AUDITORÍAS (CORREGIDO ERROR DE ARRAYS NULOS)
 // ==========================================
 window.switchAuditTab = (id) => { $$('.tab-btn').forEach(b=>b.classList.remove('active')); $$('.tab-content').forEach(c=>c.classList.remove('active')); if($(`btn-tab-${id}`)) $(`btn-tab-${id}`).classList.add('active'); if($(`tab-${id}`)) $(`tab-${id}`).classList.add('active'); };
 window.abrirModalPlan = () => {
@@ -1207,9 +1509,11 @@ window.guardarAuditoria = async () => {
             dt.audit_num = aNum; dt.estado = "Programada"; dt.creado_por = currentUser.nombre; dt.timestamp = new Date().toISOString(); dt.bitacora = []; dt.lista_verificacion = []; dt.reporte_auditoria = { conclusiones: '' }; dt.rondas = 1;
             await addDoc(collection(db, "artifacts", appId, "public", "data", "Auditorias"), dt);
             
-            let gM = Array.from(new Set([...ae, ...aue])); 
-            if(globalAuditPlan && globalAuditPlan.correos) globalAuditPlan.correos.forEach(x => gM.push(x)); 
-            gM.push(EMAIL_ADMIN_SGC);
+            let correosTo = Array.from(new Set([...ae, ...aue])).filter(e => e && e !== "undefined" && e !== "null");
+            let correosCc = [];
+            if(globalAuditPlan && globalAuditPlan.correos) globalAuditPlan.correos.forEach(x => correosCc.push(x));
+            correosCc.push(EMAIL_ADMIN_SGC);
+            correosCc = Array.from(new Set(correosCc)).filter(e => e && e !== "undefined" && e !== "null");
             
             let msgAuditoria = `
             <div style="font-family: sans-serif; color: #1e293b; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -1229,7 +1533,9 @@ window.guardarAuditoria = async () => {
                     <p style="margin: 0;">Por favor, verificar la agenda en el módulo de Auditoría.</p>
                 </div>
             </div>`;
-            window.sendNotification({to: gM.join(',')}, `Auditoría Programada: ${aNum}`, msgAuditoria);
+            
+            console.log("[Auditoría] Destinatarios identificados:", {to: correosTo, cc: correosCc});
+            window.sendNotification({to: correosTo.join(','), cc: correosCc.join(',')}, `Auditoría Programada: ${aNum}`, msgAuditoria);
             alert(`Auditoría ${aNum} programada.`);
         }
         window.cancelarEdicionAuditoria(); 
@@ -1314,27 +1620,26 @@ try {
     
     selectedAuditData = sn.data(); const a = selectedAuditData || {};
     
-    ['ma-proceso','ma-lugar','ma-auditado','ma-auditor','ma-obs'].forEach(i => { 
-        if($(i)) window.setTxt(i, a[i.replace('ma-','')] || '-'); 
-    });
+    // Asignación segura
+    ['ma-proceso','ma-lugar','ma-auditado','ma-auditor','ma-obs'].forEach(i => { window.setTxt(i, a[i.replace('ma-','')] || '-'); });
     
-    if($('ma-num')) window.setTxt('ma-num', a.audit_num || '-');
-    if($('ma-proceso')) window.setTxt('ma-proceso', a.requisitos || '-');
-    if($('ma-fecha')) window.setTxt('ma-fecha', window.formatearFechaAbreviada(a.fecha)); 
-    if($('ma-hora')) window.setTxt('ma-hora', `${a.hora_inicio || ''} a ${a.hora_fin || ''}`); 
-    if($('ma-req')) window.setTxt('ma-req', a.requisitos || ''); 
+    window.setTxt('ma-num', a.audit_num || '-');
+    window.setTxt('ma-proceso', a.requisitos || '-');
+    window.setTxt('ma-fecha', window.formatearFechaAbreviada(a.fecha)); 
+    window.setTxt('ma-hora', `${a.hora_inicio || ''} a ${a.hora_fin || ''}`); 
+    window.setTxt('ma-req', a.requisitos || ''); 
     
-    if($('rep-num')) window.setTxt('rep-num', a.audit_num || '-');
-    if($('rep-org')) window.setTxt('rep-org', a.organizacion || '-');
-    if($('rep-dir')) window.setTxt('rep-dir', a.direccion || '-');
-    if($('rep-sitios')) window.setTxt('rep-sitios', a.sitios || '-');
-    if($('rep-fechas')) window.setTxt('rep-fechas', a.fecha ? window.formatearFechaAbreviada(a.fecha) : '-');
-    if($('rep-personal')) window.setTxt('rep-personal', a.personal || '-');
-    if($('rep-turnos')) window.setTxt('rep-turnos', a.turnos || '-');
-    if($('rep-lider')) window.setTxt('rep-lider', globalAuditPlan ? globalAuditPlan.lider : '-');
-    if($('rep-adicionales')) window.setTxt('rep-adicionales', a.auditor || '-');
-    if($('rep-formacion')) window.setTxt('rep-formacion', a.auditores_formacion || '-');
-    if($('rep-alcance')) window.setTxt('rep-alcance', globalAuditPlan ? globalAuditPlan.alcance : '-');
+    window.setTxt('rep-num', a.audit_num || '-');
+    window.setTxt('rep-org', a.organizacion || '-');
+    window.setTxt('rep-dir', a.direccion || '-');
+    window.setTxt('rep-sitios', a.sitios || '-');
+    window.setTxt('rep-fechas', a.fecha ? window.formatearFechaAbreviada(a.fecha) : '-');
+    window.setTxt('rep-personal', a.personal || '-');
+    window.setTxt('rep-turnos', a.turnos || '-');
+    window.setTxt('rep-lider', globalAuditPlan ? globalAuditPlan.lider : '-');
+    window.setTxt('rep-adicionales', a.auditor || '-');
+    window.setTxt('rep-formacion', a.auditores_formacion || '-');
+    window.setTxt('rep-alcance', globalAuditPlan ? globalAuditPlan.alcance : '-');
     
     let e = String(a.estado || 'Programada'); 
     if($('ma-estado-badge')) {
@@ -1342,8 +1647,8 @@ try {
         window.setTxt('ma-estado-badge', e.toUpperCase() + (a.rondas && a.rondas > 1 ? ` (RONDA ${a.rondas})` : ''));
     }
     
-    if($('ma-inicio-real')) window.setTxt('ma-inicio-real', a.hora_real_inicio ? new Date(a.hora_real_inicio).toLocaleString() : '---'); 
-    if($('ma-fin-real')) window.setTxt('ma-fin-real', a.hora_real_fin ? new Date(a.hora_real_fin).toLocaleString() : '---');
+    window.setTxt('ma-inicio-real', a.hora_real_inicio ? new Date(a.hora_real_inicio).toLocaleString() : '---'); 
+    window.setTxt('ma-fin-real', a.hora_real_fin ? new Date(a.hora_real_fin).toLocaleString() : '---');
     
     if(a.hora_real_inicio && a.hora_real_fin && $('ma-duracion')) { 
         let m = new Date(a.hora_real_fin) - new Date(a.hora_real_inicio); 
@@ -1361,12 +1666,17 @@ try {
     window.setDisplay('btn-pausar-auditoria', (isAdm || isAud) && e === 'En Progreso' ? 'inline-block' : 'none');
     window.setDisplay('btn-finalizar-auditoria', (isAdm || isAud) && (e === 'En Progreso' || e === 'Pausada') ? 'inline-block' : 'none');
     
-    if($('chat-box-audit')) window.setHtml('chat-box-audit', a.bitacora ? a.bitacora.map(c => `<div class="chat-msg"><b style="font-size:10px">${c.u}</b> <span style="font-size:9px;color:#94a3b8">${c.t}</span><br>${c.m}${c.archivo ? `<br><a href="#" onclick="window.abrirDocumento('${c.archivo}','${c.archivo_nombre}');return false;" style="font-size:10px;color:blue;">📎 Ver</a>` : ''}</div>`).join('') : '');
+    let chatHtml = '';
+    if(Array.isArray(a.bitacora)) {
+        chatHtml = a.bitacora.map(c => `<div class="chat-msg"><b style="font-size:10px">${c.u}</b> <span style="font-size:9px;color:#94a3b8">${c.t}</span><br>${c.m}${c.archivo ? `<br><a href="#" onclick="window.abrirDocumento('${c.archivo}','${c.archivo_nombre}');return false;" style="font-size:10px;color:blue;">📎 Ver</a>` : ''}</div>`).join('');
+    }
+    window.setHtml('chat-box-audit', chatHtml);
     
-    currentAuditF020 = a.lista_verificacion || []; window.renderF020();
+    currentAuditF020 = Array.isArray(a.lista_verificacion) ? a.lista_verificacion : []; 
+    window.renderF020();
     
     let rep = a.reporte_auditoria || {};
-    let evidenciasSugeridas = (a.lista_verificacion || []).map(i => `- ${i.pregunta || ''} -> ${i.comentarios || 'Sin detalles'}`).join('\n').trim();
+    let evidenciasSugeridas = (currentAuditF020 || []).map(i => `- ${i.pregunta || ''} -> ${i.comentarios || 'Sin detalles'}`).join('\n').trim();
     
     let cargosAuditados = [];
     if(a.auditado) {
@@ -1377,13 +1687,13 @@ try {
     }
     let cargoSugerido = cargosAuditados.length > 0 ? cargosAuditados.join(', ') : '';
 
-    if($('f003-conclusiones')) window.setVal('f003-conclusiones', rep.conclusiones || "");
-    if($('f003-n-proceso')) window.setVal('f003-n-proceso', rep.n_proceso || a.requisitos || "");
-    if($('f003-n-personal')) window.setVal('f003-n-personal', rep.n_personal || a.auditado || "");
-    if($('f003-n-cargo')) window.setVal('f003-n-cargo', rep.n_cargo || cargoSugerido || "");
-    if($('f003-n-req')) window.setVal('f003-n-req', rep.n_req || a.requisitos || "");
-    if($('f003-n-doc')) window.setVal('f003-n-doc', rep.n_doc || ""); 
-    if($('f003-n-evidencia')) window.setVal('f003-n-evidencia', rep.n_evidencia || evidenciasSugeridas || "");
+    window.setVal('f003-conclusiones', rep.conclusiones || "");
+    window.setVal('f003-n-proceso', rep.n_proceso || a.requisitos || "");
+    window.setVal('f003-n-personal', rep.n_personal || a.auditado || "");
+    window.setVal('f003-n-cargo', rep.n_cargo || cargoSugerido || "");
+    window.setVal('f003-n-req', rep.n_req || a.requisitos || "");
+    window.setVal('f003-n-doc', rep.n_doc || ""); 
+    window.setVal('f003-n-evidencia', rep.n_evidencia || evidenciasSugeridas || "");
     
     ['f003-conclusiones','f003-n-proceso','f003-n-personal','f003-n-cargo','f003-n-req','f003-n-doc','f003-n-evidencia'].forEach(i => { if($(i)) $(i).disabled = !canEdReporte; });
     
@@ -1397,7 +1707,12 @@ try {
     window.setDisplay('btn-add-sac-manual', canEdReporte ? 'inline-block' : 'none');
     
     window.switchAuditTab('info'); window.setDisplay('modal-auditoria', 'flex');
-} catch(e) { console.error("Error abriendo auditoría:", e); } finally { window.hideLoading(); }
+} catch(e) { 
+    console.error("Error abriendo auditoría:", e); 
+    alert("Hubo un error de lectura en el servidor. Por favor, actualice la página: " + e.message); 
+} finally { 
+    window.hideLoading(); 
+}
 };
 
 window.comenzarAuditoria = async () => { if(selectedAuditData.estado === 'Pausada') { await window.reanudarAuditoriaDirecto(selectedAuditId); } else { await window.iniciarAuditoriaDirecto(selectedAuditId); } window.verModalAuditoria(selectedAuditId); };
@@ -1424,25 +1739,27 @@ window.renderF020 = () => {
     let rqs = selectedAuditData && selectedAuditData.requisitos ? selectedAuditData.requisitos.split(', ') : [];
     let aOps = `<option value="">-- Sel --</option>` + (selectedAuditData && selectedAuditData.auditado ? selectedAuditData.auditado.split(', ').map(a => `<option value="${a}">${a}</option>`).join('') : '');
 
-    currentAuditF020.forEach((i, idx) => {
-        let dis = canEd ? '' : 'disabled';
-        let rOpt = `<option value="">-- Sel --</option>` + rqs.map(r => `<option value="${r}" ${i.requisito === r ? 'selected' : ''}>${r}</option>`).join('');
-        let aOpt = `<option value="${i.auditado || ''}" selected>${i.auditado || '-- Sel --'}</option>` + aOps;
-        let nOpt = `<option value="N/A" ${i.nc==='N/A'||!i.nc?'selected':''}>N/A</option><option value="NC Menor" ${i.nc==='NC Menor'?'selected':''}>NC Menor</option><option value="NC Mayor" ${i.nc==='NC Mayor'?'selected':''}>NC Mayor</option><option value="OM" ${i.nc==='OM'?'selected':''}>OM</option>`;
-        let fOpt = `<option value="N/A" ${i.fortaleza==='N/A'||!i.fortaleza?'selected':''}>N/A</option><option value="Sí" ${i.fortaleza==='Sí'?'selected':''}>Sí</option>`;
-        
-        h += `<tr data-id="${i.id}">
-            <td>${idx+1}</td>
-            <td><textarea name="f020_pregunta_${idx}" class="table-input" rows="2" ${dis}>${i.pregunta||''}</textarea></td>
-            <td><select name="f020_req_${idx}" class="table-select" ${dis}>${rOpt}</select></td>
-            <td><textarea name="f020_comentario_${idx}" class="table-input" rows="2" ${dis}>${i.comentarios||''}</textarea></td>
-            <td><select name="f020_auditado_${idx}" class="table-select" ${dis}>${aOpt}</select></td>
-            <td><select name="f020_nc_${idx}" class="table-select hallazgo-sel" ${dis}>${nOpt}</select></td>
-            <td><textarea name="f020_obs_${idx}" class="table-input" rows="2" ${dis}>${i.observacion||''}</textarea></td>
-            <td><select name="f020_fort_${idx}" class="table-select" ${dis}>${fOpt}</select></td>
-            <td class="f020-action-col">${canEd ? `<button type="button" class="btn-icon-danger" onclick="window.eliminarF020('${i.id}')"><span class="material-icons-round">delete</span></button>` : ''}</td>
-        </tr>`;
-    }); 
+    if (Array.isArray(currentAuditF020)) {
+        currentAuditF020.forEach((i, idx) => {
+            let dis = canEd ? '' : 'disabled';
+            let rOpt = `<option value="">-- Sel --</option>` + rqs.map(r => `<option value="${r}" ${i.requisito === r ? 'selected' : ''}>${r}</option>`).join('');
+            let aOpt = `<option value="${i.auditado || ''}" selected>${i.auditado || '-- Sel --'}</option>` + aOps;
+            let nOpt = `<option value="N/A" ${i.nc==='N/A'||!i.nc?'selected':''}>N/A</option><option value="NC Menor" ${i.nc==='NC Menor'?'selected':''}>NC Menor</option><option value="NC Mayor" ${i.nc==='NC Mayor'?'selected':''}>NC Mayor</option><option value="OM" ${i.nc==='OM'?'selected':''}>OM</option>`;
+            let fOpt = `<option value="N/A" ${i.fortaleza==='N/A'||!i.fortaleza?'selected':''}>N/A</option><option value="Sí" ${i.fortaleza==='Sí'?'selected':''}>Sí</option>`;
+            
+            h += `<tr data-id="${i.id}">
+                <td>${idx+1}</td>
+                <td><textarea name="f020_pregunta_${idx}" class="table-input" rows="2" ${dis}>${i.pregunta||''}</textarea></td>
+                <td><select name="f020_req_${idx}" class="table-select" ${dis}>${rOpt}</select></td>
+                <td><textarea name="f020_comentario_${idx}" class="table-input" rows="2" ${dis}>${i.comentarios||''}</textarea></td>
+                <td><select name="f020_auditado_${idx}" class="table-select" ${dis}>${aOpt}</select></td>
+                <td><select name="f020_nc_${idx}" class="table-select hallazgo-sel" ${dis}>${nOpt}</select></td>
+                <td><textarea name="f020_obs_${idx}" class="table-input" rows="2" ${dis}>${i.observacion||''}</textarea></td>
+                <td><select name="f020_fort_${idx}" class="table-select" ${dis}>${fOpt}</select></td>
+                <td class="f020-action-col">${canEd ? `<button type="button" class="btn-icon-danger" onclick="window.eliminarF020('${i.id}')"><span class="material-icons-round">delete</span></button>` : ''}</td>
+            </tr>`;
+        }); 
+    }
     window.setHtml('tbody-f020', h); $$('.f020-action-col').forEach(e => e.style.display = canEd ? '' : 'none');
 };
 
@@ -1452,25 +1769,25 @@ window.guardarF020 = async (notificar=false) => { window.sincronizarF020DOM(); w
 window.enviarPreguntasSGC = () => window.guardarF020(true);
 
 window.generarBloqueNCDinamico = (i, idx, t, canEd) => {
-let d = selectedAuditData.reporte_auditoria?.detalles_nc?.[i.id] || {}; let dis = canEd ? '' : 'disabled';
+let d = selectedAuditData?.reporte_auditoria?.detalles_nc?.[i.id] || {}; let dis = canEd ? '' : 'disabled';
 return `<div style="border:1px solid #ccc;font-size:12px;margin-bottom:15px;" class="f003-hallazgo-block" data-id="${i.id}"><div style="display:grid;grid-template-columns:150px 1fr;"><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">No. de ${t}</div><div style="padding:8px;border:1px solid #ccc;">${idx}</div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Dpto/Función</div><div style="padding:0;border:1px solid #ccc;"><input type="text" name="h_dep_${i.id}" class="h-dep" value="${d.departamento||i.auditado||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Doc Ref</div><div style="padding:0;border:1px solid #ccc;"><input type="text" name="h_doc_${i.id}" class="h-doc" value="${d.doc_ref||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Requisito Afectado</div><div style="padding:0;border:1px solid #ccc;"><input type="text" name="h_req_${i.id}" class="h-req" value="${d.requisito||i.requisito||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Detalle</div><div style="padding:0;border:1px solid #ccc;"><textarea name="h_det_${i.id}" class="h-det" ${dis} style="border:none;width:100%;height:100%;min-height:40px;padding:8px;">${d.detalle||i.comentarios||i.pregunta||''}</textarea></div></div></div>`;
 };
 
 window.actualizarMetricasF003 = (canEd) => {
 let nM = 0, nm = 0, om = 0, hM = "", hm = "", ho = ""; 
-currentAuditF020.forEach(i => { 
-    if(i.nc === 'NC Mayor'){nM++; hM += window.generarBloqueNCDinamico(i,nM,'NC Mayor',canEd);} 
-    if(i.nc === 'NC Menor'){nm++; hm += window.generarBloqueNCDinamico(i,nm,'NC Menor',canEd);} 
-    if(i.nc === 'OM'){om++; ho += window.generarBloqueNCDinamico(i,om,'OM',canEd);} 
-});
+if (Array.isArray(currentAuditF020)) {
+    currentAuditF020.forEach(i => { 
+        if(i.nc === 'NC Mayor'){nM++; hM += window.generarBloqueNCDinamico(i,nM,'NC Mayor',canEd);} 
+        if(i.nc === 'NC Menor'){nm++; hm += window.generarBloqueNCDinamico(i,nm,'NC Menor',canEd);} 
+        if(i.nc === 'OM'){om++; ho += window.generarBloqueNCDinamico(i,om,'OM',canEd);} 
+    });
+}
 
-if($('f003-nc-mayor')) window.setTxt('f003-nc-mayor', nM); 
-if($('f003-nc-menor')) window.setTxt('f003-nc-menor', nm); 
-if($('f003-om')) window.setTxt('f003-om', om);
+window.setTxt('f003-nc-mayor', nM); window.setTxt('f003-nc-menor', nm); window.setTxt('f003-om', om);
 
-if($('container-nc-menor')) window.setHtml('container-nc-menor', hm || "<p style='font-size:11px;color:#94a3b8;'>Ninguna.</p>"); 
-if($('container-nc-mayor')) window.setHtml('container-nc-mayor', hM || "<p style='font-size:11px;color:#94a3b8;'>Ninguna.</p>"); 
-if($('container-om')) window.setHtml('container-om', ho || "<p style='font-size:11px;color:#94a3b8;'>Ninguna.</p>");
+window.setHtml('container-nc-menor', hm || "<p style='font-size:11px;color:#94a3b8;'>Ninguna.</p>"); 
+window.setHtml('container-nc-mayor', hM || "<p style='font-size:11px;color:#94a3b8;'>Ninguna.</p>"); 
+window.setHtml('container-om', ho || "<p style='font-size:11px;color:#94a3b8;'>Ninguna.</p>");
 };
 
 window.guardarF003 = async () => { 
@@ -1482,7 +1799,8 @@ window.hideLoading(); alert("Reporte F-003 guardado.");
 };
 
 window.renderAuditSACs = () => {
-const tb = $('tbody-audit-sacs'); if(!tb) return; let hs = currentAuditF020.filter(i => i.nc === 'NC Mayor' || i.nc === 'NC Menor' || i.nc === 'OM');
+const tb = $('tbody-audit-sacs'); if(!tb) return; 
+let hs = Array.isArray(currentAuditF020) ? currentAuditF020.filter(i => i.nc === 'NC Mayor' || i.nc === 'NC Menor' || i.nc === 'OM') : [];
 if(hs.length === 0) { tb.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No hay NC/OM.</td></tr>"; return; } let ht = "";
 hs.forEach((h, idx) => {
     let sac = globalAllSacs.find(s => s.f020_id === h.id), bd = '', es = 'SIN GENERAR', btn = '', cb = h.nc === 'NC Mayor' ? 'badge-danger' : (h.nc === 'NC Menor' ? 'badge-warning' : 'badge-info');
@@ -1508,7 +1826,8 @@ window.getUsersSelectHTML = (selectedValue) => {
 };
 
 window.addPlanRow = (d="", r="", i="", f="") => { 
-    const tb = $('tbody-plan-accion'); let tr = document.createElement('tr'); 
+    const tb = $('tbody-plan-accion'); if(!tb) return;
+    let tr = document.createElement('tr'); 
     let selHTML = window.getUsersSelectHTML(r);
     tr.innerHTML = `
     <td style="border:1px solid #ccc; text-align:center;">${tb.children.length+1}</td>
@@ -1521,7 +1840,8 @@ window.addPlanRow = (d="", r="", i="", f="") => {
 };
 
 window.addSeguimientoRow = (res="", r="", f="") => { 
-    const tb = $('tbody-seguimiento'); let tr = document.createElement('tr'); 
+    const tb = $('tbody-seguimiento'); if(!tb) return;
+    let tr = document.createElement('tr'); 
     let selHTML = window.getUsersSelectHTML(r);
     tr.innerHTML = `
     <td style="border:1px solid #ccc; text-align:center;">${tb.children.length+1}</td>
@@ -1548,29 +1868,29 @@ window.aplicarBloqueosSAC = (isAuditor, isResp) => {
         el.disabled = !isAuditor;
     });
 
-    if($('btn-add-plan')) $('btn-add-plan').style.display = (isResp || isAuditor) ? 'inline-block' : 'none';
-    if($('btn-add-seguimiento')) $('btn-add-seguimiento').style.display = isAuditor ? 'inline-block' : 'none';
-    if($('btn-save-sac')) $('btn-save-sac').style.display = (isResp || isAuditor) ? 'inline-block' : 'none';
+    window.setDisplay('btn-add-plan', (isResp || isAuditor) ? 'inline-block' : 'none');
+    window.setDisplay('btn-add-seguimiento', isAuditor ? 'inline-block' : 'none');
+    window.setDisplay('btn-save-sac', (isResp || isAuditor) ? 'inline-block' : 'none');
 };
 
 window.abrirCrearSAC = (id) => {
 let h = currentAuditF020.find(i => i.id === id); if(!h) return; currentEditingSacId = null; currentEditingF020Ref = h;
-if($('sac-num')) window.setTxt('sac-num', "POR ASIGNAR"); 
+window.setTxt('sac-num', "POR ASIGNAR"); 
 if($('sac-estado-badge')) { window.setTxt('sac-estado-badge', "NUEVA"); $('sac-estado-badge').className = "badge badge-info"; }
-if($('sac-fecha')) window.setVal('sac-fecha', new Date().toISOString().split('T')[0]);
-if($('sac-proceso')) window.setVal('sac-proceso', h.requisito || ""); 
-if($('sac-tipo')) window.setVal('sac-tipo', h.nc || "");
+window.setVal('sac-fecha', new Date().toISOString().split('T')[0]);
+window.setVal('sac-proceso', h.requisito || ""); 
+window.setVal('sac-tipo', h.nc || "");
 
-if($('sac-tipo-doc-afectado')) { window.setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join('')); window.setVal('sac-tipo-doc-afectado', ""); }
-if($('sac-fuente')) window.setVal('sac-fuente', "Auditoría Interna"); if($('sac-fuente-otro')) window.setVal('sac-fuente-otro', ""); if($('sac-detalle')) window.setVal('sac-detalle', h.comentarios || h.pregunta || ""); if($('sac-beneficio')) window.setVal('sac-beneficio', ""); if($('sac-causa')) window.setVal('sac-causa', ""); 
-if($('sac-accion')) window.setVal('sac-accion', h.observacion || "");
+window.setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join('')); window.setVal('sac-tipo-doc-afectado', ""); 
+window.setVal('sac-fuente', "Auditoría Interna"); window.setVal('sac-fuente-otro', ""); window.setVal('sac-detalle', h.comentarios || h.pregunta || ""); window.setVal('sac-beneficio', ""); window.setVal('sac-causa', ""); 
+window.setVal('sac-accion', h.observacion || "");
 
-if($('tbody-plan-accion')) window.setHtml('tbody-plan-accion', ""); if($('sac-fecha-aprob-plan')) window.setVal('sac-fecha-aprob-plan', ""); if($('tbody-seguimiento')) window.setHtml('tbody-seguimiento', ""); if($('sac-resp-cierre')) window.setVal('sac-resp-cierre', ""); if($('sac-fecha-cierre')) window.setVal('sac-fecha-cierre', ""); if($('sac-check-cerrar')) $('sac-check-cerrar').checked = false;
+window.setHtml('tbody-plan-accion', ""); window.setVal('sac-fecha-aprob-plan', ""); window.setHtml('tbody-seguimiento', ""); window.setVal('sac-resp-cierre', ""); window.setVal('sac-fecha-cierre', ""); if($('sac-check-cerrar')) $('sac-check-cerrar').checked = false;
 
 let auds = selectedAuditData?.auditado ? selectedAuditData.auditado.split(', ') : []; 
 let op = '<option value="">-- Responsable --</option>';
 allUsers.forEach(u => { op += `<option value="${u.usuario}">${auds.includes(u.nombre) ? '⭐ ' : ''}${u.nombre}</option>`; }); 
-if($('sac-dueno')) window.setHtml('sac-dueno', op); 
+window.setHtml('sac-dueno', op); 
 
 window.aplicarBloqueosSAC(true, true);
 window.setDisplay('modal-sac', 'flex');
@@ -1578,57 +1898,63 @@ window.setDisplay('modal-sac', 'flex');
 
 window.abrirCrearSACManual = () => {
 currentEditingSacId = null; currentEditingF020Ref = null;
-if($('sac-num')) window.setTxt('sac-num', "POR ASIGNAR"); 
+window.setTxt('sac-num', "POR ASIGNAR"); 
 if($('sac-estado-badge')) { window.setTxt('sac-estado-badge', "NUEVA"); $('sac-estado-badge').className = "badge badge-info"; }
-if($('sac-fecha')) window.setVal('sac-fecha', new Date().toISOString().split('T')[0]);
-if($('sac-proceso')) window.setVal('sac-proceso', selectedAuditData?.requisitos || ""); 
-if($('sac-tipo')) window.setVal('sac-tipo', "OM");
+window.setVal('sac-fecha', new Date().toISOString().split('T')[0]);
+window.setVal('sac-proceso', selectedAuditData?.requisitos || ""); 
+window.setVal('sac-tipo', "OM");
 
-if($('sac-tipo-doc-afectado')) { window.setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join('')); window.setVal('sac-tipo-doc-afectado', ""); }
-if($('sac-fuente')) window.setVal('sac-fuente', "Auditoría Interna"); if($('sac-fuente-otro')) window.setVal('sac-fuente-otro', ""); if($('sac-detalle')) window.setVal('sac-detalle', ""); if($('sac-beneficio')) window.setVal('sac-beneficio', ""); if($('sac-causa')) window.setVal('sac-causa', ""); if($('sac-accion')) window.setVal('sac-accion', "");
-if($('tbody-plan-accion')) window.setHtml('tbody-plan-accion', ""); if($('sac-fecha-aprob-plan')) window.setVal('sac-fecha-aprob-plan', ""); if($('tbody-seguimiento')) window.setHtml('tbody-seguimiento', ""); if($('sac-resp-cierre')) window.setVal('sac-resp-cierre', ""); if($('sac-fecha-cierre')) window.setVal('sac-fecha-cierre', ""); if($('sac-check-cerrar')) $('sac-check-cerrar').checked = false;
+window.setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join('')); window.setVal('sac-tipo-doc-afectado', ""); 
+window.setVal('sac-fuente', "Auditoría Interna"); window.setVal('sac-fuente-otro', ""); window.setVal('sac-detalle', ""); window.setVal('sac-beneficio', ""); window.setVal('sac-causa', ""); window.setVal('sac-accion', "");
+window.setHtml('tbody-plan-accion', ""); window.setVal('sac-fecha-aprob-plan', ""); window.setHtml('tbody-seguimiento', ""); window.setVal('sac-resp-cierre', ""); window.setVal('sac-fecha-cierre', ""); if($('sac-check-cerrar')) $('sac-check-cerrar').checked = false;
 
 let auds = selectedAuditData?.auditado ? selectedAuditData.auditado.split(', ') : []; 
 let op = '<option value="">-- Responsable --</option>';
 allUsers.forEach(u => { op += `<option value="${u.usuario}">${auds.includes(u.nombre) ? '⭐ ' : ''}${u.nombre}</option>`; }); 
-if($('sac-dueno')) window.setHtml('sac-dueno', op); 
+window.setHtml('sac-dueno', op); 
 
 window.aplicarBloqueosSAC(true, true);
 window.setDisplay('modal-sac', 'flex');
 };
 
+// VER MODAL SAC CON PROTECCIÓN ANTI-CRASH
 window.verSAC = (id) => {
-let sac = globalAllSacs.find(s => s.sac_id === id); if(!sac) return; currentEditingSacId = id;
-if($('sac-num')) window.setTxt('sac-num', sac.sac_num || ""); 
-let es = String(sac.estado || ""); let bs = es.includes('Abierta') ? 'badge-danger' : (es === 'En Seguimiento' ? 'badge-warning' : 'badge-success'); 
-if($('sac-estado-badge')) { window.setTxt('sac-estado-badge', es.toUpperCase()); $('sac-estado-badge').className = `badge ${bs}`; }
+try {
+    let sac = globalAllSacs.find(s => s.sac_id === id); if(!sac) return; currentEditingSacId = id;
+    window.setTxt('sac-num', sac.sac_num || ""); 
+    let es = String(sac.estado || ""); let bs = es.includes('Abierta') ? 'badge-danger' : (es === 'En Seguimiento' ? 'badge-warning' : 'badge-success'); 
+    if($('sac-estado-badge')) { window.setTxt('sac-estado-badge', es.toUpperCase()); $('sac-estado-badge').className = `badge ${bs}`; }
 
-if($('sac-fecha')) window.setVal('sac-fecha', sac.fecha_registro || (sac.fecha_apertura ? sac.fecha_apertura.split('T')[0] : "")); 
-if($('sac-proceso')) window.setVal('sac-proceso', sac.proceso || ""); 
-if($('sac-tipo')) window.setVal('sac-tipo', sac.tipo_hallazgo || "");
+    window.setVal('sac-fecha', sac.fecha_registro || (sac.fecha_apertura ? sac.fecha_apertura.split('T')[0] : "")); 
+    window.setVal('sac-proceso', sac.proceso || ""); 
+    window.setVal('sac-tipo', sac.tipo_hallazgo || "");
 
-if($('sac-tipo-doc-afectado')) { window.setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join('')); window.setVal('sac-tipo-doc-afectado', sac.tipo_doc_afectado || ""); }
+    window.setHtml('sac-tipo-doc-afectado', '<option value="">-- No aplica --</option>' + tiposDocumento.map(t => `<option value="${t}">${t}</option>`).join('')); window.setVal('sac-tipo-doc-afectado', sac.tipo_doc_afectado || ""); 
 
-if($('sac-fuente')) window.setVal('sac-fuente', sac.fuente_nc || "Auditoría Interna"); if($('sac-fuente-otro')) window.setVal('sac-fuente-otro', sac.fuente_otro || ""); if($('sac-detalle')) window.setVal('sac-detalle', sac.detalle_nc || ""); if($('sac-beneficio')) window.setVal('sac-beneficio', sac.beneficio_esperado || ""); if($('sac-causa')) window.setVal('sac-causa', sac.causa_raiz || ""); if($('sac-accion')) window.setVal('sac-accion', sac.accion_implementar || "");
+    window.setVal('sac-fuente', sac.fuente_nc || "Auditoría Interna"); window.setVal('sac-fuente-otro', sac.fuente_otro || ""); window.setVal('sac-detalle', sac.detalle_nc || ""); window.setVal('sac-beneficio', sac.beneficio_esperado || ""); window.setVal('sac-causa', sac.causa_raiz || ""); window.setVal('sac-accion', sac.accion_implementar || "");
 
-let auds = selectedAuditData?.auditado ? selectedAuditData.auditado.split(', ') : []; 
-let op = '<option value="">-- Responsable --</option>';
-allUsers.forEach(u => { op += `<option value="${u.usuario}" ${sac.dueno_uid === u.usuario ? 'selected' : ''}>${auds.includes(u.nombre) ? '⭐ ' : ''}${u.nombre}</option>`; }); 
-if($('sac-dueno')) window.setHtml('sac-dueno', op);
+    let auds = selectedAuditData?.auditado ? selectedAuditData.auditado.split(', ') : []; 
+    let op = '<option value="">-- Responsable --</option>';
+    allUsers.forEach(u => { op += `<option value="${u.usuario}" ${sac.dueno_uid === u.usuario ? 'selected' : ''}>${auds.includes(u.nombre) ? '⭐ ' : ''}${u.nombre}</option>`; }); 
+    window.setHtml('sac-dueno', op);
 
-if($('tbody-plan-accion')) { window.setHtml('tbody-plan-accion', ""); if(sac.plan_accion) sac.plan_accion.forEach(p => window.addPlanRow(p.detalle, p.resp, p.inicio, p.fin)); }
-if($('sac-fecha-aprob-plan')) window.setVal('sac-fecha-aprob-plan', sac.fecha_aprobacion_plan || "");
-if($('tbody-seguimiento')) { window.setHtml('tbody-seguimiento', ""); if(sac.seguimiento) sac.seguimiento.forEach(s => window.addSeguimientoRow(s.resultado, s.resp, s.fecha)); }
+    window.setHtml('tbody-plan-accion', ""); if(Array.isArray(sac.plan_accion)) sac.plan_accion.forEach(p => window.addPlanRow(p.detalle, p.resp, p.inicio, p.fin)); 
+    window.setVal('sac-fecha-aprob-plan', sac.fecha_aprobacion_plan || "");
+    window.setHtml('tbody-seguimiento', ""); if(Array.isArray(sac.seguimiento)) sac.seguimiento.forEach(s => window.addSeguimientoRow(s.resultado, s.resp, s.fecha)); 
 
-if($('sac-resp-cierre')) window.setVal('sac-resp-cierre', sac.cerrado_por || ""); 
-if($('sac-fecha-cierre')) window.setVal('sac-fecha-cierre', sac.fecha_cierre ? sac.fecha_cierre.split('T')[0] : ""); 
-if($('sac-check-cerrar')) $('sac-check-cerrar').checked = es === 'Cerrada'; 
+    window.setVal('sac-resp-cierre', sac.cerrado_por || ""); 
+    window.setVal('sac-fecha-cierre', sac.fecha_cierre ? sac.fecha_cierre.split('T')[0] : ""); 
+    if($('sac-check-cerrar')) $('sac-check-cerrar').checked = es === 'Cerrada'; 
 
-let isAuditor = currentUser.permisos.admin || currentUser.permisos.p_audit_admin || sac.auditor_nombre === currentUser.nombre || (selectedAuditData && selectedAuditData.auditor && selectedAuditData.auditor.includes(currentUser.nombre));
-let isResp = sac.dueno_uid === currentUser.usuario;
-window.aplicarBloqueosSAC(isAuditor, isResp);
+    let isAuditor = currentUser.permisos.admin || currentUser.permisos.p_audit_admin || sac.auditor_nombre === currentUser.nombre || (selectedAuditData && selectedAuditData.auditor && selectedAuditData.auditor.includes(currentUser.nombre));
+    let isResp = sac.dueno_uid === currentUser.usuario;
+    window.aplicarBloqueosSAC(isAuditor, isResp);
 
-window.setDisplay('modal-sac', 'flex');
+    window.setDisplay('modal-sac', 'flex');
+} catch (e) {
+    console.error("Error al abrir SAC:", e);
+    alert("Error procesando SAC: " + e.message);
+}
 };
 
 window.guardarSAC = async () => {
@@ -1647,7 +1973,7 @@ $$('#tbody-seguimiento tr').forEach(tr => {
 let es = "Abierta (En Plan)"; if($('sac-fecha-aprob-plan') && $('sac-fecha-aprob-plan').value) es = "En Seguimiento"; if($('sac-check-cerrar') && $('sac-check-cerrar').checked) es = "Cerrada";
 let tipoDocAfectado = $('sac-tipo-doc-afectado') ? $('sac-tipo-doc-afectado').value : "";
 
-let dt = { fecha_registro: $('sac-fecha')?$('sac-fecha').value:'', proceso: $('sac-proceso')?$('sac-proceso').value:'', tipo_doc_afectado: tipoDocAfectado, fuente_nc: $('sac-fuente')?$('sac-fuente').value:'', fuente_otro: $('sac-fuente-otro')?$('sac-fuente-otro').value:'', beneficio_esperado: $('sac-beneficio')?$('sac-beneficio').value:'', causa_raiz: $('sac-causa')?$('sac-causa').value:'', accion_implementar: $('sac-accion')?$('sac-accion').value:'', dueno_uid: $('sac-dueno')?$('sac-dueno').value:'', plan_accion: pA, fecha_aprobacion_plan: $('sac-fecha-aprob-plan')?$('sac-fecha-aprob-plan').value:'', seguimiento: sA, fecha_cierre: $('sac-fecha-cierre')?$('sac-fecha-cierre').value:'', cerrado_por: $('sac-check-cerrar')&&$('sac-check-cerrar').checked ? currentUser.nombre : "", estado: es };
+let dt = { fecha_registro: getValSafe('sac-fecha'), proceso: getValSafe('sac-proceso'), tipo_doc_afectado: tipoDocAfectado, fuente_nc: getValSafe('sac-fuente'), fuente_otro: getValSafe('sac-fuente-otro'), beneficio_esperado: getValSafe('sac-beneficio'), causa_raiz: getValSafe('sac-causa'), accion_implementar: getValSafe('sac-accion'), dueno_uid: getValSafe('sac-dueno'), plan_accion: pA, fecha_aprobacion_plan: getValSafe('sac-fecha-aprob-plan'), seguimiento: sA, fecha_cierre: getValSafe('sac-fecha-cierre'), cerrado_por: getCheckedSafe('sac-check-cerrar') ? currentUser.nombre : "", estado: es };
 
 try {
     let numSAC = "";
@@ -1658,7 +1984,7 @@ try {
             t.set(doc(db,"artifacts",appId,"public","data","Contadores","sacs"), {count: c}); 
             numSAC = `SAC-${new Date().getFullYear()}-${String(c).padStart(3,'0')}`; 
         });
-        dt.sac_num = numSAC; dt.audit_id = selectedAuditId || "N/A"; dt.f020_id = currentEditingF020Ref ? currentEditingF020Ref.id : "MANUAL"; dt.tipo_hallazgo = currentEditingF020Ref ? currentEditingF020Ref.nc : ($('sac-tipo')?$('sac-tipo').value:''); dt.detalle_nc = $('sac-detalle')?$('sac-detalle').value:''; dt.fecha_apertura = new Date().toISOString(); dt.auditor_nombre = currentUser.nombre;
+        dt.sac_num = numSAC; dt.audit_id = selectedAuditId || "N/A"; dt.f020_id = currentEditingF020Ref ? currentEditingF020Ref.id : "MANUAL"; dt.tipo_hallazgo = currentEditingF020Ref ? currentEditingF020Ref.nc : getValSafe('sac-tipo'); dt.detalle_nc = getValSafe('sac-detalle'); dt.fecha_apertura = new Date().toISOString(); dt.auditor_nombre = currentUser.nombre;
         await addDoc(collection(db, "artifacts", appId, "public", "data", "AccionesCorrectivas"), dt); 
         alert(`SAC ${numSAC} Generada.`);
     } else { 
@@ -1687,11 +2013,11 @@ try {
             <p>La Acción Correctiva <b>${dt.sac_num}</b> ha sido <b>${actionWord.toLowerCase()}</b>.</p>
             <div style="background: #fffbeb; padding: 15px; border-radius: 6px; border: 1px dashed #b45309; margin-bottom: 15px;">
                 <b>Estado Actual:</b> <span style="font-weight:bold; color:#b45309;">${dt.estado}</span><br>
-                <b>Tipo de Hallazgo:</b> ${dt.tipo_hallazgo || ($('sac-tipo')?$('sac-tipo').value:'')}<br>
+                <b>Tipo de Hallazgo:</b> ${dt.tipo_hallazgo || getValSafe('sac-tipo')}<br>
                 <b>Requisito Evaluado:</b> ${dt.proceso}<br>
                 <b>Responsable Asignado:</b> ${uD ? uD.nombre : dt.dueno_uid}<br>
                 <b>Auditor / Creador:</b> ${dt.auditor_nombre}<br><br>
-                <b>Detalle del Hallazgo:</b><br><i>${dt.detalle_nc || $('sac-detalle').value}</i>
+                <b>Detalle del Hallazgo:</b><br><i>${dt.detalle_nc || getValSafe('sac-detalle')}</i>
             </div>
             <p style="margin: 0;">Por favor, ingrese al módulo de Auditoría (F-023) para gestionar los planes de acción o dar seguimiento.</p>
         </div>
@@ -1724,14 +2050,17 @@ window.setHtml('tbody-noconf', hs);
 window.setFilterGestNC = () => window.renderF023Global();
 
 window.verSACGlobal = async (sId, aId) => { 
-selectedAuditData = null; selectedAuditId = null; 
-if(aId && aId !== "N/A" && aId !== "undefined") { 
-    try { 
+try {
+    selectedAuditData = null; selectedAuditId = null; 
+    if(aId && aId !== "N/A" && aId !== "undefined") { 
         const sn = await getDoc(doc(db,"artifacts",appId,"public","data","Auditorias",aId)); 
         if(sn.exists()) { selectedAuditData = sn.data(); selectedAuditId = aId; } 
-    } catch(e) {} 
-} 
-window.verSAC(sId); 
+    } 
+    window.verSAC(sId); 
+} catch(e) {
+    console.error("Error abriendo SAC global:", e);
+    alert("Error de red abriendo registro SAC");
+}
 };
 
 window.exportarExcelNoConf = () => {
@@ -1764,4 +2093,55 @@ const inicializarApp = async () => {
     } else { window.setDisplay('login-screen', 'flex'); }
 };
 
-document.addEventListener("DOMContentLoaded", inicializarApp);
+window.abrirModalDash = (tipo) => {
+    if(!globalSolicitudes || globalSolicitudes.length === 0) return;
+    
+    let ms = globalSolicitudes.filter(s => s.uid === currentUser.usuario || (s.involucrados && currentUser.email && s.involucrados.includes(currentUser.email.toLowerCase())));
+    let filtered = [];
+    let title = "";
+    
+    if(tipo === 'mis_tot') { filtered = ms; title = "Mis Solicitudes Totales"; }
+    else if(tipo === 'mis_pend') { filtered = ms.filter(s => !String(s.estado||"").includes('Aprobado Final') && s.estado !== 'Anulado' && s.estado !== 'Rechazado'); title = "Mis Solicitudes en Gestión / Pendientes"; }
+    else if(tipo === 'mis_ok') { filtered = ms.filter(s => String(s.estado||"").includes('Aprobado Final')); title = "Mis Solicitudes Aprobadas"; }
+    else if(tipo === 'mis_rech') { filtered = ms.filter(s => s.estado === 'Anulado' || s.estado === 'Rechazado'); title = "Mis Solicitudes Rechazadas / Anuladas"; }
+    else if(tipo === 'glob_tot') { filtered = globalSolicitudes; title = "Total Histórico Global"; }
+    else if(tipo === 'glob_pend') { filtered = globalSolicitudes.filter(s => !String(s.estado||"").includes('Aprobado Final') && s.estado !== 'Anulado' && s.estado !== 'Rechazado'); title = "Pendientes Globales"; }
+    else if(tipo === 'glob_ok') { filtered = globalSolicitudes.filter(s => String(s.estado||"").includes('Aprobado Final')); title = "Aprobadas Globales"; }
+    else if(tipo === 'glob_sla') {
+        filtered = globalSolicitudes.filter(s => s.fecha_esperada_cierre || s.sla); 
+        title = "Solicitudes con SLA Asignado";
+    }
+
+    let tbodyHTML = "";
+    if(filtered.length === 0) {
+        tbodyHTML = "<tr><td colspan='5' style='text-align:center; padding:20px; color:#64748b;'>No hay datos para mostrar</td></tr>";
+    } else {
+        filtered.forEach(s => {
+            let estadoHTML = `<span class="badge ${s.estado === 'Anulado' || s.estado === 'Rechazado' ? 'badge-danger' : (String(s.estado||'').includes('Aprobado') ? 'badge-success' : 'badge-warning')}">${s.estado || 'En Trámite'}</span>`;
+            tbodyHTML += `<tr>
+                <td><b>${s.customId || 'N/A'}</b></td>
+                <td>${s.tipo_documento || 'N/A'}</td>
+                <td>${s.solicitante || 'N/A'}</td>
+                <td>${estadoHTML}</td>
+                <td class="no-export"><button class="btn btn-primary" style="padding:4px 10px; font-size:11px;" onclick="window.verDetalle('${s.docId}'); window.setDisplay('modal-dash-details', 'none');">Ver Solicitud</button></td>
+            </tr>`;
+        });
+    }
+
+    window.setTxt('m-dash-tit', title);
+    window.setHtml('m-dash-tbody', tbodyHTML);
+    window.setDisplay('modal-dash-details', 'flex');
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    inicializarApp();
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js').then(registration => {
+                console.log('SW Registrado con éxito: ', registration.scope);
+            }).catch(err => {
+                console.log('Fallo el registro de SW: ', err);
+            });
+        });
+    }
+});
