@@ -1218,54 +1218,56 @@
 
     <!-- MODAL CONSTRUCTOR DE FORMULARIOS -->
     <div class="modal-overlay" id="modal-form-builder" style="display:none; z-index:3000;">
-        <div class="modal-content" style="max-width: 800px; width:95%; display:block; padding:30px; height:auto; max-height:90vh; overflow-y:auto; background:#fff;">
-            <h3 style="color:var(--primary); margin-top:0; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">build</span> Creador de Formularios</h3>
+        <div class="modal-content" style="max-width: 1200px; width:95%; display:block; padding:30px; height:auto; max-height:90vh; overflow-y:auto; background:#fff; position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="color:var(--primary); margin:0; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">build</span> Creador de Formularios</h3>
+                <button type="button" class="btn btn-dark" style="background:var(--sidebar); display:flex; align-items:center; gap:5px; padding:6px 12px;" onclick="let c = document.getElementById('fb-perm-container'); c.style.display = c.style.display === 'none' ? 'block' : 'none';">
+                    <span class="material-icons-round" style="font-size:16px;">lock</span> Configurar Permisos
+                </button>
+            </div>
+
+            <div id="fb-perm-container" style="display:none; position:absolute; top:75px; right:30px; background:#f8fafc; padding:20px; border-radius:8px; border:1px solid var(--border); box-shadow:0 10px 25px rgba(0,0,0,0.15); z-index:10; width:350px;">
+                <h4 style="margin:0 0 15px 0; font-size:14px; color:var(--text-main); border-bottom:1px solid var(--border); padding-bottom:5px;">Permisos del Formulario</h4>
+                <label style="font-size:12px;">Personas permitidas para LLENAR (Vacío = Todos)</label>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <select id="fb-perm-llenar-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
+                    <button type="button" class="btn btn-primary" onclick="window.addPermUser('llenar')">Añadir</button>
+                </div>
+                <div id="fb-perm-llenar-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px; min-height:10px;"></div>
+
+                <label style="font-size:12px;">Personas permitidas para VER (Vacío = Todos)</label>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <select id="fb-perm-ver-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
+                    <button type="button" class="btn btn-primary" onclick="window.addPermUser('ver')">Añadir</button>
+                </div>
+                <div id="fb-perm-ver-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px; min-height:10px;"></div>
+
+                <label style="font-size:12px;">Personas permitidas para EDITAR (Vacío = Solo Creador)</label>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <select id="fb-perm-editar-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
+                    <button type="button" class="btn btn-primary" onclick="window.addPermUser('editar')">Añadir</button>
+                </div>
+                <div id="fb-perm-editar-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:5px; min-height:10px;"></div>
+            </div>
             
             <div class="grid-2" style="gap:20px;">
                 <!-- Panel Izquierdo: Datos Básicos y Controles -->
                 <div>
-                    <label for="fb-titulo">Título del Formulario</label>
-                    <input type="text" id="fb-titulo" name="fb-titulo" placeholder="Ej: Encuesta de Satisfacción" style="margin-bottom:15px;">
-                    <label for="fb-desc">Descripción Corta</label>
+                    <label for="fb-titulo" style="font-size:12px;">Título del Formulario</label>
+                    <input type="text" id="fb-titulo" name="fb-titulo" placeholder="Ej: Encuesta de Satisfacción" style="margin-bottom:10px;">
+                    <label for="fb-desc" style="font-size:12px;">Descripción Corta</label>
                     <textarea id="fb-desc" name="fb-desc" rows="2" placeholder="Opcional..." style="margin-bottom:10px;"></textarea>
 
-                    <label style="display:flex; align-items:center; gap:8px; font-weight:600; color:var(--text-main); margin-bottom:15px; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid var(--border);">
-                        <input type="checkbox" id="fb-is-eval" style="margin:0; width:auto;"> Este formulario es una Evaluación Calificada (Genera Score Automático)
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:600; color:var(--text-main); margin-bottom:10px; background:#f8fafc; padding:8px 10px; border-radius:6px; border:1px solid var(--border); font-size:12px;">
+                        <input type="checkbox" id="fb-is-eval" style="margin:0; width:auto;"> Este formulario es una Evaluación Calificada (Score Auto)
                     </label>
 
-                    <label style="display:flex; align-items:center; gap:8px; font-weight:600; color:var(--text-main); margin-bottom:15px; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid var(--border);">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:600; color:var(--text-main); margin-bottom:10px; background:#f8fafc; padding:8px 10px; border-radius:6px; border:1px solid var(--border); font-size:12px;">
                         <input type="checkbox" id="fb-is-dynamic" style="margin:0; width:auto;" onchange="document.getElementById('fb-dynamic-options-panel').style.display = this.checked ? 'block' : 'none'; window.renderFormPreview();"> Activar Categorías Dinámicas (Selector Maestro)
                     </label>
                     <div id="fb-dynamic-options-panel" style="display:none; background:#f1f5f9; padding:10px; border-radius:6px; margin-bottom:15px; border:1px solid var(--border);">
-                        <label>Opciones del Selector (separadas por coma)</label>
+                        <label style="font-size:11px;">Opciones del Selector (separadas por coma)</label>
                         <input type="text" id="fb-dynamic-options" class="search-bar" placeholder="Ej: Auto, Moto, Camión" style="width:100%; margin-bottom:0;" onchange="window.renderFormPreview()">
-                    </div>
-
-                    <button type="button" class="btn btn-dark" style="width:100%; margin-bottom:15px; text-align:left; background:var(--sidebar);" onclick="let c = document.getElementById('fb-perm-container'); c.style.display = c.style.display === 'none' ? 'block' : 'none';">
-                        <span class="material-icons-round" style="font-size:16px; vertical-align:middle;">lock</span> Configurar Permisos de Usuarios
-                    </button>
-                    
-                    <div id="fb-perm-container" style="display:none; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border); margin-bottom:20px;">
-                        <label>Personas permitidas para LLENAR (Dejar vacío = Todos)</label>
-                        <div style="display:flex; gap:5px; margin-bottom:5px;">
-                            <select id="fb-perm-llenar-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
-                            <button type="button" class="btn btn-primary" onclick="window.addPermUser('llenar')">Añadir</button>
-                        </div>
-                        <div id="fb-perm-llenar-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px; min-height:10px;"></div>
-
-                        <label>Personas permitidas para VER RESULTADOS (Dejar vacío = Todos)</label>
-                        <div style="display:flex; gap:5px; margin-bottom:5px;">
-                            <select id="fb-perm-ver-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
-                            <button type="button" class="btn btn-primary" onclick="window.addPermUser('ver')">Añadir</button>
-                        </div>
-                        <div id="fb-perm-ver-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px; min-height:10px;"></div>
-
-                        <label>Personas permitidas para EDITAR (Dejar vacío = Solo Creador)</label>
-                        <div style="display:flex; gap:5px; margin-bottom:5px;">
-                            <select id="fb-perm-editar-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
-                            <button type="button" class="btn btn-primary" onclick="window.addPermUser('editar')">Añadir</button>
-                        </div>
-                        <div id="fb-perm-editar-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; min-height:10px;"></div>
                     </div>
                     
                     <h4 style="font-size:13px; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">Añadir Nuevo Campo</h4>

@@ -2647,8 +2647,21 @@ window.renderFormPreview = () => {
     let dynOptsRaw = getValSafe('fb-dynamic-options').trim();
     let dynOpts = dynOptsRaw ? dynOptsRaw.split(',').map(s => s.trim()).filter(s => s) : [];
 
-    let h = '';
-    formBuilderCampos.forEach((c, i) => {
+    let groups = { '': [] };
+    if(isDyn && dynOpts.length > 0) {
+        dynOpts.forEach(opt => groups[opt] = []);
+        formBuilderCampos.forEach((c, i) => {
+            if(c.categoria && groups[c.categoria]) {
+                groups[c.categoria].push({c, i});
+            } else {
+                groups[''].push({c, i});
+            }
+        });
+    } else {
+        groups[''] = formBuilderCampos.map((c, i) => ({c, i}));
+    }
+
+    const renderField = (c, i) => {
         let reqHTML = c.requerido ? '<span style="color:var(--danger)">*</span>' : '';
         
         let catHtml = '';
@@ -2662,7 +2675,7 @@ window.renderFormPreview = () => {
             catHtml += `</select>`;
         }
 
-        h += `<div style="background:white; padding:15px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border);">
+        let fh = `<div style="background:white; padding:15px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border); box-shadow:0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
                     <div style="display:flex; flex-direction:column; gap:5px;">
                         <label style="font-size:13px; color:var(--sidebar); font-weight:600; margin:0; line-height:1.4;">${c.label} ${reqHTML}</label>
@@ -2675,32 +2688,32 @@ window.renderFormPreview = () => {
                     </div>
                 </div>`;
         
-        if(c.tipo === 'text') h += `<input type="text" disabled placeholder="Campo de texto corto" style="margin-bottom:0; background:#f8fafc;">`;
-        else if(c.tipo === 'textarea') h += `<textarea disabled placeholder="Campo de texto largo" rows="2" style="margin-bottom:0; background:#f8fafc;"></textarea>`;
-        else if(c.tipo === 'number') h += `<input type="number" disabled placeholder="123" style="margin-bottom:0; background:#f8fafc;">`;
-        else if(c.tipo === 'date') h += `<input type="date" disabled style="margin-bottom:0; background:#f8fafc;">`;
-        else if(c.tipo === 'checkbox') h += `<label style="font-size:12px; color:var(--text-muted);"><input type="checkbox" disabled style="margin-bottom:0; width:auto;"> Marcar casilla</label>`;
+        if(c.tipo === 'text') fh += `<input type="text" disabled placeholder="Campo de texto corto" style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'textarea') fh += `<textarea disabled placeholder="Campo de texto largo" rows="2" style="margin-bottom:0; background:#f8fafc;"></textarea>`;
+        else if(c.tipo === 'number') fh += `<input type="number" disabled placeholder="123" style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'date') fh += `<input type="date" disabled style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'checkbox') fh += `<label style="font-size:12px; color:var(--text-muted);"><input type="checkbox" disabled style="margin-bottom:0; width:auto;"> Marcar casilla</label>`;
         else if(c.tipo === 'select') {
-            h += `<select disabled style="margin-bottom:0; background:#f8fafc;">`;
-            c.opciones.forEach(op => h += `<option>${op}</option>`);
-            h += `</select>`;
+            fh += `<select disabled style="margin-bottom:0; background:#f8fafc;">`;
+            c.opciones.forEach(op => fh += `<option>${op}</option>`);
+            fh += `</select>`;
         }
         else if(c.tipo === 'si_no') {
-            h += `<div style="display:flex; gap:15px; margin-top:5px;">
+            fh += `<div style="display:flex; gap:15px; margin-top:5px;">
                     <label style="font-size:12px; color:var(--text-muted);"><input type="radio" disabled style="width:auto; margin-bottom:0;"> Sí</label>
                     <label style="font-size:12px; color:var(--text-muted);"><input type="radio" disabled style="width:auto; margin-bottom:0;"> No</label>
                   </div>`;
         }
         else if(c.tipo === 'archivo') {
-            h += `<input type="file" disabled style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
+            fh += `<input type="file" disabled style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
         }
         else if(c.tipo === 'semaforo') {
-            h += `<div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-top:5px; border:1px solid var(--border);">
+            fh += `<div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-top:5px; border:1px solid var(--border);">
                     <p style="font-size:12px; font-weight:600; margin:0 0 10px 0; color:var(--text-main);">Configurar Columnas (Opciones y Puntaje)</p>
                     <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">`;
             if(c.matriz_cols) {
                 c.matriz_cols.forEach((col, colIdx) => {
-                    h += `<div style="display:flex; align-items:center; background:white; padding:4px; border-radius:4px; border:1px solid var(--border); gap:5px;">
+                    fh += `<div style="display:flex; align-items:center; background:white; padding:4px; border-radius:4px; border:1px solid var(--border); gap:5px;">
                             <input type="color" value="${col.color}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'color', this.value)" style="width:20px; height:20px; padding:0; border:none;">
                             <input type="text" value="${col.label}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'label', this.value)" style="width:80px; padding:2px 5px; font-size:11px; margin:0;" placeholder="Etiqueta">
                             <input type="number" value="${col.score}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'score', this.value)" style="width:50px; padding:2px 5px; font-size:11px; margin:0;" placeholder="Ptos">
@@ -2708,25 +2721,51 @@ window.renderFormPreview = () => {
                           </div>`;
                 });
             }
-            h += `      <button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.agregarColMatriz(${i})">+ Columna</button>
+            fh += `      <button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.agregarColMatriz(${i})">+ Columna</button>
                     </div>
                     
                     <p style="font-size:12px; font-weight:600; margin:10px 0 10px 0; color:var(--text-main);">Configurar Filas (Conceptos a evaluar)</p>
                     <div style="display:flex; flex-direction:column; gap:5px;">`;
             if(c.matriz_filas) {
                 c.matriz_filas.forEach((fila, filaIdx) => {
-                    h += `<div style="display:flex; gap:5px;">
+                    fh += `<div style="display:flex; gap:5px;">
                             <input type="text" value="${fila.label}" onchange="window.actualizarFilaMatriz(${i}, ${filaIdx}, this.value)" style="flex:1; padding:4px 8px; font-size:12px; margin:0;" placeholder="Concepto a evaluar...">
                             <button class="btn-icon-danger" style="padding:4px 8px;" onclick="window.eliminarFilaMatriz(${i}, ${filaIdx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button>
                           </div>`;
                 });
             }
-            h += `  </div>
+            fh += `  </div>
                     <button class="btn btn-primary" style="padding:4px 10px; font-size:11px; margin-top:8px;" onclick="window.agregarFilaMatriz(${i})">+ Añadir Fila</button>
                   </div>`;
         }
-        h += `</div>`;
-    });
+        fh += `</div>`;
+        return fh;
+    };
+
+    let h = '';
+    if(isDyn && dynOpts.length > 0) {
+        if(groups[''].length > 0) {
+            h += `<div style="margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border);">
+                    <h4 style="margin:0 0 15px 0; color:var(--text-main); font-size:14px; border-bottom:2px solid var(--border); padding-bottom:5px;">🌐 Campos Globales (Siempre Visibles)</h4>`;
+            groups[''].forEach(item => h += renderField(item.c, item.i));
+            h += `</div>`;
+        }
+        dynOpts.forEach(opt => {
+            if(groups[opt].length > 0) {
+                h += `<div style="margin-bottom:20px; background:#f0f9ff; padding:15px; border-radius:8px; border:1px solid #bae6fd;">
+                        <h4 style="margin:0 0 15px 0; color:#0369a1; font-size:14px; border-bottom:2px solid #bae6fd; padding-bottom:5px;">📂 Categoría: ${opt}</h4>`;
+                groups[opt].forEach(item => h += renderField(item.c, item.i));
+                h += `</div>`;
+            } else {
+                 h += `<div style="margin-bottom:20px; opacity:0.6; background:#f8fafc; padding:10px 15px; border-radius:8px; border:1px dashed var(--border);">
+                        <h4 style="margin:0; color:var(--text-muted); font-size:13px;">📂 Categoría: ${opt} <span style="font-size:11px; font-weight:normal;">(Sin campos configurados)</span></h4>
+                      </div>`;
+            }
+        });
+    } else {
+        groups[''].forEach(item => h += renderField(item.c, item.i));
+    }
+
     container.innerHTML = h;
 };
 
@@ -2757,10 +2796,13 @@ window.abrirLlenarFormulario = (id) => {
         let h = '';
         
         if(f.is_dynamic && f.dynamic_options && f.dynamic_options.length > 0) {
-            h += `<div style="margin-bottom:20px; background:#e2e8f0; padding:15px; border-radius:8px;">
-                    <label style="font-weight:600; color:#0f172a; margin-bottom:5px; display:block;">Seleccione una categoría para continuar</label>
-                    <select id="master-dynamic-select" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; margin:0; font-size:14px;" onchange="window.aplicarLogicaDinamica(this.value)">
-                        <option value="">(Mostrar todo / Por defecto)</option>`;
+            h += `<div style="margin-bottom:30px; background:#f8fafc; padding:25px; border-radius:12px; border:1px solid var(--border); box-shadow:0 10px 30px rgba(0,0,0,0.05); text-align:center;">
+                    <div style="background:var(--primary); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px auto;">
+                        <span class="material-icons-round">category</span>
+                    </div>
+                    <label style="font-weight:700; font-size:16px; color:#0f172a; margin-bottom:15px; display:block;">Seleccione la Categoría a Evaluar</label>
+                    <select id="master-dynamic-select" style="width:100%; max-width:400px; padding:12px; border-radius:8px; border:2px solid var(--primary); margin:0 auto; font-size:15px; font-weight:600; color:var(--primary); background:white; cursor:pointer; outline:none; display:block;" onchange="window.aplicarLogicaDinamica(this.value)">
+                        <option value="">-- Mostrar Todo --</option>`;
             f.dynamic_options.forEach(opt => {
                 h += `<option value="${opt}">${opt}</option>`;
             });
@@ -2771,10 +2813,10 @@ window.abrirLlenarFormulario = (id) => {
         f.campos.forEach(c => {
             let reqHTML = c.requerido ? '<span style="color:var(--danger)">*</span>' : '';
             let reqAttr = c.requerido ? 'required' : '';
-            h += `<div class="dynamic-field-container" data-category="${c.categoria||''}" style="margin-bottom:20px;">
-                    <label style="font-size:14px; font-weight:600; color:var(--text-main); display:block; margin-bottom:8px;">${c.label} ${reqHTML}</label>`;
+            h += `<div class="dynamic-field-container" data-category="${c.categoria||''}" style="margin-bottom:25px; background:white; padding:20px; border-radius:10px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                    <label style="font-size:15px; font-weight:600; color:#1e293b; display:block; margin-bottom:12px;">${c.label} ${reqHTML}</label>`;
             
-            if(c.tipo === 'text') h += `<input type="text" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            if(c.tipo === 'text') h += `<input type="text" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%; border:1px solid #cbd5e1; padding:10px; border-radius:6px;">`;
             else if(c.tipo === 'textarea') h += `<textarea id="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
             else if(c.tipo === 'number') h += `<input type="number" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
             else if(c.tipo === 'date') h += `<input type="date" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
