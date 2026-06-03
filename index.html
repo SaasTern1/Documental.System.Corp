@@ -1361,6 +1361,14 @@
                 </div>
             </div>
         </div>
+    <!-- Floating Admin Tools (La Tuerca) -->
+    <div id="admin-floating-gear" style="display:none; position:fixed; bottom:30px; right:30px; z-index:9000; flex-direction:column; gap:10px;">
+        <button class="btn btn-primary" onclick="window.cambiarVista('sec-usuarios', document.getElementById('nav-usuarios'))" style="border-radius:50%; width:50px; height:50px; padding:0; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(0,0,0,0.3);" title="Usuarios y Permisos">
+            <span class="material-icons-round">people</span>
+        </button>
+        <button class="btn btn-dark" onclick="window.cambiarVista('sec-estructura', document.getElementById('nav-config'))" style="border-radius:50%; width:50px; height:50px; padding:0; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(0,0,0,0.3); background:var(--sidebar);" title="Configuración del Sistema">
+            <span class="material-icons-round">settings</span>
+        </button>
     </div>
 </body>
 </html>
