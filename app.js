@@ -359,7 +359,7 @@ window.renderDashboardCharts = () => {
             let sortedAudits = [...globalAllAuditorias].sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).slice(0, 5);
             sortedAudits.forEach(a => {
                 let statusColor = a.estado === 'Finalizada' ? 'var(--success)' : (a.estado === 'Cancelada' ? 'var(--danger)' : 'var(--warning)');
-                audHtml += `<tr><td>${a.lugar}</td><td>${window.formatearFechaAbreviada(a.fecha)}</td><td>${a.lider}</td><td><span style="color:${statusColor}; font-weight:600;">${a.estado}</span></td></tr>`;
+                audHtml += `<tr><td>${a.lugar || 'N/A'}</td><td>${window.formatearFechaAbreviada(a.fecha)}</td><td>${a.auditor_nombre || a.auditor || 'N/A'}</td><td><span style="color:${statusColor}; font-weight:600;">${a.estado}</span></td></tr>`;
             });
             $('dash-tbody-audits').innerHTML = audHtml || '<tr><td colspan="4" style="text-align:center;">No hay auditorías próximas</td></tr>';
         }
@@ -369,7 +369,7 @@ window.renderDashboardCharts = () => {
             let sortedNcs = [...globalAllSacs].sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 5);
             sortedNcs.forEach(n => {
                 let statusColor = n.estado === 'Cerrada' ? 'var(--success)' : 'var(--warning)';
-                ncHtml += `<tr><td>${n.sac_n}</td><td>${n.tipo_sac}</td><td>${n.responsable}</td><td><span style="color:${statusColor}; font-weight:600;">${n.estado}</span></td></tr>`;
+                ncHtml += `<tr><td>${n.sac_num || 'N/A'}</td><td>${n.tipo_hallazgo || 'N/A'}</td><td>${n.dueno_uid || 'N/A'}</td><td><span style="color:${statusColor}; font-weight:600;">${n.estado}</span></td></tr>`;
             });
             $('dash-tbody-ncs').innerHTML = ncHtml || '<tr><td colspan="4" style="text-align:center;">No hay No Conformidades recientes</td></tr>';
         }
