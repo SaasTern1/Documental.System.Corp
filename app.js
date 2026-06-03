@@ -1404,8 +1404,9 @@ window.verRespuestasFormulario = async (id) => {
         tbody.innerHTML = tbHTML;
         
         let chartContainer = $('vr-chart-container');
+        let evalChartContainer = $('vr-chart-eval-container');
         if(docsData && docsData.length > 0) {
-            chartContainer.style.display = 'block';
+            chartContainer.style.display = 'flex';
             let usuariosCount = {};
             docsData.forEach(d => usuariosCount[d.usuario] = (usuariosCount[d.usuario] || 0) + 1);
             let ctx = $('vr-chart');
@@ -1427,8 +1428,57 @@ window.verRespuestasFormulario = async (id) => {
                     scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
                 }
             });
+            
+            if(f.is_eval && evalChartContainer) {
+                evalChartContainer.style.display = 'block';
+                let userScores = {};
+                docsData.forEach(d => {
+                    if(!userScores[d.usuario]) userScores[d.usuario] = { sum: 0, count: 0 };
+                    if(d._avgScore !== undefined) {
+                        userScores[d.usuario].sum += Number(d._avgScore || 0);
+                        userScores[d.usuario].count++;
+                    }
+                });
+                
+                let labelsE = [];
+                let dataE = [];
+                let colorsE = [];
+                
+                for(let u in userScores) {
+                    if(userScores[u].count > 0) {
+                        labelsE.push(u);
+                        let avgS = Number((userScores[u].sum / userScores[u].count).toFixed(1));
+                        dataE.push(avgS);
+                        colorsE.push(avgS >= 95 ? '#22c55e' : (avgS >= 85 ? '#3b82f6' : (avgS >= 75 ? '#eab308' : '#ef4444')));
+                    }
+                }
+                
+                let ctxE = $('vr-chart-eval');
+                if(window.vrChartEvalInstance) window.vrChartEvalInstance.destroy();
+                window.vrChartEvalInstance = new Chart(ctxE, {
+                    type: 'bar',
+                    data: {
+                        labels: labelsE,
+                        datasets: [{
+                            label: 'Promedio Evaluación (%)',
+                            data: dataE,
+                            backgroundColor: colorsE,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, max: 100 } }
+                    }
+                });
+            } else if(evalChartContainer) {
+                evalChartContainer.style.display = 'none';
+            }
+            
         } else {
             chartContainer.style.display = 'none';
+            if(evalChartContainer) evalChartContainer.style.display = 'none';
         }
 
         let statsContainer = $('vr-stats-container');
