@@ -2853,9 +2853,9 @@ window.renderFormPreview = () => {
         let fh = `<div style="background:white; padding:15px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border); box-shadow:0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
                     <div style="display:flex; flex-direction:column; gap:5px; flex:1;">
-                        <input type="text" value="${c.label}" onchange="formBuilderCampos[${i}].label = this.value; window.renderFormPreview();" style="font-size:14px; font-weight:600; color:var(--sidebar); border:1px dashed transparent; background:transparent; padding:2px 5px; margin:0; width:100%; transition:all 0.2s;" onfocus="this.style.border='1px dashed var(--primary)'; this.style.background='#fff';" onblur="this.style.border='1px dashed transparent'; this.style.background='transparent';" title="Clic para editar el título">
+                        <input type="text" id="fb_fld_lbl_${i}" name="fb_fld_lbl_${i}" aria-label="Título del campo" value="${c.label}" onchange="formBuilderCampos[${i}].label = this.value; window.renderFormPreview();" style="font-size:14px; font-weight:600; color:var(--sidebar); border:1px dashed transparent; background:transparent; padding:2px 5px; margin:0; width:100%; transition:all 0.2s;" onfocus="this.style.border='1px dashed var(--primary)'; this.style.background='#fff';" onblur="this.style.border='1px dashed transparent'; this.style.background='transparent';" title="Clic para editar el título">
                         <div style="display:flex; gap:10px; align-items:center;">
-                            <label style="font-size:11px; color:var(--text-muted); cursor:pointer; background:#f1f5f9; padding:2px 6px; border-radius:4px;"><input type="checkbox" style="width:auto; margin:0; vertical-align:middle;" ${c.requerido ? 'checked' : ''} onchange="formBuilderCampos[${i}].requerido = this.checked; window.renderFormPreview();"> Obligatorio</label>
+                            <label for="fb_fld_req_${i}" style="font-size:11px; color:var(--text-muted); cursor:pointer; background:#f1f5f9; padding:2px 6px; border-radius:4px;"><input type="checkbox" id="fb_fld_req_${i}" name="fb_fld_req_${i}" style="width:auto; margin:0; vertical-align:middle;" ${c.requerido ? 'checked' : ''} onchange="formBuilderCampos[${i}].requerido = this.checked; window.renderFormPreview();"> Obligatorio</label>
                             ${catHtml}
                         </div>
                     </div>
@@ -3052,8 +3052,8 @@ window.addFilaSemaforo = (cId) => {
     if(!tb) return;
     let tr = document.createElement('tr');
     tr.innerHTML = `
-        <td style="padding:8px;"><input type="text" class="sem-item search-bar" placeholder="Descripción..." style="width:100%; margin:0;" required></td>
-        <td style="padding:8px;"><select class="sem-val search-bar" style="width:100%; margin:0;" required onchange="this.style.backgroundColor = this.value==='Verde'?'#dcfce7':(this.value==='Amarillo'?'#fef3c7':(this.value==='Rojo'?'#fee2e2':'#fff'));"><option value="">--</option><option value="Verde">Verde (Ok)</option><option value="Amarillo">Amarillo (Alerta)</option><option value="Rojo">Rojo (Crítico)</option></select></td>
+        <td style="padding:8px;"><input type="text" class="sem-item search-bar" id="sem_item_${cId}_${Date.now()}" name="sem_item_${cId}" aria-label="Descripción del Semáforo" placeholder="Descripción..." style="width:100%; margin:0;" required></td>
+        <td style="padding:8px;"><select class="sem-val search-bar" id="sem_val_${cId}_${Date.now()}" name="sem_val_${cId}" aria-label="Valor del Semáforo" style="width:100%; margin:0;" required onchange="this.style.backgroundColor = this.value==='Verde'?'#dcfce7':(this.value==='Amarillo'?'#fef3c7':(this.value==='Rojo'?'#fee2e2':'#fff'));"><option value="">--</option><option value="Verde">Verde (Ok)</option><option value="Amarillo">Amarillo (Alerta)</option><option value="Rojo">Rojo (Crítico)</option></select></td>
         <td style="padding:8px; text-align:center;"><button class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="this.parentElement.parentElement.remove()"><span class="material-icons-round" style="font-size:14px;">delete</span></button></td>
     `;
     tb.appendChild(tr);
