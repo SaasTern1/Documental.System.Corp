@@ -1325,7 +1325,7 @@ window.verRespuestasFormulario = async (id) => {
         f.campos.forEach(c => {
             thHTML += `<th style="padding:10px; border-bottom:1px solid var(--border);">${c.label}</th>`;
         });
-        thHTML += `</tr>`;
+        thHTML += `<th style="padding:10px; border-bottom:1px solid var(--border);">Acción</th></tr>`;
         thead.innerHTML = thHTML;
 
         // Build tbody
@@ -1348,7 +1348,8 @@ window.verRespuestasFormulario = async (id) => {
                 });
             }
 
-            docsData.forEach(data => {
+            window.currentRespuestasDocs = docsData;
+            docsData.forEach((data, rIndex) => {
                 let trScore = 0;
                 if(f.is_eval) {
                     f.campos.forEach(c => {
@@ -1383,6 +1384,7 @@ window.verRespuestasFormulario = async (id) => {
                         tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border);">${val === true ? 'Sí' : (val === false ? 'No' : val)}</td>`;
                     }
                 });
+                tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border); text-align:center;"><button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.descargarRespuestaIndividual(${rIndex}, '${id}')">PDF</button></td>`;
                 tbHTML += `</tr>`;
             });
         }
@@ -1394,6 +1396,59 @@ window.verRespuestasFormulario = async (id) => {
         window.hideLoading();
         alert("Error obteniendo respuestas.");
     }
+};
+
+window.descargarRespuestaIndividual = (rIndex, formId) => {
+    let f = globalForms.find(x => x.id === formId);
+    let data = window.currentRespuestasDocs[rIndex];
+    if(!f || !data) return;
+
+    let html = `<div style="padding:40px; font-family:Arial,sans-serif; color:#333;">
+        <h2 style="color:#0f172a; margin-bottom:5px; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">${f.titulo}</h2>
+        <p style="font-size:12px; color:#64748b; margin-top:0;">Respondido por: <b>${data.usuario}</b> el ${window.formatearFechaAbreviada(data.fecha_llenado)}</p>
+        <div style="margin-top:20px;">`;
+
+    f.campos.forEach(c => {
+        let ansObj = data.respuestas ? data.respuestas.find(r => r.id_campo === c.id) : null;
+        let val = ansObj ? ansObj.respuesta : '-';
+        
+        html += `<div style="margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
+                    <strong style="display:block; font-size:14px; margin-bottom:8px; color:#1e293b;">${c.label}</strong>`;
+        
+        if(c.tipo === 'semaforo' && Array.isArray(val)) {
+            html += `<table style="width:100%; border-collapse:collapse; margin-top:5px;">`;
+            val.forEach(v => {
+                html += `<tr><td style="padding:5px 0; border-bottom:1px solid #cbd5e1; font-size:13px; color:#475569;">${v.fila}</td><td style="text-align:right; border-bottom:1px solid #cbd5e1;"><span style="display:inline-block; padding:3px 8px; font-size:11px; border-radius:12px; background:${v.color}20; color:${v.color}; border:1px solid ${v.color};"><b>${v.col}</b> (Ptos: ${v.score||0})</span></td></tr>`;
+            });
+            html += `</table>`;
+        } else if (c.tipo === 'archivo' && val !== '-') {
+             html += `<a href="${val}" target="_blank" style="font-size:12px; color:#2563eb;">Documento Adjunto (Clic para ver)</a>`;
+        } else {
+             html += `<div style="font-size:13px; color:#475569;">${val === true ? 'Sí' : (val === false ? 'No' : val)}</div>`;
+        }
+        html += `</div>`;
+    });
+
+    html += `</div></div>`;
+    
+    let tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    let opt = {
+        margin:       0.5,
+        filename:     `Respuesta_${data.usuario}_${f.titulo}.pdf`.replace(/[^a-zA-Z0-9_-]/g, '_'),
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    
+    window.showLoading();
+    html2pdf().set(opt).from(tempDiv).save().then(() => {
+        window.hideLoading();
+    }).catch(err => {
+        console.error(err);
+        window.hideLoading();
+    });
 };
 
 window.descargarRespuestasPDF = () => {
@@ -2538,11 +2593,19 @@ window.moverCampoAbajo = (idx) => {
     }
 };
 
-window.agregarFilaMatriz = (idx) => { formBuilderCampos[idx].matriz_filas.push({id: Date.now().toString(), label: ''}); window.renderFormPreview(); };
+window.agregarFilaMatriz = (idx) => { 
+    if(!formBuilderCampos[idx].matriz_filas) formBuilderCampos[idx].matriz_filas = [];
+    formBuilderCampos[idx].matriz_filas.push({id: Date.now().toString(), label: ''}); 
+    window.renderFormPreview(); 
+};
 window.eliminarFilaMatriz = (idx, filaIdx) => { formBuilderCampos[idx].matriz_filas.splice(filaIdx, 1); window.renderFormPreview(); };
 window.actualizarFilaMatriz = (idx, filaIdx, val) => { formBuilderCampos[idx].matriz_filas[filaIdx].label = val; };
 
-window.agregarColMatriz = (idx) => { formBuilderCampos[idx].matriz_cols.push({id: Date.now().toString(), label: 'Opc', score: 0, color: '#94a3b8'}); window.renderFormPreview(); };
+window.agregarColMatriz = (idx) => { 
+    if(!formBuilderCampos[idx].matriz_cols) formBuilderCampos[idx].matriz_cols = [];
+    formBuilderCampos[idx].matriz_cols.push({id: Date.now().toString(), label: 'Opc', score: 0, color: '#94a3b8'}); 
+    window.renderFormPreview(); 
+};
 window.eliminarColMatriz = (idx, colIdx) => { formBuilderCampos[idx].matriz_cols.splice(colIdx, 1); window.renderFormPreview(); };
 window.actualizarColMatriz = (idx, colIdx, prop, val) => { formBuilderCampos[idx].matriz_cols[colIdx][prop] = (prop==='score'?Number(val):val); };
 
