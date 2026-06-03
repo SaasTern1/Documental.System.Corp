@@ -1337,27 +1337,33 @@ window.verRespuestasFormulario = async (id) => {
             qs.forEach(doc => docsData.push(doc.data()));
             docsData.sort((a,b) => new Date(b.fecha_llenado) - new Date(a.fecha_llenado));
 
+            let maxPosibleScore = 0;
+            if(f.is_eval) {
+                f.campos.forEach(c => {
+                    if(c.tipo === 'si_no') maxPosibleScore += 100;
+                    else if(c.tipo === 'semaforo' && c.matriz_cols) {
+                        let maxScoreCol = Math.max(...c.matriz_cols.map(m => Number(m.score) || 0));
+                        maxPosibleScore += (c.matriz_filas ? c.matriz_filas.length : 0) * (maxScoreCol > 0 ? maxScoreCol : 0);
+                    }
+                });
+            }
+
             docsData.forEach(data => {
-                // Calcular Score si es eval
                 let trScore = 0;
-                let evalItems = 0;
                 if(f.is_eval) {
                     f.campos.forEach(c => {
                         let ansObj = data.respuestas ? data.respuestas.find(r => r.id_campo === c.id) : null;
                         let val = ansObj ? ansObj.respuesta : null;
-                        if(c.tipo === 'si_no') {
-                            evalItems++;
-                            if(val === 'Sí') trScore += 100;
+                        if(c.tipo === 'si_no' && val === 'Sí') {
+                            trScore += 100;
                         } else if (c.tipo === 'semaforo' && Array.isArray(val)) {
                             val.forEach(v => {
-                                evalItems++;
-                                if(v.color === 'Verde') trScore += 100;
-                                else if(v.color === 'Amarillo') trScore += 50;
+                                trScore += (Number(v.score) || 0);
                             });
                         }
                     });
                 }
-                let avgScore = evalItems > 0 ? (trScore / evalItems).toFixed(1) : 0;
+                let avgScore = maxPosibleScore > 0 ? ((trScore / maxPosibleScore) * 100).toFixed(1) : (f.is_eval ? 0 : null);
                 let scoreColor = avgScore >= 80 ? 'var(--success)' : (avgScore >= 60 ? 'var(--warning)' : 'var(--danger)');
 
                 tbHTML += `<tr><td style="padding:10px; border-bottom:1px solid var(--border);">${window.formatearFechaAbreviada(data.fecha_llenado)}</td><td style="padding:10px; border-bottom:1px solid var(--border);"><b>${data.usuario}</b></td>`;
@@ -1371,7 +1377,7 @@ window.verRespuestasFormulario = async (id) => {
                     if(c.tipo === 'archivo' && val && val !== '-') {
                         tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border);"><a href="${val}" target="_blank" class="btn btn-dark" style="padding:4px 8px; font-size:11px; text-decoration:none;"><span class="material-icons-round" style="font-size:14px; vertical-align:middle;">download</span> Descargar</a></td>`;
                     } else if(c.tipo === 'semaforo' && Array.isArray(val)) {
-                        let semHTML = val.map(v => `<span style="display:inline-block; padding:2px 6px; font-size:10px; border-radius:10px; background:${v.color==='Verde'?'#dcfce7':(v.color==='Amarillo'?'#fef3c7':'#fee2e2')}; border:1px solid ${v.color==='Verde'?'#22c55e':(v.color==='Amarillo'?'#eab308':'#ef4444')}; margin:2px;">${v.item}</span>`).join(' ');
+                        let semHTML = val.map(v => `<span style="display:inline-block; padding:4px 8px; font-size:10px; border-radius:10px; background:${v.color}20; color:${v.color}; border:1px solid ${v.color}; margin:2px;"><b>${v.fila}:</b> ${v.col}</span>`).join(' ');
                         tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border);">${semHTML || '-'}</td>`;
                     } else {
                         tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border);">${val === true ? 'Sí' : (val === false ? 'No' : val)}</td>`;
@@ -2493,6 +2499,13 @@ window.agregarCampoBuilder = () => {
     if(tipo === 'select') {
         if(!opciones) return alert("Ingrese al menos una opción para la lista desplegable.");
         campoObj.opciones = opciones.split(',').map(s => s.trim()).filter(s => s);
+    } else if (tipo === 'semaforo') {
+        campoObj.matriz_filas = [{ id: Date.now().toString(), label: 'Concepto a evaluar 1' }];
+        campoObj.matriz_cols = [
+            { id: '1', label: 'Excelente', score: 5, color: '#22c55e' },
+            { id: '2', label: 'Bueno', score: 3, color: '#eab308' },
+            { id: '3', label: 'Malo', score: 1, color: '#ef4444' }
+        ];
     }
 
     formBuilderCampos.push(campoObj);
@@ -2524,6 +2537,14 @@ window.moverCampoAbajo = (idx) => {
         window.renderFormPreview();
     }
 };
+
+window.agregarFilaMatriz = (idx) => { formBuilderCampos[idx].matriz_filas.push({id: Date.now().toString(), label: ''}); window.renderFormPreview(); };
+window.eliminarFilaMatriz = (idx, filaIdx) => { formBuilderCampos[idx].matriz_filas.splice(filaIdx, 1); window.renderFormPreview(); };
+window.actualizarFilaMatriz = (idx, filaIdx, val) => { formBuilderCampos[idx].matriz_filas[filaIdx].label = val; };
+
+window.agregarColMatriz = (idx) => { formBuilderCampos[idx].matriz_cols.push({id: Date.now().toString(), label: 'Opc', score: 0, color: '#94a3b8'}); window.renderFormPreview(); };
+window.eliminarColMatriz = (idx, colIdx) => { formBuilderCampos[idx].matriz_cols.splice(colIdx, 1); window.renderFormPreview(); };
+window.actualizarColMatriz = (idx, colIdx, prop, val) => { formBuilderCampos[idx].matriz_cols[colIdx][prop] = (prop==='score'?Number(val):val); };
 
 window.renderFormPreview = () => {
     let container = $('fb-preview-area');
@@ -2567,9 +2588,34 @@ window.renderFormPreview = () => {
             h += `<input type="file" disabled style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
         }
         else if(c.tipo === 'semaforo') {
-            h += `<div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-top:5px; border:1px dashed var(--sidebar); text-align:center;">
-                    <span class="material-icons-round" style="color:var(--sidebar); font-size:24px;">view_list</span>
-                    <p style="font-size:12px; color:var(--sidebar); margin:5px 0 0 0;">Tabla Semáforo Dinámica (Se habilitará al llenar)</p>
+            h += `<div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-top:5px; border:1px solid var(--border);">
+                    <p style="font-size:12px; font-weight:600; margin:0 0 10px 0; color:var(--text-main);">Configurar Columnas (Opciones y Puntaje)</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">`;
+            if(c.matriz_cols) {
+                c.matriz_cols.forEach((col, colIdx) => {
+                    h += `<div style="display:flex; align-items:center; background:white; padding:4px; border-radius:4px; border:1px solid var(--border); gap:5px;">
+                            <input type="color" value="${col.color}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'color', this.value)" style="width:20px; height:20px; padding:0; border:none;">
+                            <input type="text" value="${col.label}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'label', this.value)" style="width:80px; padding:2px 5px; font-size:11px; margin:0;" placeholder="Etiqueta">
+                            <input type="number" value="${col.score}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'score', this.value)" style="width:50px; padding:2px 5px; font-size:11px; margin:0;" placeholder="Ptos">
+                            <button class="btn-icon-danger" style="padding:2px;" onclick="window.eliminarColMatriz(${i}, ${colIdx})"><span class="material-icons-round" style="font-size:14px;">close</span></button>
+                          </div>`;
+                });
+            }
+            h += `      <button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.agregarColMatriz(${i})">+ Columna</button>
+                    </div>
+                    
+                    <p style="font-size:12px; font-weight:600; margin:10px 0 10px 0; color:var(--text-main);">Configurar Filas (Conceptos a evaluar)</p>
+                    <div style="display:flex; flex-direction:column; gap:5px;">`;
+            if(c.matriz_filas) {
+                c.matriz_filas.forEach((fila, filaIdx) => {
+                    h += `<div style="display:flex; gap:5px;">
+                            <input type="text" value="${fila.label}" onchange="window.actualizarFilaMatriz(${i}, ${filaIdx}, this.value)" style="flex:1; padding:4px 8px; font-size:12px; margin:0;" placeholder="Concepto a evaluar...">
+                            <button class="btn-icon-danger" style="padding:4px 8px;" onclick="window.eliminarFilaMatriz(${i}, ${filaIdx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button>
+                          </div>`;
+                });
+            }
+            h += `  </div>
+                    <button class="btn btn-primary" style="padding:4px 10px; font-size:11px; margin-top:8px;" onclick="window.agregarFilaMatriz(${i})">+ Añadir Fila</button>
                   </div>`;
         }
         h += `</div>`;
@@ -2628,20 +2674,29 @@ window.abrirLlenarFormulario = (id) => {
                 h += `<input type="file" id="ans_${c.id}" ${reqAttr} style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
             }
             else if(c.tipo === 'semaforo') {
-                h += `<div style="border:1px solid var(--border); border-radius:8px; overflow:hidden;">
-                        <table style="width:100%; text-align:left; border-collapse:collapse;">
-                            <thead style="background:#e2e8f0; font-size:12px;"><tr><th style="padding:10px;">Ítem / Concepto evaluado</th><th style="padding:10px; width:120px; text-align:center;">Evaluación</th><th style="padding:10px; width:50px;"></th></tr></thead>
-                            <tbody id="tb_semaforo_${c.id}">
-                                <tr>
-                                    <td style="padding:8px;"><input type="text" class="sem-item search-bar" placeholder="Descripción..." style="width:100%; margin:0;" ${reqAttr}></td>
-                                    <td style="padding:8px;"><select class="sem-val search-bar" style="width:100%; margin:0;" ${reqAttr} onchange="this.style.backgroundColor = this.value==='Verde'?'#dcfce7':(this.value==='Amarillo'?'#fef3c7':(this.value==='Rojo'?'#fee2e2':'#fff'));"><option value="">--</option><option value="Verde">Verde (Ok)</option><option value="Amarillo">Amarillo (Alerta)</option><option value="Rojo">Rojo (Crítico)</option></select></td>
-                                    <td style="padding:8px; text-align:center;"><button class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="this.parentElement.parentElement.remove()"><span class="material-icons-round" style="font-size:14px;">delete</span></button></td>
-                                </tr>
-                            </tbody>
+                h += `<div style="border:1px solid var(--border); border-radius:8px; overflow-x:auto;">
+                        <table style="width:100%; text-align:left; border-collapse:collapse; min-width:400px;">
+                            <thead style="background:#e2e8f0; font-size:12px;"><tr>
+                                <th style="padding:10px;">Ítem / Concepto</th>`;
+                if(c.matriz_cols) c.matriz_cols.forEach(col => h += `<th style="padding:10px; text-align:center;">${col.label}</th>`);
+                h += `          </tr></thead>
+                            <tbody id="tb_semaforo_${c.id}">`;
+                if(c.matriz_filas) {
+                    c.matriz_filas.forEach((fila, filaIdx) => {
+                        h += `      <tr>
+                                        <td style="padding:10px; border-bottom:1px solid var(--border); font-size:13px; font-weight:500;">${fila.label}</td>`;
+                        if(c.matriz_cols) {
+                            c.matriz_cols.forEach(col => {
+                                h += `  <td style="padding:10px; border-bottom:1px solid var(--border); text-align:center;">
+                                            <input type="radio" name="ans_${c.id}_${filaIdx}" value="${col.id}" style="width:18px; height:18px; accent-color:${col.color}; cursor:pointer;" ${reqAttr}>
+                                        </td>`;
+                            });
+                        }
+                        h += `      </tr>`;
+                    });
+                }
+                h += `          </tbody>
                         </table>
-                        <div style="padding:10px; background:#f8fafc; text-align:center; border-top:1px solid var(--border);">
-                            <button class="btn btn-primary" onclick="window.addFilaSemaforo('${c.id}')" style="padding:4px 12px; font-size:12px;">+ Añadir Fila</button>
-                        </div>
                       </div>`;
             }
             h += `</div>`;
@@ -2681,16 +2736,17 @@ window.guardarFormularioLleno = async () => {
             if (selected) val = selected.value;
             if (c.requerido && !val) isValid = false;
         } else if(c.tipo === 'semaforo') {
-            let tb = document.getElementById(`tb_semaforo_${c.id}`);
-            let rows = tb.querySelectorAll('tr');
             val = [];
-            rows.forEach(r => {
-                let item = r.querySelector('.sem-item').value;
-                let color = r.querySelector('.sem-val').value;
-                if(item || color) val.push({ item, color });
-                if(c.requerido && (!item || !color)) isValid = false;
-            });
-            if(c.requerido && val.length === 0) isValid = false;
+            if(c.matriz_filas) {
+                c.matriz_filas.forEach((fila, filaIdx) => {
+                    let selected = document.querySelector(`input[name="ans_${c.id}_${filaIdx}"]:checked`);
+                    if(selected && c.matriz_cols) {
+                        let colConfig = c.matriz_cols.find(col => col.id === selected.value);
+                        if(colConfig) val.push({ fila: fila.label, col: colConfig.label, score: colConfig.score, color: colConfig.color });
+                    }
+                });
+                if(c.requerido && val.length < c.matriz_filas.length) isValid = false;
+            }
         } else if(c.tipo === 'archivo') {
             let fileInput = $(`ans_${c.id}`);
             if (fileInput.files.length > 0) {
