@@ -23,6 +23,8 @@
         .rm-cell:hover { transform: scale(1.08); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 10; border: 2px solid #1e293b; }
         .rm-y-title { writing-mode: vertical-rl; transform: rotate(180deg); text-align: center; font-weight: 800; color: var(--primary); font-size: 13px; letter-spacing: 2px; }
     </style>
+    <!-- HTML2PDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <div id="loading-overlay">
@@ -1225,7 +1227,17 @@
                     <label for="fb-titulo">Título del Formulario</label>
                     <input type="text" id="fb-titulo" name="fb-titulo" placeholder="Ej: Encuesta de Satisfacción" style="margin-bottom:15px;">
                     <label for="fb-desc">Descripción Corta</label>
-                    <textarea id="fb-desc" name="fb-desc" rows="2" placeholder="Opcional..." style="margin-bottom:20px;"></textarea>
+                    <textarea id="fb-desc" name="fb-desc" rows="2" placeholder="Opcional..." style="margin-bottom:10px;"></textarea>
+
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:600; color:var(--text-main); margin-bottom:15px; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid var(--border);">
+                        <input type="checkbox" id="fb-is-eval" style="margin:0; width:auto;"> Este formulario es una Evaluación Calificada (Genera Score Automático)
+                    </label>
+
+                    <label for="fb-perm-llenar">Departamentos permitidos para LLENAR (Opcional)</label>
+                    <input type="text" id="fb-perm-llenar" placeholder="Ej: Sistemas, Ventas (Dejar vacío para todos)" style="margin-bottom:10px;">
+
+                    <label for="fb-perm-ver">Departamentos permitidos para VER RESPUESTAS (Opcional)</label>
+                    <input type="text" id="fb-perm-ver" placeholder="Ej: Gerencia (Dejar vacío para todos)" style="margin-bottom:20px;">
                     
                     <h4 style="font-size:13px; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">Añadir Nuevo Campo</h4>
                     <label for="fb-tipo-campo">Tipo de Campo</label>
@@ -1302,7 +1314,10 @@
                         <h2 id="vr-tit" style="margin:0; font-size:22px; color:var(--text-main); font-weight:800;">Respuestas del Formulario</h2>
                         <span id="vr-subtit" style="font-size:12px; color:var(--text-muted);"></span>
                     </div>
-                    <button class="btn btn-dark" onclick="window.setDisplay('modal-ver-respuestas', 'none')" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button class="btn btn-primary" onclick="window.descargarRespuestasPDF()" style="padding:6px 12px; display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="font-size:16px;">picture_as_pdf</span> PDF</button>
+                        <button class="btn btn-dark" onclick="window.setDisplay('modal-ver-respuestas', 'none')" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
+                    </div>
                 </div>
                 <div class="table-responsive" style="border-radius:8px; border:1px solid var(--border);">
                     <table style="width:100%; text-align:left; font-size:12px; white-space:nowrap;">

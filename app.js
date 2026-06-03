@@ -1302,6 +1302,13 @@ window.verRespuestasFormulario = async (id) => {
     let f = globalForms.find(x => x.id === id);
     if(!f) return;
 
+    if(f.perm_ver && f.perm_ver.trim() !== '') {
+        let depts = f.perm_ver.split(',').map(s => s.trim().toLowerCase());
+        if(!depts.includes(currentUser.departamento.toLowerCase())) {
+            return alert("Acceso denegado: Tu departamento no tiene permisos para ver los resultados de este formulario.");
+        }
+    }
+
     $('vr-tit').innerText = f.titulo;
     $('vr-subtit').innerText = "Respuestas enviadas por los usuarios";
 
@@ -1314,6 +1321,8 @@ window.verRespuestasFormulario = async (id) => {
         
         // Build thead based on form fields
         let thHTML = `<tr><th style="padding:10px; border-bottom:1px solid var(--border);">Fecha</th><th style="padding:10px; border-bottom:1px solid var(--border);">Usuario</th>`;
+        if(f.is_eval) thHTML += `<th style="padding:10px; border-bottom:1px solid var(--border); color:var(--primary);">Puntaje</th>`;
+        
         f.campos.forEach(c => {
             thHTML += `<th style="padding:10px; border-bottom:1px solid var(--border);">${c.label}</th>`;
         });
@@ -1323,15 +1332,39 @@ window.verRespuestasFormulario = async (id) => {
         // Build tbody
         let tbHTML = '';
         if(qs.empty) {
-            tbHTML = `<tr><td colspan="${f.campos.length + 2}" style="text-align:center; padding:20px;">No hay respuestas aún para este formulario.</td></tr>`;
+            tbHTML = `<tr><td colspan="${f.campos.length + (f.is_eval?3:2)}" style="text-align:center; padding:20px;">No hay respuestas aún para este formulario.</td></tr>`;
         } else {
             let docsData = [];
             qs.forEach(doc => docsData.push(doc.data()));
             docsData.sort((a,b) => new Date(b.fecha_llenado) - new Date(a.fecha_llenado));
 
             docsData.forEach(data => {
+                // Calcular Score si es eval
+                let trScore = 0;
+                let evalItems = 0;
+                if(f.is_eval) {
+                    f.campos.forEach(c => {
+                        let ansObj = data.respuestas ? data.respuestas.find(r => r.id_campo === c.id) : null;
+                        let val = ansObj ? ansObj.respuesta : null;
+                        if(c.tipo === 'si_no') {
+                            evalItems++;
+                            if(val === 'Sí') trScore += 100;
+                        } else if (c.tipo === 'semaforo' && Array.isArray(val)) {
+                            val.forEach(v => {
+                                evalItems++;
+                                if(v.color === 'Verde') trScore += 100;
+                                else if(v.color === 'Amarillo') trScore += 50;
+                            });
+                        }
+                    });
+                }
+                let avgScore = evalItems > 0 ? (trScore / evalItems).toFixed(1) : 0;
+                let scoreColor = avgScore >= 80 ? 'var(--success)' : (avgScore >= 60 ? 'var(--warning)' : 'var(--danger)');
+
                 tbHTML += `<tr><td style="padding:10px; border-bottom:1px solid var(--border);">${window.formatearFechaAbreviada(data.fecha_llenado)}</td><td style="padding:10px; border-bottom:1px solid var(--border);"><b>${data.usuario}</b></td>`;
                 
+                if(f.is_eval) tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border); font-weight:bold; color:${scoreColor};">${avgScore}%</td>`;
+
                 f.campos.forEach(c => {
                     let ansObj = data.respuestas ? data.respuestas.find(r => r.id_campo === c.id) : null;
                     let val = ansObj ? ansObj.respuesta : '-';
@@ -1356,6 +1389,28 @@ window.verRespuestasFormulario = async (id) => {
         window.hideLoading();
         alert("Error obteniendo respuestas.");
     }
+};
+
+window.descargarRespuestasPDF = () => {
+    let element = document.querySelector('#modal-ver-respuestas .modal-main');
+    if(!element) return;
+    
+    let opt = {
+        margin:       0.5,
+        filename:     'Respuestas_Formulario.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+    };
+    
+    window.showLoading();
+    html2pdf().set(opt).from(element).save().then(() => {
+        window.hideLoading();
+    }).catch(err => {
+        console.error(err);
+        window.hideLoading();
+        alert("Error al generar PDF.");
+    });
 };
 
 window.verDetalle = async (id) => {
@@ -2324,16 +2379,25 @@ window.abrirModalNuevoFormulario = (id) => {
         if(f) {
             window.setVal('fb-titulo', f.titulo);
             window.setVal('fb-desc', f.descripcion);
+            $('fb-is-eval').checked = !!f.is_eval;
+            window.setVal('fb-perm-llenar', f.perm_llenar || '');
+            window.setVal('fb-perm-ver', f.perm_ver || '');
             formBuilderCampos = f.campos ? JSON.parse(JSON.stringify(f.campos)) : [];
         } else {
             formBuilderCampos = [];
             window.setVal('fb-titulo', '');
             window.setVal('fb-desc', '');
+            $('fb-is-eval').checked = false;
+            window.setVal('fb-perm-llenar', '');
+            window.setVal('fb-perm-ver', '');
         }
     } else {
         formBuilderCampos = [];
         window.setVal('fb-titulo', '');
         window.setVal('fb-desc', '');
+        $('fb-is-eval').checked = false;
+        window.setVal('fb-perm-llenar', '');
+        window.setVal('fb-perm-ver', '');
     }
     window.setVal('fb-desc', '');
     window.setVal('fb-tipo-campo', 'text');
@@ -2378,6 +2442,24 @@ window.eliminarCampoBuilder = (idx) => {
     window.renderFormPreview();
 };
 
+window.moverCampoArriba = (idx) => {
+    if(idx > 0) {
+        let temp = formBuilderCampos[idx];
+        formBuilderCampos[idx] = formBuilderCampos[idx-1];
+        formBuilderCampos[idx-1] = temp;
+        window.renderFormPreview();
+    }
+};
+
+window.moverCampoAbajo = (idx) => {
+    if(idx < formBuilderCampos.length - 1) {
+        let temp = formBuilderCampos[idx];
+        formBuilderCampos[idx] = formBuilderCampos[idx+1];
+        formBuilderCampos[idx+1] = temp;
+        window.renderFormPreview();
+    }
+};
+
 window.renderFormPreview = () => {
     let container = $('fb-preview-area');
     if(!container) return;
@@ -2391,7 +2473,11 @@ window.renderFormPreview = () => {
     formBuilderCampos.forEach((c, i) => {
         let reqHTML = c.requerido ? '<span style="color:var(--danger)">*</span>' : '';
         h += `<div style="background:white; padding:15px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border); position:relative;">
-                <button type="button" onclick="window.eliminarCampoBuilder(${i})" style="position:absolute; right:10px; top:10px; background:none; border:none; color:var(--danger); cursor:pointer;"><span class="material-icons-round" style="font-size:18px;">delete</span></button>
+                <div style="position:absolute; right:10px; top:10px; display:flex; gap:5px;">
+                    ${i > 0 ? `<button type="button" onclick="window.moverCampoArriba(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer;"><span class="material-icons-round" style="font-size:18px;">arrow_upward</span></button>` : ''}
+                    ${i < formBuilderCampos.length - 1 ? `<button type="button" onclick="window.moverCampoAbajo(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer;"><span class="material-icons-round" style="font-size:18px;">arrow_downward</span></button>` : ''}
+                    <button type="button" onclick="window.eliminarCampoBuilder(${i})" style="background:none; border:none; color:var(--danger); cursor:pointer;"><span class="material-icons-round" style="font-size:18px;">delete</span></button>
+                </div>
                 <label style="font-size:13px; color:var(--sidebar); display:block; margin-bottom:5px;">${c.label} ${reqHTML}</label>`;
         
         if(c.tipo === 'text') h += `<input type="text" disabled placeholder="Campo de texto corto" style="margin-bottom:0; background:#f8fafc;">`;
@@ -2432,6 +2518,13 @@ let currentFormLlenar = null;
 window.abrirLlenarFormulario = (id) => {
     let f = globalForms.find(x => x.id === id);
     if (!f) return;
+
+    if(f.perm_llenar && f.perm_llenar.trim() !== '') {
+        let depts = f.perm_llenar.split(',').map(s => s.trim().toLowerCase());
+        if(!depts.includes(currentUser.departamento.toLowerCase())) {
+            return alert("Acceso denegado: Tu departamento no está autorizado para llenar este formulario.");
+        }
+    }
     currentFormLlenar = f;
     
     $('fill-form-title').innerText = f.titulo;
@@ -2590,6 +2683,9 @@ window.guardarFormulario = async () => {
             titulo: titulo,
             descripcion: desc,
             campos: formBuilderCampos,
+            is_eval: $('fb-is-eval').checked,
+            perm_llenar: getValSafe('fb-perm-llenar').trim(),
+            perm_ver: getValSafe('fb-perm-ver').trim(),
             estado: 'Activo',
             creado_por: currentUser.usuario,
             ultima_modificacion: new Date().toISOString()
