@@ -2677,9 +2677,12 @@ window.renderFormPreview = () => {
 
         let fh = `<div style="background:white; padding:15px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border); box-shadow:0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
-                    <div style="display:flex; flex-direction:column; gap:5px;">
-                        <label style="font-size:13px; color:var(--sidebar); font-weight:600; margin:0; line-height:1.4;">${c.label} ${reqHTML}</label>
-                        ${catHtml}
+                    <div style="display:flex; flex-direction:column; gap:5px; flex:1;">
+                        <input type="text" value="${c.label}" onchange="formBuilderCampos[${i}].label = this.value; window.renderFormPreview();" style="font-size:14px; font-weight:600; color:var(--sidebar); border:1px dashed transparent; background:transparent; padding:2px 5px; margin:0; width:100%; transition:all 0.2s;" onfocus="this.style.border='1px dashed var(--primary)'; this.style.background='#fff';" onblur="this.style.border='1px dashed transparent'; this.style.background='transparent';" title="Clic para editar el título">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <label style="font-size:11px; color:var(--text-muted); cursor:pointer; background:#f1f5f9; padding:2px 6px; border-radius:4px;"><input type="checkbox" style="width:auto; margin:0; vertical-align:middle;" ${c.requerido ? 'checked' : ''} onchange="formBuilderCampos[${i}].requerido = this.checked; window.renderFormPreview();"> Obligatorio</label>
+                            ${catHtml}
+                        </div>
                     </div>
                     <div style="display:flex; gap:2px; flex-shrink:0; background:#f8fafc; border-radius:6px; padding:2px;">
                         ${i > 0 ? `<button type="button" onclick="window.moverCampoArriba(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px;" title="Subir"><span class="material-icons-round" style="font-size:16px;">arrow_upward</span></button>` : ''}
@@ -3053,8 +3056,8 @@ window.renderTablaForms = () => {
                 <td>${window.formatearFechaAbreviada(f.fecha_creacion)}</td>
                 <td><span class="badge ${bEst}">${f.estado}</span></td>
                 <td style="text-align:center;">
-                    <button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.abrirLlenarFormulario('${f.id}')" title="Llenar"><span class="material-icons-round" style="font-size:14px;">preview</span></button>
-                    ${(currentUser.permisos && currentUser.permisos.admin) || f.creado_por === currentUser.usuario || (f.perm_editar_users && f.perm_editar_users.includes(currentUser.usuario)) ? `<button class="btn btn-warning" style="padding:4px 8px; font-size:11px;" onclick="window.abrirModalNuevoFormulario('${f.id}')" title="Editar/Ver"><span class="material-icons-round" style="font-size:14px;">edit</span></button>` : ''}
+                    <button class="btn btn-primary" style="padding:6px 12px; font-size:12px; font-weight:600; box-shadow:0 2px 5px rgba(30,64,175,0.2);" onclick="window.abrirLlenarFormulario('${f.id}')" title="Llenar Formulario"><span class="material-icons-round" style="font-size:16px; vertical-align:middle; margin-right:4px;">assignment</span> Llenar</button>
+                    ${(currentUser.permisos && currentUser.permisos.admin) || f.creado_por === currentUser.usuario || (f.perm_editar_users && f.perm_editar_users.includes(currentUser.usuario)) ? `<button class="btn btn-warning" style="padding:6px 12px; font-size:12px;" onclick="window.abrirModalNuevoFormulario('${f.id}')" title="Editar Formulario"><span class="material-icons-round" style="font-size:16px; vertical-align:middle;">edit</span></button>` : ''}
                 </td>
               </tr>`;
     });
