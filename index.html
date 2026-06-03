@@ -170,6 +170,8 @@
                     <p style="font-size:10px; color:#94a3b8; font-weight:800; padding:0 15px; margin-bottom:5px; margin-top:5px;">ADMINISTRACIÓN</p>
                     <button onclick="window.setDisplay('sec-usuarios', 'flex'); document.getElementById('gear-dropdown').style.display='none'" style="width:100%; text-align:left; padding:10px 15px; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-main); transition:0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:18px; color:var(--primary);">people</span> Usuarios y Permisos</button>
                     <button onclick="window.setDisplay('sec-estructura', 'flex'); document.getElementById('gear-dropdown').style.display='none'" style="width:100%; text-align:left; padding:10px 15px; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-main); transition:0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:18px; color:var(--primary);">account_tree</span> Config. del Sistema</button>
+                    <div style="border-top:1px solid var(--border); margin:5px 0;"></div>
+                    <button onclick="window.logout()" style="width:100%; text-align:left; padding:10px 15px; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--danger); transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:18px; color:var(--danger);">logout</span> Cerrar Sesión</button>
                 </div>
             </div>
         </div>
@@ -477,7 +479,7 @@
 
         <!-- MODAL USUARIOS -->
         <div id="sec-usuarios" class="modal-overlay" style="display:none; z-index:2000;">
-            <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto; position:relative;">
+            <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto; position:relative; display:block; padding:30px; height:auto; background:var(--background-alt);">
                 <button type="button" class="btn-icon-danger" onclick="window.setDisplay('sec-usuarios', 'none')" style="position:absolute; top:15px; right:15px; z-index:10;"><span class="material-icons-round">close</span></button>
             <div class="section-header">
                 <div class="section-header-info">
@@ -494,7 +496,7 @@
 
         <!-- MODAL CONFIGURACION SISTEMA -->
         <div id="sec-estructura" class="modal-overlay" style="display:none; z-index:2000;">
-            <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto; position:relative;">
+            <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto; position:relative; display:block; padding:30px; height:auto; background:var(--background-alt);">
                 <button type="button" class="btn-icon-danger" onclick="window.setDisplay('sec-estructura', 'none')" style="position:absolute; top:15px; right:15px; z-index:10;"><span class="material-icons-round">close</span></button>
             <div class="section-header">
                 <div class="section-header-info">
@@ -1179,7 +1181,7 @@
 
     <!-- MODAL CONSTRUCTOR DE FORMULARIOS -->
     <div class="modal-overlay" id="modal-form-builder" style="display:none; z-index:3000;">
-        <div class="modal-content" style="max-width: 800px; width:95%;">
+        <div class="modal-content" style="max-width: 800px; width:95%; display:block; padding:30px; height:auto; max-height:90vh; overflow-y:auto; background:#fff;">
             <h3 style="color:var(--primary); margin-top:0; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">build</span> Creador de Formularios</h3>
             
             <div class="grid-2" style="gap:20px;">
