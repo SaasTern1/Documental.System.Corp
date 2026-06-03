@@ -1327,6 +1327,7 @@ window.verRespuestasFormulario = async (id) => {
         });
         thHTML += `<th style="padding:10px; border-bottom:1px solid var(--border);">Acción</th></tr>`;
         thead.innerHTML = thHTML;
+        window.currentRespuestasFormId = id;
 
         // Build tbody
         let tbHTML = '';
@@ -1401,6 +1402,35 @@ window.verRespuestasFormulario = async (id) => {
             });
         }
         tbody.innerHTML = tbHTML;
+        
+        let chartContainer = $('vr-chart-container');
+        if(docsData && docsData.length > 0) {
+            chartContainer.style.display = 'block';
+            let usuariosCount = {};
+            docsData.forEach(d => usuariosCount[d.usuario] = (usuariosCount[d.usuario] || 0) + 1);
+            let ctx = $('vr-chart');
+            if(window.vrChartInstance) window.vrChartInstance.destroy();
+            window.vrChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(usuariosCount),
+                    datasets: [{
+                        label: 'Formularios Llenados',
+                        data: Object.values(usuariosCount),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        } else {
+            chartContainer.style.display = 'none';
+        }
+
         window.hideLoading();
         window.setDisplay('modal-ver-respuestas', 'flex');
     } catch(e) {
@@ -1408,6 +1438,40 @@ window.verRespuestasFormulario = async (id) => {
         window.hideLoading();
         alert("Error obteniendo respuestas.");
     }
+};
+
+window.descargarRespuestasExcel = () => {
+    let f = globalForms.find(x => x.id === window.currentRespuestasFormId);
+    if(!f || !window.currentRespuestasDocs || window.currentRespuestasDocs.length === 0) return alert("No hay datos para exportar.");
+    
+    let ws_data = [];
+    let headers = ["Fecha", "Usuario"];
+    if(f.is_eval) headers.push("Puntaje (%)", "Nivel");
+    f.campos.forEach(c => headers.push(c.label));
+    ws_data.push(headers);
+
+    window.currentRespuestasDocs.forEach(data => {
+        let row = [
+            window.formatearFechaAbreviada(data.fecha_llenado),
+            data.usuario
+        ];
+        if(f.is_eval) row.push(data._avgScore, data._scoreLabel);
+        f.campos.forEach(c => {
+            let ansObj = data.respuestas ? data.respuestas.find(r => r.id_campo === c.id) : null;
+            let val = ansObj ? ansObj.respuesta : '-';
+            if(c.tipo === 'semaforo' && Array.isArray(val)) {
+                row.push(val.map(v => `${v.fila}: ${v.col}`).join(' | '));
+            } else {
+                row.push(val === true ? 'Sí' : (val === false ? 'No' : val));
+            }
+        });
+        ws_data.push(row);
+    });
+
+    let ws = XLSX.utils.aoa_to_sheet(ws_data);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Respuestas");
+    XLSX.writeFile(wb, `Respuestas_${f.titulo.replace(/[^a-z0-9]/gi, '_')}.xlsx`);
 };
 
 window.descargarRespuestaIndividual = (rIndex, formId) => {
@@ -2634,6 +2698,22 @@ window.actualizarCategoriaCampo = (idx, val) => {
     formBuilderCampos[idx].categoria = val;
 };
 
+window.editarOpcionesCampo = (i) => {
+    let c = formBuilderCampos[i];
+    let optsArray = c.opciones || [];
+    let optsStr = optsArray.join(', ');
+    let newOpts = prompt(`Edita las opciones separadas por coma:\n(Campo: ${c.label})`, optsStr);
+    if(newOpts !== null) {
+        let cleanOpts = newOpts.split(',').map(s => s.trim()).filter(s => s);
+        if(cleanOpts.length > 0) {
+            c.opciones = cleanOpts;
+            window.renderFormPreview();
+        } else {
+            alert('Debes ingresar al menos una opción válida.');
+        }
+    }
+};
+
 window.renderFormPreview = () => {
     let container = $('fb-preview-area');
     if(!container) return;
@@ -2687,6 +2767,7 @@ window.renderFormPreview = () => {
                     <div style="display:flex; gap:2px; flex-shrink:0; background:#f8fafc; border-radius:6px; padding:2px;">
                         ${i > 0 ? `<button type="button" onclick="window.moverCampoArriba(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px;" title="Subir"><span class="material-icons-round" style="font-size:16px;">arrow_upward</span></button>` : ''}
                         ${i < formBuilderCampos.length - 1 ? `<button type="button" onclick="window.moverCampoAbajo(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px;" title="Bajar"><span class="material-icons-round" style="font-size:16px;">arrow_downward</span></button>` : ''}
+                        ${['select', 'radio', 'checkbox'].includes(c.tipo) ? `<button type="button" onclick="window.editarOpcionesCampo(${i})" style="background:none; border:none; color:var(--info); cursor:pointer; padding:4px;" title="Editar Opciones"><span class="material-icons-round" style="font-size:16px;">edit</span></button>` : ''}
                         <button type="button" onclick="window.eliminarCampoBuilder(${i})" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px;" title="Eliminar"><span class="material-icons-round" style="font-size:16px;">delete</span></button>
                     </div>
                 </div>`;

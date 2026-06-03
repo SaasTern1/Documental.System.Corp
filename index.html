@@ -1342,9 +1342,13 @@
                         <span id="vr-subtit" style="font-size:12px; color:var(--text-muted);"></span>
                     </div>
                     <div style="display:flex; gap:10px; align-items:center;">
+                        <button class="btn btn-success" onclick="window.descargarRespuestasExcel()" style="padding:6px 12px; display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="font-size:16px;">table_view</span> Excel</button>
                         <button class="btn btn-primary" onclick="window.descargarRespuestasPDF()" style="padding:6px 12px; display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="font-size:16px;">picture_as_pdf</span> PDF</button>
                         <button class="btn btn-dark" onclick="window.setDisplay('modal-ver-respuestas', 'none')" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
                     </div>
+                </div>
+                <div id="vr-chart-container" style="display:none; height:250px; margin-bottom:20px; border:1px solid var(--border); border-radius:8px; padding:15px;">
+                    <canvas id="vr-chart"></canvas>
                 </div>
                 <div class="table-responsive" style="border-radius:8px; border:1px solid var(--border);">
                     <table style="width:100%; text-align:left; font-size:12px; white-space:nowrap;">
