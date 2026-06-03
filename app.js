@@ -1298,6 +1298,66 @@ window.enviarComentarioLibre = async () => {
     box.innerHTML = ""; f.value = ""; window.hideLoading(); window.closeModal();
 };
 
+window.verRespuestasFormulario = async (id) => {
+    let f = globalForms.find(x => x.id === id);
+    if(!f) return;
+
+    $('vr-tit').innerText = f.titulo;
+    $('vr-subtit').innerText = "Respuestas enviadas por los usuarios";
+
+    window.showLoading();
+    try {
+        const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "FormulariosRespuestas"), where("id_formulario", "==", id)));
+        
+        let thead = $('vr-thead');
+        let tbody = $('vr-tbody');
+        
+        // Build thead based on form fields
+        let thHTML = `<tr><th style="padding:10px; border-bottom:1px solid var(--border);">Fecha</th><th style="padding:10px; border-bottom:1px solid var(--border);">Usuario</th>`;
+        f.campos.forEach(c => {
+            thHTML += `<th style="padding:10px; border-bottom:1px solid var(--border);">${c.label}</th>`;
+        });
+        thHTML += `</tr>`;
+        thead.innerHTML = thHTML;
+
+        // Build tbody
+        let tbHTML = '';
+        if(qs.empty) {
+            tbHTML = `<tr><td colspan="${f.campos.length + 2}" style="text-align:center; padding:20px;">No hay respuestas aún para este formulario.</td></tr>`;
+        } else {
+            let docsData = [];
+            qs.forEach(doc => docsData.push(doc.data()));
+            docsData.sort((a,b) => new Date(b.fecha_llenado) - new Date(a.fecha_llenado));
+
+            docsData.forEach(data => {
+                tbHTML += `<tr><td style="padding:10px; border-bottom:1px solid var(--border);">${window.formatearFechaAbreviada(data.fecha_llenado)}</td><td style="padding:10px; border-bottom:1px solid var(--border);"><b>${data.usuario}</b></td>`;
+                
+                f.campos.forEach(c => {
+                    let ansObj = data.respuestas ? data.respuestas.find(r => r.id_campo === c.id) : null;
+                    let val = ansObj ? ansObj.respuesta : '-';
+                    
+                    if(c.tipo === 'archivo' && val && val !== '-') {
+                        tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border);"><a href="${val}" target="_blank" class="btn btn-dark" style="padding:4px 8px; font-size:11px; text-decoration:none;"><span class="material-icons-round" style="font-size:14px; vertical-align:middle;">download</span> Descargar</a></td>`;
+                    } else if(c.tipo === 'semaforo' && Array.isArray(val)) {
+                        let semHTML = val.map(v => `<span style="display:inline-block; padding:2px 6px; font-size:10px; border-radius:10px; background:${v.color==='Verde'?'#dcfce7':(v.color==='Amarillo'?'#fef3c7':'#fee2e2')}; border:1px solid ${v.color==='Verde'?'#22c55e':(v.color==='Amarillo'?'#eab308':'#ef4444')}; margin:2px;">${v.item}</span>`).join(' ');
+                        tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border);">${semHTML || '-'}</td>`;
+                    } else {
+                        tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border);">${val === true ? 'Sí' : (val === false ? 'No' : val)}</td>`;
+                    }
+                });
+                tbHTML += `</tr>`;
+            });
+        }
+        tbody.innerHTML = tbHTML;
+        window.hideLoading();
+        window.setDisplay('modal-ver-respuestas', 'flex');
+    } catch(e) {
+        console.error(e);
+        window.hideLoading();
+        alert("Error obteniendo respuestas.");
+    }
+};
+
 window.verDetalle = async (id) => {
 try {
     window.showLoading(); selectedId = id; window.setHtml('m-extra-input', ""); window.setHtml('m-comentario-libre', "");
@@ -2255,10 +2315,26 @@ window.abrirModalDash = (tipo) => {
 // ==========================================
 let globalForms = [];
 let formBuilderCampos = []; // Almacena temporalmente los campos mientras se construye
+let editandoFormId = null;
 
-window.abrirModalNuevoFormulario = () => {
-    formBuilderCampos = [];
-    window.setVal('fb-titulo', '');
+window.abrirModalNuevoFormulario = (id) => {
+    editandoFormId = id || null;
+    if(editandoFormId) {
+        let f = globalForms.find(x => x.id === editandoFormId);
+        if(f) {
+            window.setVal('fb-titulo', f.titulo);
+            window.setVal('fb-desc', f.descripcion);
+            formBuilderCampos = f.campos ? JSON.parse(JSON.stringify(f.campos)) : [];
+        } else {
+            formBuilderCampos = [];
+            window.setVal('fb-titulo', '');
+            window.setVal('fb-desc', '');
+        }
+    } else {
+        formBuilderCampos = [];
+        window.setVal('fb-titulo', '');
+        window.setVal('fb-desc', '');
+    }
     window.setVal('fb-desc', '');
     window.setVal('fb-tipo-campo', 'text');
     window.setVal('fb-label-campo', '');
@@ -2334,6 +2410,9 @@ window.renderFormPreview = () => {
                     <label style="font-size:12px; color:var(--text-muted);"><input type="radio" disabled style="width:auto; margin-bottom:0;"> No</label>
                   </div>`;
         }
+        else if(c.tipo === 'archivo') {
+            h += `<input type="file" disabled style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
+        }
         else if(c.tipo === 'semaforo') {
             h += `<div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-top:5px; border:1px dashed var(--sidebar); text-align:center;">
                     <span class="material-icons-round" style="color:var(--sidebar); font-size:24px;">view_list</span>
@@ -2385,6 +2464,9 @@ window.abrirLlenarFormulario = (id) => {
                         <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="ans_${c.id}" value="No" ${reqAttr} style="width:auto; margin:0;"> No</label>
                       </div>`;
             }
+            else if(c.tipo === 'archivo') {
+                h += `<input type="file" id="ans_${c.id}" ${reqAttr} style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
+            }
             else if(c.tipo === 'semaforo') {
                 h += `<div style="border:1px solid var(--border); border-radius:8px; overflow:hidden;">
                         <table style="width:100%; text-align:left; border-collapse:collapse;">
@@ -2428,6 +2510,8 @@ window.guardarFormularioLleno = async () => {
     let respuestas = [];
     let isValid = true;
 
+    window.showLoading();
+
     for (let c of currentFormLlenar.campos) {
         let val = null;
         if(c.tipo === 'checkbox') {
@@ -2447,6 +2531,19 @@ window.guardarFormularioLleno = async () => {
                 if(c.requerido && (!item || !color)) isValid = false;
             });
             if(c.requerido && val.length === 0) isValid = false;
+        } else if(c.tipo === 'archivo') {
+            let fileInput = $(`ans_${c.id}`);
+            if (fileInput.files.length > 0) {
+                let fileUrl = await window.uploadToCloudinary(fileInput.files[0]);
+                if(fileUrl) {
+                    val = fileUrl;
+                } else {
+                    alert("Error subiendo el archivo de la pregunta: " + c.label);
+                    isValid = false;
+                }
+            } else if (c.requerido) {
+                isValid = false;
+            }
         } else {
             val = getValSafe(`ans_${c.id}`);
             if (c.requerido && !val) isValid = false;
@@ -2456,7 +2553,8 @@ window.guardarFormularioLleno = async () => {
     }
 
     if (!isValid) {
-        alert("Por favor, complete todos los campos obligatorios (*).");
+        window.hideLoading();
+        alert("Por favor, complete todos los campos obligatorios (*) y espere a que los archivos suban.");
         return;
     }
 
@@ -2494,10 +2592,17 @@ window.guardarFormulario = async () => {
             campos: formBuilderCampos,
             estado: 'Activo',
             creado_por: currentUser.usuario,
-            fecha_creacion: new Date().toISOString()
+            ultima_modificacion: new Date().toISOString()
         };
-        await addDoc(collection(db, "artifacts", appId, "public", "data", "Formularios"), formData);
-        alert("Formulario guardado con éxito.");
+        
+        if(editandoFormId) {
+            await updateDoc(doc(db, "artifacts", appId, "public", "data", "Formularios", editandoFormId), formData);
+            alert("Formulario actualizado con éxito.");
+        } else {
+            formData.fecha_creacion = new Date().toISOString();
+            await addDoc(collection(db, "artifacts", appId, "public", "data", "Formularios"), formData);
+            alert("Formulario guardado con éxito.");
+        }
         window.setDisplay('modal-form-builder', 'none');
     } catch(e) {
         console.error(e);
@@ -2525,8 +2630,10 @@ window.renderTablaForms = () => {
                 <td>${window.formatearFechaAbreviada(f.fecha_creacion)}</td>
                 <td><span class="badge ${bEst}">${f.estado}</span></td>
                 <td style="text-align:center;">
-                    <button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.abrirLlenarFormulario('${f.id}')"><span class="material-icons-round" style="font-size:14px;">preview</span> Llenar</button>
-                    <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="window.del('Formularios','${f.id}')"><span class="material-icons-round" style="font-size:14px;">delete</span></button>
+                    <button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.abrirLlenarFormulario('${f.id}')" title="Llenar"><span class="material-icons-round" style="font-size:14px;">preview</span></button>
+                    <button class="btn btn-warning" style="padding:4px 8px; font-size:11px;" onclick="window.abrirModalNuevoFormulario('${f.id}')" title="Editar"><span class="material-icons-round" style="font-size:14px;">edit</span></button>
+                    <button class="btn btn-info" style="padding:4px 8px; font-size:11px;" onclick="window.verRespuestasFormulario('${f.id}')" title="Ver Respuestas"><span class="material-icons-round" style="font-size:14px;">format_list_bulleted</span></button>
+                    <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="window.del('Formularios','${f.id}')" title="Eliminar"><span class="material-icons-round" style="font-size:14px;">delete</span></button>
                 </td>
               </tr>`;
     });

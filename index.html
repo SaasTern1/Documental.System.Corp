@@ -1238,6 +1238,7 @@
                         <option value="checkbox">Casilla de Verificación (Check)</option>
                         <option value="si_no">Sí / No</option>
                         <option value="semaforo">Tabla de Evaluación (Semáforo Dinámico)</option>
+                        <option value="archivo">Archivo Adjunto</option>
                     </select>
                     <label for="fb-label-campo">Etiqueta (Pregunta)</label>
                     <input type="text" id="fb-label-campo" name="fb-label-campo" placeholder="Ej: ¿Cuál es su nombre?">
@@ -1288,6 +1289,28 @@
                 <div style="text-align:right;">
                     <button class="btn btn-dark" onclick="window.setDisplay('modal-fill-form', 'none')">Cancelar</button>
                     <button class="btn btn-success" onclick="window.guardarFormularioLleno()">Guardar Respuestas</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal for Viewing Form Responses -->
+    <div class="modal-overlay" id="modal-ver-respuestas" style="display:none; z-index:4000;">
+        <div class="modal-content" style="max-width:1100px; display:block; width:100%; height:auto; padding:20px; max-height:90vh; overflow-y:auto; background:#fff;">
+            <div class="modal-main">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px;">
+                    <div>
+                        <h2 id="vr-tit" style="margin:0; font-size:22px; color:var(--text-main); font-weight:800;">Respuestas del Formulario</h2>
+                        <span id="vr-subtit" style="font-size:12px; color:var(--text-muted);"></span>
+                    </div>
+                    <button class="btn btn-dark" onclick="window.setDisplay('modal-ver-respuestas', 'none')" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
+                </div>
+                <div class="table-responsive" style="border-radius:8px; border:1px solid var(--border);">
+                    <table style="width:100%; text-align:left; font-size:12px; white-space:nowrap;">
+                        <thead id="vr-thead" style="background:#f8fafc; position:sticky; top:0; z-index:10;">
+                        </thead>
+                        <tbody id="vr-tbody">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
