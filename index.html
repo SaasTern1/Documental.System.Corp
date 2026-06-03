@@ -131,6 +131,12 @@
                 <button class="nav-link" id="nav-proveedores" onclick="window.cambiarVista('sec-proveedores', this)"><span class="material-icons-round">local_shipping</span> Evaluación Proveedores</button>
                 <button class="nav-link" id="nav-riesgos" onclick="window.cambiarVista('sec-riesgos', this)"><span class="material-icons-round">query_stats</span> Matriz de Riesgos</button>
             </div>
+
+            <div id="nav-admin-group" style="display:none;">
+                <p style="font-size:10px; color:#475569; font-weight:800; margin-left:16px; margin-bottom:8px; margin-top:20px;">ADMINISTRACIÓN</p>
+                <button class="nav-link" id="nav-usuarios" onclick="window.cambiarVista('sec-usuarios', this)"><span class="material-icons-round">people</span> Usuarios y Permisos</button>
+                <button class="nav-link" id="nav-config" onclick="window.cambiarVista('sec-estructura', this)"><span class="material-icons-round">account_tree</span> Config. del Sistema</button>
+            </div>
         </nav>
         <div style="background: rgba(255,255,255,0.04); padding: 16px; border-radius: 12px; margin-top:10px; border: 1px solid rgba(255,255,255,0.06);">
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
@@ -163,20 +169,7 @@
             <button class="menu-btn" onclick="window.toggleMenu()"><span class="material-icons-round">menu</span></button>
         </div>
 
-        <div id="admin-gear-container" style="display:none; position:fixed; right:20px; bottom:20px; z-index:9999; align-items:center; background:transparent;">
-            <div id="admin-gear-menu" style="position:relative;">
-                <button class="btn" style="background:transparent; border:none; color:var(--text-main); padding:8px; border-radius:50%; box-shadow:none; cursor:pointer;" onclick="document.getElementById('gear-dropdown').style.display = document.getElementById('gear-dropdown').style.display === 'none' ? 'block' : 'none';">
-                    <span class="material-icons-round" style="font-size:26px; color:var(--primary);">settings</span>
-                </button>
-                <div id="gear-dropdown" style="display:none; position:absolute; right:0; bottom:100%; background:#fff; box-shadow:0 -4px 15px rgba(0,0,0,0.1); border-radius:12px; width:220px; z-index:1001; border:1px solid var(--border); padding:8px 0; margin-bottom:10px;">
-                    <p style="font-size:10px; color:#94a3b8; font-weight:800; padding:0 15px; margin-bottom:5px; margin-top:5px;">ADMINISTRACIÓN</p>
-                    <button onclick="window.setDisplay('sec-usuarios', 'flex'); document.getElementById('gear-dropdown').style.display='none'" style="width:100%; text-align:left; padding:10px 15px; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-main); transition:0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:18px; color:var(--primary);">people</span> Usuarios y Permisos</button>
-                    <button onclick="window.setDisplay('sec-estructura', 'flex'); document.getElementById('gear-dropdown').style.display='none'" style="width:100%; text-align:left; padding:10px 15px; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-main); transition:0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:18px; color:var(--primary);">account_tree</span> Config. del Sistema</button>
-                    <div style="border-top:1px solid var(--border); margin:5px 0;"></div>
-                    <button onclick="window.logout()" style="width:100%; text-align:left; padding:10px 15px; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--danger); transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:18px; color:var(--danger);">logout</span> Cerrar Sesión</button>
-                </div>
-            </div>
-        </div>
+
 
         <section id="sec-dash" class="section">
             <div class="section-header">

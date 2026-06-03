@@ -752,7 +752,7 @@ window.completarLoginUI = () => {
   const p = currentUser.permisos || {}; const isAdm = p.admin || false;
   const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
   window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-forms', (isAdm || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none');
-  window.setDisplay('admin-gear-container', (isAdm || p.p_users || p.p_struct) ? 'flex' : 'none');
+  window.setDisplay('nav-admin-group', (isAdm || p.p_users || p.p_struct) ? 'block' : 'none');
   
   const canAud = p.p_audit_ver || p.p_audit_admin || p.p_audit_auditor || p.p_audit_dueno || isAdm; 
   window.setDisplay('nav-audit-group', canAud ? 'block' : 'none'); window.setDisplay('nav-norma', canAud ? 'flex' : 'none'); window.setDisplay('nav-audit', canAud ? 'flex' : 'none'); window.setDisplay('nav-noconf', (p.p_audit_admin || p.p_gest_sgc || p.p_audit_auditor || p.p_audit_dueno || isAdm) ? 'flex' : 'none');
@@ -2691,24 +2691,24 @@ window.renderFormPreview = () => {
                     </div>
                 </div>`;
         
-        if(c.tipo === 'text') fh += `<input type="text" disabled placeholder="Campo de texto corto" style="margin-bottom:0; background:#f8fafc;">`;
-        else if(c.tipo === 'textarea') fh += `<textarea disabled placeholder="Campo de texto largo" rows="2" style="margin-bottom:0; background:#f8fafc;"></textarea>`;
-        else if(c.tipo === 'number') fh += `<input type="number" disabled placeholder="123" style="margin-bottom:0; background:#f8fafc;">`;
-        else if(c.tipo === 'date') fh += `<input type="date" disabled style="margin-bottom:0; background:#f8fafc;">`;
-        else if(c.tipo === 'checkbox') fh += `<label style="font-size:12px; color:var(--text-muted);"><input type="checkbox" disabled style="margin-bottom:0; width:auto;"> Marcar casilla</label>`;
+        if(c.tipo === 'text') fh += `<input type="text" id="prev_text_${i}" name="prev_text_${i}" disabled placeholder="Campo de texto corto" style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'textarea') fh += `<textarea id="prev_textarea_${i}" name="prev_textarea_${i}" disabled placeholder="Campo de texto largo" rows="2" style="margin-bottom:0; background:#f8fafc;"></textarea>`;
+        else if(c.tipo === 'number') fh += `<input type="number" id="prev_num_${i}" name="prev_num_${i}" disabled placeholder="123" style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'date') fh += `<input type="date" id="prev_date_${i}" name="prev_date_${i}" disabled style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'checkbox') fh += `<label style="font-size:12px; color:var(--text-muted);" for="prev_chk_${i}"><input type="checkbox" id="prev_chk_${i}" name="prev_chk_${i}" disabled style="margin-bottom:0; width:auto;"> Marcar casilla</label>`;
         else if(c.tipo === 'select') {
-            fh += `<select disabled style="margin-bottom:0; background:#f8fafc;">`;
+            fh += `<select id="prev_sel_${i}" name="prev_sel_${i}" disabled style="margin-bottom:0; background:#f8fafc;">`;
             c.opciones.forEach(op => fh += `<option>${op}</option>`);
             fh += `</select>`;
         }
         else if(c.tipo === 'si_no') {
             fh += `<div style="display:flex; gap:15px; margin-top:5px;">
-                    <label style="font-size:12px; color:var(--text-muted);"><input type="radio" disabled style="width:auto; margin-bottom:0;"> Sí</label>
-                    <label style="font-size:12px; color:var(--text-muted);"><input type="radio" disabled style="width:auto; margin-bottom:0;"> No</label>
+                    <label style="font-size:12px; color:var(--text-muted);" for="prev_si_${i}"><input type="radio" id="prev_si_${i}" name="prev_sino_${i}" disabled style="width:auto; margin-bottom:0;"> Sí</label>
+                    <label style="font-size:12px; color:var(--text-muted);" for="prev_no_${i}"><input type="radio" id="prev_no_${i}" name="prev_sino_${i}" disabled style="width:auto; margin-bottom:0;"> No</label>
                   </div>`;
         }
         else if(c.tipo === 'archivo') {
-            fh += `<input type="file" disabled style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
+            fh += `<input type="file" id="prev_file_${i}" name="prev_file_${i}" disabled style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
         }
         else if(c.tipo === 'semaforo') {
             fh += `<div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-top:5px; border:1px solid var(--border);">
@@ -2817,26 +2817,26 @@ window.abrirLlenarFormulario = (id) => {
             let reqHTML = c.requerido ? '<span style="color:var(--danger)">*</span>' : '';
             let reqAttr = c.requerido ? 'required' : '';
             h += `<div class="dynamic-field-container" data-category="${c.categoria||''}" style="margin-bottom:25px; background:white; padding:20px; border-radius:10px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
-                    <label style="font-size:15px; font-weight:600; color:#1e293b; display:block; margin-bottom:12px;">${c.label} ${reqHTML}</label>`;
+                    <label for="ans_${c.id}" style="font-size:15px; font-weight:600; color:#1e293b; display:block; margin-bottom:12px;">${c.label} ${reqHTML}</label>`;
             
-            if(c.tipo === 'text') h += `<input type="text" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%; border:1px solid #cbd5e1; padding:10px; border-radius:6px;">`;
-            else if(c.tipo === 'textarea') h += `<textarea id="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
-            else if(c.tipo === 'number') h += `<input type="number" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
-            else if(c.tipo === 'date') h += `<input type="date" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
-            else if(c.tipo === 'checkbox') h += `<label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" id="ans_${c.id}" style="width:auto; margin:0;"> Marcar</label>`;
+            if(c.tipo === 'text') h += `<input type="text" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%; border:1px solid #cbd5e1; padding:10px; border-radius:6px;">`;
+            else if(c.tipo === 'textarea') h += `<textarea id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
+            else if(c.tipo === 'number') h += `<input type="number" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'date') h += `<input type="date" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'checkbox') h += `<label style="display:flex; align-items:center; gap:5px;" for="ans_chk_${c.id}"><input type="checkbox" id="ans_chk_${c.id}" name="ans_${c.id}" style="width:auto; margin:0;"> Marcar</label>`;
             else if(c.tipo === 'select') {
-                h += `<select id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;"><option value="">-- Seleccione --</option>`;
+                h += `<select id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;"><option value="">-- Seleccione --</option>`;
                 c.opciones.forEach(op => h += `<option value="${op}">${op}</option>`);
                 h += `</select>`;
             }
             else if(c.tipo === 'si_no') {
                 h += `<div style="display:flex; gap:15px; margin-top:5px;">
-                        <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="ans_${c.id}" value="Sí" ${reqAttr} style="width:auto; margin:0;"> Sí</label>
-                        <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="ans_${c.id}" value="No" ${reqAttr} style="width:auto; margin:0;"> No</label>
+                        <label style="display:flex; align-items:center; gap:5px;" for="ans_${c.id}_si"><input type="radio" id="ans_${c.id}_si" name="ans_${c.id}" value="Sí" ${reqAttr} style="width:auto; margin:0;"> Sí</label>
+                        <label style="display:flex; align-items:center; gap:5px;" for="ans_${c.id}_no"><input type="radio" id="ans_${c.id}_no" name="ans_${c.id}" value="No" ${reqAttr} style="width:auto; margin:0;"> No</label>
                       </div>`;
             }
             else if(c.tipo === 'archivo') {
-                h += `<input type="file" id="ans_${c.id}" ${reqAttr} style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
+                h += `<input type="file" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
             }
             else if(c.tipo === 'semaforo') {
                 h += `<div style="border:1px solid var(--border); border-radius:8px; overflow-x:auto;">
