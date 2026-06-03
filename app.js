@@ -2462,7 +2462,6 @@ window.guardarFormularioLleno = async () => {
 
     try {
         window.showLoading();
-        import { addDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         const docRef = await addDoc(collection(db, "artifacts", appId, "public", "data", "FormulariosRespuestas"), {
             id_formulario: currentFormLlenar.id,
             titulo_formulario: currentFormLlenar.titulo,
