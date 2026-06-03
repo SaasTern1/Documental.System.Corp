@@ -1320,6 +1320,7 @@ window.verRespuestasFormulario = async (id) => {
         
         // Build thead based on form fields
         let thHTML = `<tr><th style="padding:10px; border-bottom:1px solid var(--border);">Fecha</th><th style="padding:10px; border-bottom:1px solid var(--border);">Usuario</th>`;
+        if(f.is_dynamic) thHTML += `<th style="padding:10px; border-bottom:1px solid var(--border); color:var(--info);">Categoría</th>`;
         if(f.is_eval) thHTML += `<th style="padding:10px; border-bottom:1px solid var(--border); color:var(--primary);">Puntaje</th>`;
         
         f.campos.forEach(c => {
@@ -1381,7 +1382,7 @@ window.verRespuestasFormulario = async (id) => {
                 data._scoreColor = scoreColor;
 
                 tbHTML += `<tr><td style="padding:10px; border-bottom:1px solid var(--border);">${window.formatearFechaAbreviada(data.fecha_llenado)}</td><td style="padding:10px; border-bottom:1px solid var(--border);"><b>${data.usuario}</b></td>`;
-                
+                if(f.is_dynamic) tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border);">${data.categoria_evaluada || 'Global/Todas'}</td>`;
                 if(f.is_eval) tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border);"><span style="display:inline-block; padding:4px 8px; border-radius:12px; background:${scoreColor}20; color:${scoreColor}; font-weight:bold; font-size:11px;">${avgScore}% - ${scoreLabel}</span></td>`;
 
                 f.campos.forEach(c => {
@@ -1518,6 +1519,7 @@ window.descargarRespuestasExcel = () => {
     
     let ws_data = [];
     let headers = ["Fecha", "Usuario"];
+    if(f.is_dynamic) headers.push("Categoría");
     if(f.is_eval) headers.push("Puntaje (%)", "Nivel");
     f.campos.forEach(c => headers.push(c.label));
     ws_data.push(headers);
@@ -1527,6 +1529,7 @@ window.descargarRespuestasExcel = () => {
             window.formatearFechaAbreviada(data.fecha_llenado),
             data.usuario
         ];
+        if(f.is_dynamic) row.push(data.categoria_evaluada || 'Global/Todas');
         if(f.is_eval) row.push(data._avgScore, data._scoreLabel);
         f.campos.forEach(c => {
             let ansObj = data.respuestas ? data.respuestas.find(r => r.id_campo === c.id) : null;
@@ -3120,9 +3123,12 @@ window.guardarFormularioLleno = async () => {
 
     try {
         window.showLoading();
+        let catSelect = $('master-dynamic-select');
+        let catElegida = catSelect ? catSelect.value : null;
         const docRef = await addDoc(collection(db, "artifacts", appId, "public", "data", "FormulariosRespuestas"), {
             id_formulario: currentFormLlenar.id,
             titulo_formulario: currentFormLlenar.titulo,
+            categoria_evaluada: catElegida,
             respuestas: respuestas,
             fecha_llenado: new Date().toISOString(),
             usuario: currentUser.nombre || currentUser.email || 'Anónimo',
