@@ -202,6 +202,39 @@ window.renderDashboardCharts = () => {
         if(!currentUser || (!currentUser.permisos.admin && !currentUser.permisos.p_gest_sgc)) return;
         if (typeof Chart === 'undefined') return;
 
+        let excludeAnuladas = false;
+        let checkbox = document.getElementById('dash-exclude-anuladas');
+        if (checkbox) excludeAnuladas = checkbox.checked;
+
+        let solicitudesFiltered = globalSolicitudes || [];
+        if (excludeAnuladas) {
+            solicitudesFiltered = solicitudesFiltered.filter(s => s.estado !== 'Anulado' && s.estado !== 'Rechazado');
+        }
+
+        // 0. KPIs Superiores
+        if (globalSolicitudes) {
+            let tot = solicitudesFiltered.length;
+            let ok = solicitudesFiltered.filter(s => String(s.estado).includes('Aprobado Final')).length;
+            let pend = solicitudesFiltered.filter(s => !String(s.estado).includes('Aprobado Final') && s.estado !== 'Anulado' && s.estado !== 'Rechazado').length;
+            
+            // SLA Calculation: Only count approved items that had an expected date
+            let slaCount = 0;
+            let slaOnTime = 0;
+            solicitudesFiltered.forEach(s => {
+                let f_sla = s.sla || s.fecha_esperada_cierre;
+                if(String(s.estado).includes('Aprobado Final') && f_sla && s.fecha_final) {
+                    slaCount++;
+                    if(s.fecha_final <= f_sla) slaOnTime++;
+                }
+            });
+            let slaPct = slaCount > 0 ? Math.round((slaOnTime / slaCount) * 100) : 0;
+
+            if($('dash-tot')) $('dash-tot').innerText = tot;
+            if($('dash-pend')) $('dash-pend').innerText = pend;
+            if($('dash-ok')) $('dash-ok').innerText = ok;
+            if($('dash-sla-percent')) $('dash-sla-percent').innerText = slaPct + '%';
+        }
+
         // 1. Matriz de Riesgo OEA (Heatmap)
         const grid = $('heatmap-grid');
         if(grid && globalRiesgos) {
@@ -238,13 +271,12 @@ window.renderDashboardCharts = () => {
 
         // 2. Gráfico SLA Compare (Barras: SLA Esperado vs Real)
         const ctxSla = $('chartSlaCompare');
-        if(ctxSla && globalSolicitudes) {
-            let prioAlta = globalSolicitudes.filter(s => s.prioridad === 'Alta');
-            let prioMedia = globalSolicitudes.filter(s => s.prioridad === 'Media');
-            let prioBaja = globalSolicitudes.filter(s => s.prioridad === 'Baja' || !s.prioridad);
+        if(ctxSla && solicitudesFiltered) {
+            let prioAlta = solicitudesFiltered.filter(s => s.prioridad === 'Alta');
+            let prioMedia = solicitudesFiltered.filter(s => s.prioridad === 'Media');
+            let prioBaja = solicitudesFiltered.filter(s => s.prioridad === 'Baja' || !s.prioridad);
 
             let dataReal = [prioAlta.length, prioMedia.length, prioBaja.length];
-            // Simulamos datos de budget/expected basados en promedios
             let dataExpected = [Math.max(2, prioAlta.length + 3), Math.max(5, prioMedia.length + 5), Math.max(10, prioBaja.length + 8)];
 
             if(chartSlaInstance) chartSlaInstance.destroy();
@@ -263,10 +295,10 @@ window.renderDashboardCharts = () => {
 
         // 3. Gráfico Evolución Mensual (Solicitudes por mes)
         const ctxMonthly = $('chartMonthly');
-        if(ctxMonthly && globalSolicitudes) {
+        if(ctxMonthly && solicitudesFiltered) {
             let monthCounts = { "Ene":0, "Feb":0, "Mar":0, "Abr":0, "May":0, "Jun":0, "Jul":0, "Ago":0, "Sep":0, "Oct":0, "Nov":0, "Dic":0 };
             const mesesStr = Object.keys(monthCounts);
-            globalSolicitudes.forEach(s => {
+            solicitudesFiltered.forEach(s => {
                 if(s.fecha) {
                     let d = new Date(s.fecha);
                     let m = d.getMonth();
@@ -286,38 +318,60 @@ window.renderDashboardCharts = () => {
         // 4. Gráfico Donut (Estado General Stats)
         const ctxDonut = $('chartDonutStats');
         if(ctxDonut && globalSolicitudes) {
-            let aprobadas = globalSolicitudes.filter(s => String(s.estado).includes('Aprobado Final')).length;
-            let pendientes = globalSolicitudes.filter(s => !String(s.estado).includes('Aprobado Final') && s.estado !== 'Anulado' && s.estado !== 'Rechazado').length;
-            let anuladas = globalSolicitudes.filter(s => s.estado === 'Anulado' || s.estado === 'Rechazado').length;
-            let total = aprobadas + pendientes + anuladas;
-            let pAp = total > 0 ? Math.round((aprobadas/total)*100) : 0;
-            let pPe = total > 0 ? Math.round((pendientes/total)*100) : 0;
-            let pAn = total > 0 ? Math.round((anuladas/total)*100) : 0;
+            // Note: Donut should probably always calculate all unless filtered, but we will use the globalSolicitudes to show anuladas unless excluded.
+            let d_aprobadas = solicitudesFiltered.filter(s => String(s.estado).includes('Aprobado Final')).length;
+            let d_pendientes = solicitudesFiltered.filter(s => !String(s.estado).includes('Aprobado Final') && s.estado !== 'Anulado' && s.estado !== 'Rechazado').length;
+            let d_anuladas = solicitudesFiltered.filter(s => s.estado === 'Anulado' || s.estado === 'Rechazado').length;
+            let d_total = d_aprobadas + d_pendientes + d_anuladas;
+            let pAp = d_total > 0 ? Math.round((d_aprobadas/d_total)*100) : 0;
+            let pPe = d_total > 0 ? Math.round((d_pendientes/d_total)*100) : 0;
+            let pAn = d_total > 0 ? Math.round((d_anuladas/d_total)*100) : 0;
 
             if(chartDonutStatsInstance) chartDonutStatsInstance.destroy();
             chartDonutStatsInstance = new Chart(ctxDonut, {
                 type: 'doughnut',
-                data: { labels: ['Aprobadas', 'En Trámite', 'Anuladas'], datasets: [{ data: [aprobadas, pendientes, anuladas], backgroundColor: ['#6366f1', '#10b981', '#ef4444'], borderWidth: 0, hoverOffset: 4 }] },
+                data: { labels: ['Aprobadas', 'En Trámite', 'Anuladas'], datasets: [{ data: [d_aprobadas, d_pendientes, d_anuladas], backgroundColor: ['#6366f1', '#10b981', '#ef4444'], borderWidth: 0, hoverOffset: 4 }] },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
             });
 
-            // HTML Legend
             if($('donut-legend-container')) {
                 $('donut-legend-container').innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">
                         <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:#6366f1; border-radius:50%;"></div><span style="font-size:12px; color:var(--text-main); font-weight:600;">Aprobadas</span></div>
-                        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${aprobadas}</span><span style="background:#eef2ff; color:#6366f1; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pAp}%</span></div>
+                        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${d_aprobadas}</span><span style="background:#eef2ff; color:#6366f1; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pAp}%</span></div>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">
                         <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:#10b981; border-radius:50%;"></div><span style="font-size:12px; color:var(--text-main); font-weight:600;">En Trámite</span></div>
-                        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${pendientes}</span><span style="background:#dcfce7; color:#10b981; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pPe}%</span></div>
+                        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${d_pendientes}</span><span style="background:#dcfce7; color:#10b981; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pPe}%</span></div>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:#ef4444; border-radius:50%;"></div><span style="font-size:12px; color:var(--text-main); font-weight:600;">Anuladas</span></div>
-                        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${anuladas}</span><span style="background:#fee2e2; color:#ef4444; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pAn}%</span></div>
+                        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${d_anuladas}</span><span style="background:#fee2e2; color:#ef4444; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pAn}%</span></div>
                     </div>
                 `;
             }
+        }
+
+        // 5. Poblar Tablas Secundarias en Dashboard
+        if ($('dash-tbody-audits') && globalAllAuditorias) {
+            let audHtml = '';
+            // Solo futuras y del año
+            let sortedAudits = [...globalAllAuditorias].sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).slice(0, 5);
+            sortedAudits.forEach(a => {
+                let statusColor = a.estado === 'Finalizada' ? 'var(--success)' : (a.estado === 'Cancelada' ? 'var(--danger)' : 'var(--warning)');
+                audHtml += `<tr><td>${a.lugar}</td><td>${window.formatearFechaAbreviada(a.fecha)}</td><td>${a.lider}</td><td><span style="color:${statusColor}; font-weight:600;">${a.estado}</span></td></tr>`;
+            });
+            $('dash-tbody-audits').innerHTML = audHtml || '<tr><td colspan="4" style="text-align:center;">No hay auditorías próximas</td></tr>';
+        }
+
+        if ($('dash-tbody-ncs') && globalAllSacs) {
+            let ncHtml = '';
+            let sortedNcs = [...globalAllSacs].sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 5);
+            sortedNcs.forEach(n => {
+                let statusColor = n.estado === 'Cerrada' ? 'var(--success)' : 'var(--warning)';
+                ncHtml += `<tr><td>${n.sac_n}</td><td>${n.tipo_sac}</td><td>${n.responsable}</td><td><span style="color:${statusColor}; font-weight:600;">${n.estado}</span></td></tr>`;
+            });
+            $('dash-tbody-ncs').innerHTML = ncHtml || '<tr><td colspan="4" style="text-align:center;">No hay No Conformidades recientes</td></tr>';
         }
 
     } catch(e) {
@@ -2333,6 +2387,116 @@ window.renderTablaForms = () => {
 };
 
 // ==========================================
+
+window.verDetalleDashboard = (tipo) => {
+    let excludeAnuladas = false;
+    let checkbox = document.getElementById('dash-exclude-anuladas');
+    if (checkbox) excludeAnuladas = checkbox.checked;
+
+    let solicitudesFiltered = globalSolicitudes || [];
+    if (excludeAnuladas) {
+        solicitudesFiltered = solicitudesFiltered.filter(s => s.estado !== 'Anulado' && s.estado !== 'Rechazado');
+    }
+
+    let titulo = '';
+    let data = [];
+
+    if (tipo === 'tot') {
+        titulo = 'Total Solicitudes';
+        data = solicitudesFiltered;
+    } else if (tipo === 'pend') {
+        titulo = 'Solicitudes Pendientes / En Curso';
+        data = solicitudesFiltered.filter(s => !String(s.estado).includes('Aprobado Final') && s.estado !== 'Anulado' && s.estado !== 'Rechazado');
+    } else if (tipo === 'ok') {
+        titulo = 'Solicitudes Aprobadas Oficiales';
+        data = solicitudesFiltered.filter(s => String(s.estado).includes('Aprobado Final'));
+    } else if (tipo === 'sla') {
+        titulo = 'Cumplimiento SLA (Aprobadas a tiempo)';
+        data = solicitudesFiltered.filter(s => {
+            let f_sla = s.sla || s.fecha_esperada_cierre;
+            return String(s.estado).includes('Aprobado Final') && f_sla && s.fecha_final && s.fecha_final <= f_sla;
+        });
+    }
+
+    if($('m-dash-tit')) $('m-dash-tit').innerHTML = `<span class="material-icons-round" style="vertical-align:middle; color:var(--primary); margin-right:8px;">insights</span> ${titulo} (${data.length})`;
+
+    let html = '';
+    data.forEach(s => {
+        let f_sla = s.sla || s.fecha_esperada_cierre;
+        let slaVisual = f_sla ? window.formatearFechaAbreviada(f_sla) : '-';
+        html += `<tr>
+            <td style="padding:12px; border-bottom:1px solid var(--border);"><b>${s.customId || s.id}</b><br><small style="color:var(--sidebar);">${window.formatearFechaAbreviada(s.fecha)}</small></td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);">${s.titulo}</td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);">${s.solicitante}</td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);"><span class="badge ${String(s.estado).includes('Aprobado') ? 'badge-success' : 'badge-warning'}">${s.estado || 'Pendiente'}</span><br><small>SLA: ${slaVisual}</small></td>
+            <td class="no-export" style="padding:12px; border-bottom:1px solid var(--border);"><button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="window.setDisplay('modal-dash-details','none'); window.verDetalle('${s.docId || s.id}')">Ver Documento</button></td>
+        </tr>`;
+    });
+
+    if(data.length === 0) {
+        html = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--sidebar);">No hay datos para mostrar en esta categoría</td></tr>`;
+    }
+
+    if($('m-dash-tbody')) $('m-dash-tbody').innerHTML = html;
+    window.setDisplay('modal-dash-details', 'flex');
+};
+
+window.extraerTodaInformacion = () => {
+    // Basic export logic gathering major collections
+    try {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "=== EXPORTACION GLOBAL DEL SISTEMA ===\\n\\n";
+
+        // 1. Solicitudes
+        csvContent += "--- SOLICITUDES ---\\n";
+        csvContent += "ID,Fecha,Solicitante,Titulo,Gerencia,Prioridad,Estado,SLA Esperado,Fecha Cierre\\n";
+        if (globalSolicitudes) {
+            globalSolicitudes.forEach(s => {
+                let row = [
+                    s.customId || '', s.fecha || '', `"${s.solicitante || ''}"`, `"${s.titulo || ''}"`, 
+                    `"${s.gerencia || ''}"`, s.prioridad || '', `"${s.estado || ''}"`, 
+                    s.sla || s.fecha_esperada_cierre || '', s.fecha_final || ''
+                ].join(",");
+                csvContent += row + "\\n";
+            });
+        }
+        
+        csvContent += "\\n--- AUDITORIAS ---\\n";
+        csvContent += "ID,Fecha,Lugar,Lider,Requisitos,Estado\\n";
+        if (globalAllAuditorias) {
+            globalAllAuditorias.forEach(a => {
+                let row = [
+                    a.id || '', a.fecha || '', `"${a.lugar || ''}"`, `"${a.lider || ''}"`, 
+                    `"${a.requisitos || ''}"`, `"${a.estado || ''}"`
+                ].join(",");
+                csvContent += row + "\\n";
+            });
+        }
+
+        csvContent += "\\n--- NO CONFORMIDADES (SAC) ---\\n";
+        csvContent += "SAC_N,Fecha,Tipo,Responsable,Requisito,Estado\\n";
+        if (globalAllSacs) {
+            globalAllSacs.forEach(n => {
+                let row = [
+                    n.sac_n || '', n.fecha || '', `"${n.tipo_sac || ''}"`, `"${n.responsable || ''}"`, 
+                    `"${n.requisito_evaluado || ''}"`, `"${n.estado || ''}"`
+                ].join(",");
+                csvContent += row + "\\n";
+            });
+        }
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Backup_Global_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error("Error al exportar:", error);
+        alert("Ocurrió un error al extraer la información.");
+    }
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     inicializarApp();
