@@ -1233,6 +1233,14 @@
                         <input type="checkbox" id="fb-is-eval" style="margin:0; width:auto;"> Este formulario es una Evaluación Calificada (Genera Score Automático)
                     </label>
 
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:600; color:var(--text-main); margin-bottom:15px; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid var(--border);">
+                        <input type="checkbox" id="fb-is-dynamic" style="margin:0; width:auto;" onchange="document.getElementById('fb-dynamic-options-panel').style.display = this.checked ? 'block' : 'none'; window.renderFormPreview();"> Activar Categorías Dinámicas (Selector Maestro)
+                    </label>
+                    <div id="fb-dynamic-options-panel" style="display:none; background:#f1f5f9; padding:10px; border-radius:6px; margin-bottom:15px; border:1px solid var(--border);">
+                        <label>Opciones del Selector (separadas por coma)</label>
+                        <input type="text" id="fb-dynamic-options" class="search-bar" placeholder="Ej: Auto, Moto, Camión" style="width:100%; margin-bottom:0;" onchange="window.renderFormPreview()">
+                    </div>
+
                     <button type="button" class="btn btn-dark" style="width:100%; margin-bottom:15px; text-align:left; background:var(--sidebar);" onclick="let c = document.getElementById('fb-perm-container'); c.style.display = c.style.display === 'none' ? 'block' : 'none';">
                         <span class="material-icons-round" style="font-size:16px; vertical-align:middle;">lock</span> Configurar Permisos de Usuarios
                     </button>

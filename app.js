@@ -1365,11 +1365,23 @@ window.verRespuestasFormulario = async (id) => {
                     });
                 }
                 let avgScore = maxPosibleScore > 0 ? ((trScore / maxPosibleScore) * 100).toFixed(1) : (f.is_eval ? 0 : null);
-                let scoreColor = avgScore >= 80 ? 'var(--success)' : (avgScore >= 60 ? 'var(--warning)' : 'var(--danger)');
+                
+                let avgScoreNum = Number(avgScore);
+                let scoreLabel = '';
+                let scoreColor = '';
+                if(avgScoreNum >= 95) { scoreLabel = 'Excelente'; scoreColor = '#22c55e'; } // Verde
+                else if(avgScoreNum >= 85) { scoreLabel = 'Bueno'; scoreColor = '#3b82f6'; } // Azul
+                else if(avgScoreNum >= 75) { scoreLabel = 'Regular'; scoreColor = '#eab308'; } // Amarillo
+                else { scoreLabel = 'Deficiente'; scoreColor = '#ef4444'; } // Rojo
+
+                // Guardamos en data para el PDF
+                data._avgScore = avgScore;
+                data._scoreLabel = scoreLabel;
+                data._scoreColor = scoreColor;
 
                 tbHTML += `<tr><td style="padding:10px; border-bottom:1px solid var(--border);">${window.formatearFechaAbreviada(data.fecha_llenado)}</td><td style="padding:10px; border-bottom:1px solid var(--border);"><b>${data.usuario}</b></td>`;
                 
-                if(f.is_eval) tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border); font-weight:bold; color:${scoreColor};">${avgScore}%</td>`;
+                if(f.is_eval) tbHTML += `<td style="padding:10px; border-bottom:1px solid var(--border);"><span style="display:inline-block; padding:4px 8px; border-radius:12px; background:${scoreColor}20; color:${scoreColor}; font-weight:bold; font-size:11px;">${avgScore}% - ${scoreLabel}</span></td>`;
 
                 f.campos.forEach(c => {
                     let ansObj = data.respuestas ? data.respuestas.find(r => r.id_campo === c.id) : null;
@@ -1405,7 +1417,10 @@ window.descargarRespuestaIndividual = (rIndex, formId) => {
 
     let html = `<div style="padding:40px; font-family:Arial,sans-serif; color:#333;">
         <h2 style="color:#0f172a; margin-bottom:5px; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">${f.titulo}</h2>
-        <p style="font-size:12px; color:#64748b; margin-top:0;">Respondido por: <b>${data.usuario}</b> el ${window.formatearFechaAbreviada(data.fecha_llenado)}</p>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <p style="font-size:12px; color:#64748b; margin:0;">Respondido por: <b>${data.usuario}</b> el ${window.formatearFechaAbreviada(data.fecha_llenado)}</p>
+            ${f.is_eval ? `<div style="padding:5px 15px; border-radius:20px; background:${data._scoreColor}20; color:${data._scoreColor}; font-weight:bold; border:1px solid ${data._scoreColor};">Resultado: ${data._avgScore}% - ${data._scoreLabel}</div>` : ''}
+        </div>
         <div style="margin-top:20px;">`;
 
     f.campos.forEach(c => {
@@ -2499,6 +2514,9 @@ window.abrirModalNuevoFormulario = (id) => {
             window.setVal('fb-titulo', f.titulo);
             window.setVal('fb-desc', f.descripcion);
             $('fb-is-eval').checked = !!f.is_eval;
+            $('fb-is-dynamic').checked = !!f.is_dynamic;
+            window.setDisplay('fb-dynamic-options-panel', !!f.is_dynamic ? 'block' : 'none');
+            window.setVal('fb-dynamic-options', f.dynamic_options ? f.dynamic_options.join(', ') : '');
             formPermLlenarUsers = f.perm_llenar_users || [];
             formPermVerUsers = f.perm_ver_users || [];
             formPermEditarUsers = f.perm_editar_users || [];
@@ -2508,6 +2526,9 @@ window.abrirModalNuevoFormulario = (id) => {
             window.setVal('fb-titulo', '');
             window.setVal('fb-desc', '');
             $('fb-is-eval').checked = false;
+            $('fb-is-dynamic').checked = false;
+            window.setDisplay('fb-dynamic-options-panel', 'none');
+            window.setVal('fb-dynamic-options', '');
             formPermLlenarUsers = [];
             formPermVerUsers = [];
             formPermEditarUsers = [];
@@ -2609,6 +2630,10 @@ window.agregarColMatriz = (idx) => {
 window.eliminarColMatriz = (idx, colIdx) => { formBuilderCampos[idx].matriz_cols.splice(colIdx, 1); window.renderFormPreview(); };
 window.actualizarColMatriz = (idx, colIdx, prop, val) => { formBuilderCampos[idx].matriz_cols[colIdx][prop] = (prop==='score'?Number(val):val); };
 
+window.actualizarCategoriaCampo = (idx, val) => {
+    formBuilderCampos[idx].categoria = val;
+};
+
 window.renderFormPreview = () => {
     let container = $('fb-preview-area');
     if(!container) return;
@@ -2618,12 +2643,31 @@ window.renderFormPreview = () => {
         return;
     }
 
+    let isDyn = $('fb-is-dynamic') && $('fb-is-dynamic').checked;
+    let dynOptsRaw = getValSafe('fb-dynamic-options').trim();
+    let dynOpts = dynOptsRaw ? dynOptsRaw.split(',').map(s => s.trim()).filter(s => s) : [];
+
     let h = '';
     formBuilderCampos.forEach((c, i) => {
         let reqHTML = c.requerido ? '<span style="color:var(--danger)">*</span>' : '';
+        
+        let catHtml = '';
+        if(isDyn && dynOpts.length > 0) {
+            catHtml = `<select style="margin:0; padding:2px 5px; font-size:11px; max-width:140px; border-radius:4px; border:1px solid var(--border);" onchange="window.actualizarCategoriaCampo(${i}, this.value)">
+                <option value="">(Mostrar siempre)</option>`;
+            dynOpts.forEach(opt => {
+                let sel = (c.categoria === opt) ? 'selected' : '';
+                catHtml += `<option value="${opt}" ${sel}>Solo en: ${opt}</option>`;
+            });
+            catHtml += `</select>`;
+        }
+
         h += `<div style="background:white; padding:15px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
-                    <label style="font-size:13px; color:var(--sidebar); font-weight:600; margin:0; line-height:1.4;">${c.label} ${reqHTML}</label>
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <label style="font-size:13px; color:var(--sidebar); font-weight:600; margin:0; line-height:1.4;">${c.label} ${reqHTML}</label>
+                        ${catHtml}
+                    </div>
                     <div style="display:flex; gap:2px; flex-shrink:0; background:#f8fafc; border-radius:6px; padding:2px;">
                         ${i > 0 ? `<button type="button" onclick="window.moverCampoArriba(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px;" title="Subir"><span class="material-icons-round" style="font-size:16px;">arrow_upward</span></button>` : ''}
                         ${i < formBuilderCampos.length - 1 ? `<button type="button" onclick="window.moverCampoAbajo(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px;" title="Bajar"><span class="material-icons-round" style="font-size:16px;">arrow_downward</span></button>` : ''}
@@ -2711,10 +2755,23 @@ window.abrirLlenarFormulario = (id) => {
         container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Este formulario no tiene campos configurados.</p>';
     } else {
         let h = '';
+        
+        if(f.is_dynamic && f.dynamic_options && f.dynamic_options.length > 0) {
+            h += `<div style="margin-bottom:20px; background:#e2e8f0; padding:15px; border-radius:8px;">
+                    <label style="font-weight:600; color:#0f172a; margin-bottom:5px; display:block;">Seleccione una categoría para continuar</label>
+                    <select id="master-dynamic-select" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; margin:0; font-size:14px;" onchange="window.aplicarLogicaDinamica(this.value)">
+                        <option value="">(Mostrar todo / Por defecto)</option>`;
+            f.dynamic_options.forEach(opt => {
+                h += `<option value="${opt}">${opt}</option>`;
+            });
+            h += `  </select>
+                  </div>`;
+        }
+
         f.campos.forEach(c => {
             let reqHTML = c.requerido ? '<span style="color:var(--danger)">*</span>' : '';
             let reqAttr = c.requerido ? 'required' : '';
-            h += `<div style="margin-bottom:20px;">
+            h += `<div class="dynamic-field-container" data-category="${c.categoria||''}" style="margin-bottom:20px;">
                     <label style="font-size:14px; font-weight:600; color:var(--text-main); display:block; margin-bottom:8px;">${c.label} ${reqHTML}</label>`;
             
             if(c.tipo === 'text') h += `<input type="text" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
@@ -2781,6 +2838,22 @@ window.addFilaSemaforo = (cId) => {
     tb.appendChild(tr);
 };
 
+window.aplicarLogicaDinamica = (cat) => {
+    let containers = document.querySelectorAll('.dynamic-field-container');
+    containers.forEach(div => {
+        let fieldCat = div.getAttribute('data-category');
+        if(!fieldCat || fieldCat === cat) {
+            div.style.display = 'block';
+            let inputs = div.querySelectorAll('input, select, textarea');
+            inputs.forEach(i => i.disabled = false);
+        } else {
+            div.style.display = 'none';
+            let inputs = div.querySelectorAll('input, select, textarea');
+            inputs.forEach(i => i.disabled = true);
+        }
+    });
+};
+
 window.guardarFormularioLleno = async () => {
     if(!currentFormLlenar) return;
     
@@ -2790,7 +2863,17 @@ window.guardarFormularioLleno = async () => {
 
     window.showLoading();
 
+    let masterCat = '';
+    let masterSel = $('master-dynamic-select');
+    if(currentFormLlenar.is_dynamic && masterSel) {
+        masterCat = masterSel.value;
+    }
+
     for (let c of currentFormLlenar.campos) {
+        if(masterCat && c.categoria && c.categoria !== masterCat) {
+             continue; // Skip conditionally hidden fields
+        }
+
         let val = null;
         if(c.tipo === 'checkbox') {
             val = $(`ans_${c.id}`).checked;
@@ -2865,13 +2948,17 @@ window.guardarFormulario = async () => {
 
     window.showLoading();
     try {
+        let dynOptsRaw = getValSafe('fb-dynamic-options').trim();
         let formData = {
             titulo: titulo,
             descripcion: desc,
             campos: formBuilderCampos,
             is_eval: $('fb-is-eval').checked,
+            is_dynamic: $('fb-is-dynamic').checked,
+            dynamic_options: $('fb-is-dynamic').checked && dynOptsRaw ? dynOptsRaw.split(',').map(s => s.trim()).filter(s => s) : [],
             perm_llenar_users: formPermLlenarUsers,
             perm_ver_users: formPermVerUsers,
+            perm_editar_users: formPermEditarUsers,
             estado: 'Activo',
             creado_por: currentUser.usuario,
             ultima_modificacion: new Date().toISOString()
