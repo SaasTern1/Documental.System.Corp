@@ -1233,11 +1233,19 @@
                         <input type="checkbox" id="fb-is-eval" style="margin:0; width:auto;"> Este formulario es una Evaluación Calificada (Genera Score Automático)
                     </label>
 
-                    <label for="fb-perm-llenar">Departamentos permitidos para LLENAR (Opcional)</label>
-                    <input type="text" id="fb-perm-llenar" placeholder="Ej: Sistemas, Ventas (Dejar vacío para todos)" style="margin-bottom:10px;">
+                    <label>Personas permitidas para LLENAR (Dejar vacío = Todos)</label>
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <select id="fb-perm-llenar-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
+                        <button type="button" class="btn btn-primary" onclick="window.addPermUser('llenar')">Añadir</button>
+                    </div>
+                    <div id="fb-perm-llenar-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px; min-height:10px;"></div>
 
-                    <label for="fb-perm-ver">Departamentos permitidos para VER RESPUESTAS (Opcional)</label>
-                    <input type="text" id="fb-perm-ver" placeholder="Ej: Gerencia (Dejar vacío para todos)" style="margin-bottom:20px;">
+                    <label>Personas permitidas para VER RESULTADOS (Dejar vacío = Todos)</label>
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <select id="fb-perm-ver-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
+                        <button type="button" class="btn btn-primary" onclick="window.addPermUser('ver')">Añadir</button>
+                    </div>
+                    <div id="fb-perm-ver-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:20px; min-height:10px;"></div>
                     
                     <h4 style="font-size:13px; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">Añadir Nuevo Campo</h4>
                     <label for="fb-tipo-campo">Tipo de Campo</label>

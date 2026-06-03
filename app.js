@@ -1302,10 +1302,9 @@ window.verRespuestasFormulario = async (id) => {
     let f = globalForms.find(x => x.id === id);
     if(!f) return;
 
-    if(f.perm_ver && f.perm_ver.trim() !== '') {
-        let depts = f.perm_ver.split(',').map(s => s.trim().toLowerCase());
-        if(!depts.includes(currentUser.departamento.toLowerCase())) {
-            return alert("Acceso denegado: Tu departamento no tiene permisos para ver los resultados de este formulario.");
+    if(f.perm_ver_users && Array.isArray(f.perm_ver_users) && f.perm_ver_users.length > 0) {
+        if(!f.perm_ver_users.includes(currentUser.usuario)) {
+            return alert("Acceso denegado: No tienes permisos asignados para ver los resultados de este formulario.");
         }
     }
 
@@ -2370,35 +2369,81 @@ window.abrirModalDash = (tipo) => {
 // ==========================================
 let globalForms = [];
 let formBuilderCampos = []; // Almacena temporalmente los campos mientras se construye
+let formPermLlenarUsers = [];
+let formPermVerUsers = [];
 let editandoFormId = null;
+
+window.renderPermTags = () => {
+    let hl = '';
+    formPermLlenarUsers.forEach((u, i) => {
+        let us = allUsers.find(x => x.usuario === u);
+        let name = us ? us.nombre : u;
+        hl += `<div style="display:inline-flex; align-items:center; background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:10px; font-size:11px;"><b>${name}</b> <span class="material-icons-round" style="font-size:14px; cursor:pointer; color:var(--danger); margin-left:5px;" onclick="window.removePermUser('llenar', ${i})">close</span></div>`;
+    });
+    $('fb-perm-llenar-list').innerHTML = hl || '<span style="font-size:11px; color:var(--text-muted);">Cualquiera puede llenar</span>';
+
+    let hv = '';
+    formPermVerUsers.forEach((u, i) => {
+        let us = allUsers.find(x => x.usuario === u);
+        let name = us ? us.nombre : u;
+        hv += `<div style="display:inline-flex; align-items:center; background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:10px; font-size:11px;"><b>${name}</b> <span class="material-icons-round" style="font-size:14px; cursor:pointer; color:var(--danger); margin-left:5px;" onclick="window.removePermUser('ver', ${i})">close</span></div>`;
+    });
+    $('fb-perm-ver-list').innerHTML = hv || '<span style="font-size:11px; color:var(--text-muted);">Cualquiera puede ver</span>';
+};
+
+window.addPermUser = (type) => {
+    let sel = $(`fb-perm-${type}-sel`).value;
+    if(!sel) return;
+    if(type === 'llenar') {
+        if(!formPermLlenarUsers.includes(sel)) formPermLlenarUsers.push(sel);
+    } else {
+        if(!formPermVerUsers.includes(sel)) formPermVerUsers.push(sel);
+    }
+    window.renderPermTags();
+};
+
+window.removePermUser = (type, idx) => {
+    if(type === 'llenar') formPermLlenarUsers.splice(idx, 1);
+    else formPermVerUsers.splice(idx, 1);
+    window.renderPermTags();
+};
 
 window.abrirModalNuevoFormulario = (id) => {
     editandoFormId = id || null;
+    
+    // Poblar selects
+    let opt = '<option value="">Seleccionar usuario...</option>';
+    allUsers.forEach(u => opt += `<option value="${u.usuario}">${u.nombre} (${u.usuario})</option>`);
+    $('fb-perm-llenar-sel').innerHTML = opt;
+    $('fb-perm-ver-sel').innerHTML = opt;
+
     if(editandoFormId) {
         let f = globalForms.find(x => x.id === editandoFormId);
         if(f) {
             window.setVal('fb-titulo', f.titulo);
             window.setVal('fb-desc', f.descripcion);
             $('fb-is-eval').checked = !!f.is_eval;
-            window.setVal('fb-perm-llenar', f.perm_llenar || '');
-            window.setVal('fb-perm-ver', f.perm_ver || '');
+            formPermLlenarUsers = f.perm_llenar_users || [];
+            formPermVerUsers = f.perm_ver_users || [];
             formBuilderCampos = f.campos ? JSON.parse(JSON.stringify(f.campos)) : [];
         } else {
             formBuilderCampos = [];
             window.setVal('fb-titulo', '');
             window.setVal('fb-desc', '');
             $('fb-is-eval').checked = false;
-            window.setVal('fb-perm-llenar', '');
-            window.setVal('fb-perm-ver', '');
+            formPermLlenarUsers = [];
+            formPermVerUsers = [];
         }
     } else {
         formBuilderCampos = [];
         window.setVal('fb-titulo', '');
         window.setVal('fb-desc', '');
         $('fb-is-eval').checked = false;
-        window.setVal('fb-perm-llenar', '');
-        window.setVal('fb-perm-ver', '');
+        formPermLlenarUsers = [];
+        formPermVerUsers = [];
     }
+    
+    window.renderPermTags();
     window.setVal('fb-desc', '');
     window.setVal('fb-tipo-campo', 'text');
     window.setVal('fb-label-campo', '');
@@ -2519,12 +2564,12 @@ window.abrirLlenarFormulario = (id) => {
     let f = globalForms.find(x => x.id === id);
     if (!f) return;
 
-    if(f.perm_llenar && f.perm_llenar.trim() !== '') {
-        let depts = f.perm_llenar.split(',').map(s => s.trim().toLowerCase());
-        if(!depts.includes(currentUser.departamento.toLowerCase())) {
-            return alert("Acceso denegado: Tu departamento no está autorizado para llenar este formulario.");
+    if(f.perm_llenar_users && Array.isArray(f.perm_llenar_users) && f.perm_llenar_users.length > 0) {
+        if(!f.perm_llenar_users.includes(currentUser.usuario)) {
+            return alert("Acceso denegado: No estás autorizado directamente para llenar este formulario.");
         }
     }
+    
     currentFormLlenar = f;
     
     $('fill-form-title').innerText = f.titulo;
@@ -2684,8 +2729,8 @@ window.guardarFormulario = async () => {
             descripcion: desc,
             campos: formBuilderCampos,
             is_eval: $('fb-is-eval').checked,
-            perm_llenar: getValSafe('fb-perm-llenar').trim(),
-            perm_ver: getValSafe('fb-perm-ver').trim(),
+            perm_llenar_users: formPermLlenarUsers,
+            perm_ver_users: formPermVerUsers,
             estado: 'Activo',
             creado_por: currentUser.usuario,
             ultima_modificacion: new Date().toISOString()
