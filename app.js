@@ -2371,6 +2371,7 @@ let globalForms = [];
 let formBuilderCampos = []; // Almacena temporalmente los campos mientras se construye
 let formPermLlenarUsers = [];
 let formPermVerUsers = [];
+let formPermEditarUsers = [];
 let editandoFormId = null;
 
 window.renderPermTags = () => {
@@ -2389,6 +2390,14 @@ window.renderPermTags = () => {
         hv += `<div style="display:inline-flex; align-items:center; background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:10px; font-size:11px;"><b>${name}</b> <span class="material-icons-round" style="font-size:14px; cursor:pointer; color:var(--danger); margin-left:5px;" onclick="window.removePermUser('ver', ${i})">close</span></div>`;
     });
     $('fb-perm-ver-list').innerHTML = hv || '<span style="font-size:11px; color:var(--text-muted);">Cualquiera puede ver</span>';
+
+    let he = '';
+    formPermEditarUsers.forEach((u, i) => {
+        let us = allUsers.find(x => x.usuario === u);
+        let name = us ? us.nombre : u;
+        he += `<div style="display:inline-flex; align-items:center; background:#dcfce7; color:#166534; padding:4px 10px; border-radius:10px; font-size:11px;"><b>${name}</b> <span class="material-icons-round" style="font-size:14px; cursor:pointer; color:var(--danger); margin-left:5px;" onclick="window.removePermUser('editar', ${i})">close</span></div>`;
+    });
+    $('fb-perm-editar-list').innerHTML = he || '<span style="font-size:11px; color:var(--text-muted);">Solo Creador/Admin</span>';
 };
 
 window.addPermUser = (type) => {
@@ -2396,15 +2405,18 @@ window.addPermUser = (type) => {
     if(!sel) return;
     if(type === 'llenar') {
         if(!formPermLlenarUsers.includes(sel)) formPermLlenarUsers.push(sel);
-    } else {
+    } else if (type === 'ver') {
         if(!formPermVerUsers.includes(sel)) formPermVerUsers.push(sel);
+    } else if (type === 'editar') {
+        if(!formPermEditarUsers.includes(sel)) formPermEditarUsers.push(sel);
     }
     window.renderPermTags();
 };
 
 window.removePermUser = (type, idx) => {
     if(type === 'llenar') formPermLlenarUsers.splice(idx, 1);
-    else formPermVerUsers.splice(idx, 1);
+    else if(type === 'ver') formPermVerUsers.splice(idx, 1);
+    else if(type === 'editar') formPermEditarUsers.splice(idx, 1);
     window.renderPermTags();
 };
 
@@ -2416,8 +2428,11 @@ window.abrirModalNuevoFormulario = (id) => {
     allUsers.forEach(u => opt += `<option value="${u.usuario}">${u.nombre} (${u.usuario})</option>`);
     $('fb-perm-llenar-sel').innerHTML = opt;
     $('fb-perm-ver-sel').innerHTML = opt;
+    $('fb-perm-editar-sel').innerHTML = opt;
 
     if(editandoFormId) {
+        window.setDisplay('btn-eliminar-form-interno', 'block');
+        window.setDisplay('btn-ver-respuestas-interno', 'block');
         let f = globalForms.find(x => x.id === editandoFormId);
         if(f) {
             window.setVal('fb-titulo', f.titulo);
@@ -2425,6 +2440,7 @@ window.abrirModalNuevoFormulario = (id) => {
             $('fb-is-eval').checked = !!f.is_eval;
             formPermLlenarUsers = f.perm_llenar_users || [];
             formPermVerUsers = f.perm_ver_users || [];
+            formPermEditarUsers = f.perm_editar_users || [];
             formBuilderCampos = f.campos ? JSON.parse(JSON.stringify(f.campos)) : [];
         } else {
             formBuilderCampos = [];
@@ -2433,14 +2449,18 @@ window.abrirModalNuevoFormulario = (id) => {
             $('fb-is-eval').checked = false;
             formPermLlenarUsers = [];
             formPermVerUsers = [];
+            formPermEditarUsers = [];
         }
     } else {
+        window.setDisplay('btn-eliminar-form-interno', 'none');
+        window.setDisplay('btn-ver-respuestas-interno', 'none');
         formBuilderCampos = [];
         window.setVal('fb-titulo', '');
         window.setVal('fb-desc', '');
         $('fb-is-eval').checked = false;
         formPermLlenarUsers = [];
         formPermVerUsers = [];
+        formPermEditarUsers = [];
     }
     
     window.renderPermTags();
@@ -2755,6 +2775,18 @@ window.guardarFormulario = async () => {
     }
 };
 
+window.eliminarFormularioInterno = () => {
+    if(!editandoFormId) return;
+    window.del('Formularios', editandoFormId);
+    window.setDisplay('modal-form-builder', 'none');
+};
+
+window.verRespuestasFormularioInterno = () => {
+    if(!editandoFormId) return;
+    window.verRespuestasFormulario(editandoFormId);
+    window.setDisplay('modal-form-builder', 'none');
+};
+
 window.renderTablaForms = () => {
     let tb = $('tbody-forms');
     if(!tb) return;
@@ -2774,9 +2806,7 @@ window.renderTablaForms = () => {
                 <td><span class="badge ${bEst}">${f.estado}</span></td>
                 <td style="text-align:center;">
                     <button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.abrirLlenarFormulario('${f.id}')" title="Llenar"><span class="material-icons-round" style="font-size:14px;">preview</span></button>
-                    <button class="btn btn-warning" style="padding:4px 8px; font-size:11px;" onclick="window.abrirModalNuevoFormulario('${f.id}')" title="Editar"><span class="material-icons-round" style="font-size:14px;">edit</span></button>
-                    <button class="btn btn-info" style="padding:4px 8px; font-size:11px;" onclick="window.verRespuestasFormulario('${f.id}')" title="Ver Respuestas"><span class="material-icons-round" style="font-size:14px;">format_list_bulleted</span></button>
-                    <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="window.del('Formularios','${f.id}')" title="Eliminar"><span class="material-icons-round" style="font-size:14px;">delete</span></button>
+                    ${(currentUser.permisos && currentUser.permisos.admin) || f.creado_por === currentUser.usuario || (f.perm_editar_users && f.perm_editar_users.includes(currentUser.usuario)) ? `<button class="btn btn-warning" style="padding:4px 8px; font-size:11px;" onclick="window.abrirModalNuevoFormulario('${f.id}')" title="Editar/Ver"><span class="material-icons-round" style="font-size:14px;">edit</span></button>` : ''}
                 </td>
               </tr>`;
     });
