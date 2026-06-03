@@ -1299,14 +1299,12 @@ window.enviarComentarioLibre = async () => {
 };
 
 window.verRespuestasFormulario = async (id) => {
+    if(!currentUser.permisos || (!currentUser.permisos.admin && !currentUser.permisos.p_gest_sgc)) {
+        return alert("Acceso denegado: La consulta de respuestas es exclusiva para Gestores SGC y Administradores.");
+    }
+
     let f = globalForms.find(x => x.id === id);
     if(!f) return;
-
-    if(f.perm_ver_users && Array.isArray(f.perm_ver_users) && f.perm_ver_users.length > 0) {
-        if(!f.perm_ver_users.includes(currentUser.usuario)) {
-            return alert("Acceso denegado: No tienes permisos asignados para ver los resultados de este formulario.");
-        }
-    }
 
     $('vr-tit').innerText = f.titulo;
     $('vr-subtit').innerText = "Respuestas enviadas por los usuarios";
@@ -1332,10 +1330,10 @@ window.verRespuestasFormulario = async (id) => {
 
         // Build tbody
         let tbHTML = '';
+        let docsData = [];
         if(qs.empty) {
             tbHTML = `<tr><td colspan="${f.campos.length + (f.is_eval?3:2)}" style="text-align:center; padding:20px;">No hay respuestas aún para este formulario.</td></tr>`;
         } else {
-            let docsData = [];
             qs.forEach(doc => docsData.push(doc.data()));
             docsData.sort((a,b) => new Date(b.fecha_llenado) - new Date(a.fecha_llenado));
 
@@ -2647,7 +2645,11 @@ window.abrirModalNuevoFormulario = (id) => {
 
     if(editandoFormId) {
         window.setDisplay('btn-eliminar-form-interno', 'block');
-        window.setDisplay('btn-ver-respuestas-interno', 'block');
+        if(currentUser.permisos && (currentUser.permisos.admin || currentUser.permisos.p_gest_sgc)) {
+            window.setDisplay('btn-ver-respuestas-interno', 'block');
+        } else {
+            window.setDisplay('btn-ver-respuestas-interno', 'none');
+        }
         let f = globalForms.find(x => x.id === editandoFormId);
         if(f) {
             window.setVal('fb-titulo', f.titulo);
