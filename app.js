@@ -1431,6 +1431,78 @@ window.verRespuestasFormulario = async (id) => {
             chartContainer.style.display = 'none';
         }
 
+        let statsContainer = $('vr-stats-container');
+        if(window.vrSelectCharts && window.vrSelectCharts.length > 0) {
+            window.vrSelectCharts.forEach(ch => ch.destroy());
+        }
+        window.vrSelectCharts = [];
+        
+        let selectFields = f.campos.filter(c => c.tipo === 'select' || c.tipo === 'radio' || c.tipo === 'si_no');
+        if(docsData && docsData.length > 0 && selectFields.length > 0) {
+            statsContainer.style.display = 'flex';
+            statsContainer.innerHTML = '';
+            
+            selectFields.forEach(c => {
+                let counts = {};
+                docsData.forEach(d => {
+                    let ansObj = d.respuestas ? d.respuestas.find(r => r.id_campo === c.id) : null;
+                    let val = ansObj ? ansObj.respuesta : null;
+                    if(val) counts[val] = (counts[val] || 0) + 1;
+                });
+                
+                if(Object.keys(counts).length > 0) {
+                    let div = document.createElement('div');
+                    div.style.flex = "1";
+                    div.style.minWidth = "300px";
+                    div.style.maxWidth = "450px";
+                    div.style.border = "1px solid var(--border)";
+                    div.style.borderRadius = "8px";
+                    div.style.padding = "15px";
+                    
+                    let title = document.createElement('h5');
+                    title.innerText = c.label;
+                    title.style.margin = "0 0 15px 0";
+                    title.style.fontSize = "13px";
+                    title.style.color = "var(--sidebar)";
+                    div.appendChild(title);
+                    
+                    let canvasContainer = document.createElement('div');
+                    canvasContainer.style.position = "relative";
+                    canvasContainer.style.height = "180px";
+                    let canvas = document.createElement('canvas');
+                    canvasContainer.appendChild(canvas);
+                    div.appendChild(canvasContainer);
+                    statsContainer.appendChild(div);
+                    
+                    let labels = Object.keys(counts);
+                    let data = Object.values(counts);
+                    let total = data.reduce((a,b)=>a+b, 0);
+                    
+                    let chart = new Chart(canvas, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels.map((l, i) => `${l.length > 25 ? l.substring(0,25)+'...' : l} (${Math.round((data[i]/total)*100)}%)`),
+                            datasets: [{
+                                data: data,
+                                backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9', '#ec4899', '#14b8a6']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }
+                            }
+                        }
+                    });
+                    window.vrSelectCharts.push(chart);
+                }
+            });
+            if(statsContainer.innerHTML === '') statsContainer.style.display = 'none';
+        } else {
+            if(statsContainer) statsContainer.style.display = 'none';
+        }
+
         window.hideLoading();
         window.setDisplay('modal-ver-respuestas', 'flex');
     } catch(e) {
