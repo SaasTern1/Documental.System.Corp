@@ -822,6 +822,62 @@ window.guardarUsuario = async () => {
   } catch (err) { console.error(err); window.hideLoading(); alert("Error de red al guardar usuario."); }
 };
 
+window.actualizarGraficoEvaluacion = (campoId, campoLabel) => {
+    let ctxE = document.getElementById('vr-chart-eval');
+    if(!ctxE) return;
+    let docsData = window.currentRespuestasDocs || [];
+    let optionScores = {};
+    
+    docsData.forEach(d => {
+        if(d._avgScore !== undefined) {
+            let ansObj = d.respuestas ? d.respuestas.find(r => r.id_campo === campoId) : null;
+            let val = ansObj ? ansObj.respuesta : null;
+            if(val && val !== '-' && !Array.isArray(val)) {
+                if(!optionScores[val]) optionScores[val] = { sum: 0, count: 0 };
+                optionScores[val].sum += Number(d._avgScore || 0);
+                optionScores[val].count++;
+            }
+        }
+    });
+    
+    let labelsE = [];
+    let dataE = [];
+    let colorsE = [];
+    
+    let sortedOptions = Object.keys(optionScores).sort((a,b) => optionScores[b].count - optionScores[a].count);
+    
+    sortedOptions.forEach(opt => {
+        if(optionScores[opt].count > 0) {
+            labelsE.push(opt.length > 25 ? opt.substring(0,25)+'...' : opt);
+            let avgS = Number((optionScores[opt].sum / optionScores[opt].count).toFixed(1));
+            dataE.push(avgS);
+            colorsE.push(avgS >= 95 ? '#22c55e' : (avgS >= 85 ? '#3b82f6' : (avgS >= 75 ? '#eab308' : '#ef4444')));
+        }
+    });
+    
+    if(window.vrChartEvalInstance) window.vrChartEvalInstance.destroy();
+    window.vrChartEvalInstance = new Chart(ctxE, {
+        type: 'bar',
+        data: {
+            labels: labelsE,
+            datasets: [{
+                label: 'Promedio Evaluación (%)',
+                data: dataE,
+                backgroundColor: colorsE,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false },
+                title: { display: true, text: `Promedios por: ${campoLabel}`, font: {size: 13, weight: 'bold'}, color: '#1e293b' }
+            },
+            scales: { y: { beginAtZero: true, max: 100 } }
+        }
+    });
+};
+
 window.exportarExcelUsuarios = () => {
   if(allUsers.length === 0) return; let dE = allUsers.map(u => ({ "Nombre": u.nombre, "Usuario ID": u.usuario, "Email": u.email || '', "Rol": u.role || '', "Gerencias": u.gerencias ? u.gerencias.join(', ') : (u.gerencia || ''), "Admin": u.permisos.admin ? 'Sí' : 'No', "Gestor SGC": u.permisos.p_gest_sgc ? 'Sí' : 'No', "Auditor": u.permisos.p_audit_auditor ? 'Sí' : 'No' })); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dE), "Usuarios_Registrados"); XLSX.writeFile(wb, "Reporte_Usuarios_SGC.xlsx");
 };
@@ -1431,47 +1487,10 @@ window.verRespuestasFormulario = async (id) => {
             
             if(f.is_eval && evalChartContainer) {
                 evalChartContainer.style.display = 'block';
-                let userScores = {};
-                docsData.forEach(d => {
-                    if(!userScores[d.usuario]) userScores[d.usuario] = { sum: 0, count: 0 };
-                    if(d._avgScore !== undefined) {
-                        userScores[d.usuario].sum += Number(d._avgScore || 0);
-                        userScores[d.usuario].count++;
-                    }
-                });
-                
-                let labelsE = [];
-                let dataE = [];
-                let colorsE = [];
-                
-                for(let u in userScores) {
-                    if(userScores[u].count > 0) {
-                        labelsE.push(u);
-                        let avgS = Number((userScores[u].sum / userScores[u].count).toFixed(1));
-                        dataE.push(avgS);
-                        colorsE.push(avgS >= 95 ? '#22c55e' : (avgS >= 85 ? '#3b82f6' : (avgS >= 75 ? '#eab308' : '#ef4444')));
-                    }
+                let categoricalFields = f.campos.filter(c => c.tipo === 'select' || c.tipo === 'radio' || c.tipo === 'si_no');
+                if(categoricalFields.length > 0) {
+                    window.actualizarGraficoEvaluacion(categoricalFields[0].id, categoricalFields[0].label);
                 }
-                
-                let ctxE = $('vr-chart-eval');
-                if(window.vrChartEvalInstance) window.vrChartEvalInstance.destroy();
-                window.vrChartEvalInstance = new Chart(ctxE, {
-                    type: 'bar',
-                    data: {
-                        labels: labelsE,
-                        datasets: [{
-                            label: 'Promedio Evaluación (%)',
-                            data: dataE,
-                            backgroundColor: colorsE,
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true, max: 100 } }
-                    }
-                });
             } else if(evalChartContainer) {
                 evalChartContainer.style.display = 'none';
             }
@@ -1518,12 +1537,34 @@ window.verRespuestasFormulario = async (id) => {
                     div.style.padding = "15px";
                     div.style.background = "#fff";
                     
+                    let titleContainer = document.createElement('div');
+                    titleContainer.style.display = "flex";
+                    titleContainer.style.justifyContent = "space-between";
+                    titleContainer.style.alignItems = "center";
+                    titleContainer.style.marginBottom = "15px";
+
                     let title = document.createElement('h5');
                     title.innerText = c.label;
-                    title.style.margin = "0 0 15px 0";
+                    title.style.margin = "0";
                     title.style.fontSize = "13px";
                     title.style.color = "var(--sidebar)";
-                    div.appendChild(title);
+                    titleContainer.appendChild(title);
+                    
+                    if(f.is_eval) {
+                        let btnChart = document.createElement('button');
+                        btnChart.className = 'btn btn-primary';
+                        btnChart.style.padding = '4px 8px';
+                        btnChart.style.fontSize = '10px';
+                        btnChart.innerHTML = '<span class="material-icons-round" style="font-size:12px; vertical-align:middle;">bar_chart</span> Gráfico';
+                        btnChart.onclick = () => {
+                            window.actualizarGraficoEvaluacion(c.id, c.label);
+                            // Desplazarse suavemente al gráfico
+                            let chartEl = document.getElementById('vr-chart-container');
+                            if(chartEl) chartEl.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        };
+                        titleContainer.appendChild(btnChart);
+                    }
+                    div.appendChild(titleContainer);
                     
                     let table = document.createElement('table');
                     table.style.width = "100%";
