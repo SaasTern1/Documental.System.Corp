@@ -2442,59 +2442,99 @@ window.verDetalleDashboard = (tipo) => {
 };
 
 window.extraerTodaInformacion = () => {
-    // Basic export logic gathering major collections
     try {
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "=== EXPORTACION GLOBAL DEL SISTEMA ===\\n\\n";
-
-        // 1. Solicitudes
-        csvContent += "--- SOLICITUDES ---\\n";
-        csvContent += "ID,Fecha,Solicitante,Titulo,Gerencia,Prioridad,Estado,SLA Esperado,Fecha Cierre\\n";
-        if (globalSolicitudes) {
-            globalSolicitudes.forEach(s => {
-                let row = [
-                    s.customId || '', s.fecha || '', `"${s.solicitante || ''}"`, `"${s.titulo || ''}"`, 
-                    `"${s.gerencia || ''}"`, s.prioridad || '', `"${s.estado || ''}"`, 
-                    s.sla || s.fecha_esperada_cierre || '', s.fecha_final || ''
-                ].join(",");
-                csvContent += row + "\\n";
-            });
+        if (typeof XLSX === 'undefined') {
+            alert('Librería de Excel no encontrada. Por favor recarga la página.');
+            return;
         }
         
-        csvContent += "\\n--- AUDITORIAS ---\\n";
-        csvContent += "ID,Fecha,Lugar,Lider,Requisitos,Estado\\n";
+        let wb = XLSX.utils.book_new();
+
+        // 1. Solicitudes
+        let dataSolicitudes = [
+            ["ID / Código", "Fecha Creada", "Solicitante", "Título", "Gerencia", "Prioridad", "Estado", "SLA / Esperada", "Fecha Cierre", "Autorizado Por"]
+        ];
+        if (globalSolicitudes) {
+            globalSolicitudes.forEach(s => {
+                dataSolicitudes.push([
+                    s.customId || s.id || '', s.fecha || '', s.solicitante || '', s.titulo || '', 
+                    s.gerencia || '', s.prioridad || '', s.estado || '', 
+                    s.sla || s.fecha_esperada_cierre || '', s.fecha_final || '', s.autorizado_por || ''
+                ]);
+            });
+        }
+        let wsSol = XLSX.utils.aoa_to_sheet(dataSolicitudes);
+        XLSX.utils.book_append_sheet(wb, wsSol, "Solicitudes");
+
+        // 2. Auditorías
+        let dataAud = [
+            ["ID Auditoría", "Lugar / Proceso", "Fecha", "Requisitos", "Líder", "Equipo Auditor", "Estado", "Puntaje Promedio"]
+        ];
         if (globalAllAuditorias) {
             globalAllAuditorias.forEach(a => {
-                let row = [
-                    a.id || '', a.fecha || '', `"${a.lugar || ''}"`, `"${a.lider || ''}"`, 
-                    `"${a.requisitos || ''}"`, `"${a.estado || ''}"`
-                ].join(",");
-                csvContent += row + "\\n";
+                dataAud.push([
+                    a.id || '', a.lugar || '', a.fecha || '', a.requisitos || '', 
+                    a.lider || '', a.auditores || '', a.estado || '', a.puntaje_global || ''
+                ]);
             });
         }
+        let wsAud = XLSX.utils.aoa_to_sheet(dataAud);
+        XLSX.utils.book_append_sheet(wb, wsAud, "Auditorías");
 
-        csvContent += "\\n--- NO CONFORMIDADES (SAC) ---\\n";
-        csvContent += "SAC_N,Fecha,Tipo,Responsable,Requisito,Estado\\n";
+        // 3. No Conformidades (SAC)
+        let dataNC = [
+            ["SAC N°", "Fecha de Emisión", "Tipo", "Requisito Evaluado", "Responsable", "Descripción", "Acción Inmediata", "Estado", "Fecha Cierre"]
+        ];
         if (globalAllSacs) {
             globalAllSacs.forEach(n => {
-                let row = [
-                    n.sac_n || '', n.fecha || '', `"${n.tipo_sac || ''}"`, `"${n.responsable || ''}"`, 
-                    `"${n.requisito_evaluado || ''}"`, `"${n.estado || ''}"`
-                ].join(",");
-                csvContent += row + "\\n";
+                dataNC.push([
+                    n.sac_n || '', n.fecha || '', n.tipo_sac || '', n.requisito_evaluado || '', 
+                    n.responsable || '', n.descripcion || '', n.accion_inmediata || '', n.estado || '', n.fecha_cierre || ''
+                ]);
             });
         }
+        let wsNC = XLSX.utils.aoa_to_sheet(dataNC);
+        XLSX.utils.book_append_sheet(wb, wsNC, "No Conformidades");
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Backup_Global_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // 4. Proveedores
+        if (typeof globalProveedores !== 'undefined') {
+            let dataProv = [
+                ["RUC", "Razón Social", "Servicio", "Certificaciones", "Ev. Física", "Ev. TI", "Ev. RRHH", "Riesgo Global", "Estado", "Próxima Evaluación"]
+            ];
+            globalProveedores.forEach(p => {
+                let f = parseFloat(p.ev_fisica) || 0; let t = parseFloat(p.ev_ti) || 0; let r = parseFloat(p.ev_rrhh) || 0;
+                let prom = ((f+t+r)/3).toFixed(1);
+                dataProv.push([
+                    p.ruc || '', p.razon_social || '', p.servicio || '', p.certificaciones || '', 
+                    f, t, r, prom, p.estado || '', p.fecha_proxima || ''
+                ]);
+            });
+            let wsProv = XLSX.utils.aoa_to_sheet(dataProv);
+            XLSX.utils.book_append_sheet(wb, wsProv, "Proveedores OEA");
+        }
+
+        // 5. Riesgos
+        if (typeof globalRiesgos !== 'undefined') {
+            let dataRiesgo = [
+                ["ID Riesgo", "Proceso Afectado", "Amenaza", "Vulnerabilidad", "Probabilidad", "Impacto", "Severidad", "Acción Mitigación", "Responsable", "Estado"]
+            ];
+            globalRiesgos.forEach(r => {
+                let sev = (parseInt(r.probabilidad) || 0) * (parseInt(r.impacto) || 0);
+                dataRiesgo.push([
+                    r.rsk_id || '', r.proceso || '', r.amenaza || '', r.vulnerabilidad || '', 
+                    r.probabilidad || '', r.impacto || '', sev, r.accion_mitigacion || '', r.responsable || '', r.estado || ''
+                ]);
+            });
+            let wsRiesgo = XLSX.utils.aoa_to_sheet(dataRiesgo);
+            XLSX.utils.book_append_sheet(wb, wsRiesgo, "Matriz Riesgos OEA");
+        }
+
+        // Generar y Descargar Archivo Excel
+        XLSX.writeFile(wb, `Backup_Sistema_Global_${new Date().toISOString().split('T')[0]}.xlsx`);
+
     } catch (error) {
-        console.error("Error al exportar:", error);
-        alert("Ocurrió un error al extraer la información.");
+        console.error("Error al exportar a Excel:", error);
+        alert("Ocurrió un error al generar el archivo Excel.");
     }
 };
 
