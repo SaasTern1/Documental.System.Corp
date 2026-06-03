@@ -1236,6 +1236,8 @@
                         <option value="date">Fecha</option>
                         <option value="select">Lista Desplegable</option>
                         <option value="checkbox">Casilla de Verificación (Check)</option>
+                        <option value="si_no">Sí / No</option>
+                        <option value="semaforo">Tabla de Evaluación (Semáforo Dinámico)</option>
                     </select>
                     <label for="fb-label-campo">Etiqueta (Pregunta)</label>
                     <input type="text" id="fb-label-campo" name="fb-label-campo" placeholder="Ej: ¿Cuál es su nombre?">
@@ -1265,6 +1267,28 @@
             <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;">
                 <button class="btn btn-dark" onclick="window.setDisplay('modal-form-builder', 'none')">Cancelar</button>
                 <button class="btn btn-primary" onclick="window.guardarFormulario()"><span class="material-icons-round" style="font-size:18px;">save</span> Guardar Formulario</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Filling Forms -->
+    <div class="modal-overlay" id="modal-fill-form">
+        <div class="modal-content" style="max-width:800px;">
+            <div class="modal-main">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px;">
+                    <div>
+                        <h2 id="fill-form-title" style="margin:0; font-size:22px; color:var(--text-main); font-weight:800;">Llenar Formulario</h2>
+                        <p id="fill-form-desc" style="margin:5px 0 0 0; color:var(--sidebar); font-size:14px;"></p>
+                    </div>
+                    <button class="btn btn-dark" onclick="window.setDisplay('modal-fill-form', 'none')" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
+                </div>
+                <div id="fill-form-container" style="background:#f8fafc; border:1px solid var(--border); padding:20px; border-radius:8px; min-height:200px; max-height:60vh; overflow-y:auto; margin-bottom:20px;">
+                    <!-- Campos Dinámicos Aquí -->
+                </div>
+                <div style="text-align:right;">
+                    <button class="btn btn-dark" onclick="window.setDisplay('modal-fill-form', 'none')">Cancelar</button>
+                    <button class="btn btn-success" onclick="window.guardarFormularioLleno()">Guardar Respuestas</button>
+                </div>
             </div>
         </div>
     </div>

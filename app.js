@@ -2328,9 +2328,157 @@ window.renderFormPreview = () => {
             c.opciones.forEach(op => h += `<option>${op}</option>`);
             h += `</select>`;
         }
+        else if(c.tipo === 'si_no') {
+            h += `<div style="display:flex; gap:15px; margin-top:5px;">
+                    <label style="font-size:12px; color:var(--text-muted);"><input type="radio" disabled style="width:auto; margin-bottom:0;"> Sí</label>
+                    <label style="font-size:12px; color:var(--text-muted);"><input type="radio" disabled style="width:auto; margin-bottom:0;"> No</label>
+                  </div>`;
+        }
+        else if(c.tipo === 'semaforo') {
+            h += `<div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-top:5px; border:1px dashed var(--sidebar); text-align:center;">
+                    <span class="material-icons-round" style="color:var(--sidebar); font-size:24px;">view_list</span>
+                    <p style="font-size:12px; color:var(--sidebar); margin:5px 0 0 0;">Tabla Semáforo Dinámica (Se habilitará al llenar)</p>
+                  </div>`;
+        }
         h += `</div>`;
     });
     container.innerHTML = h;
+};
+
+// ==========================================
+// LLENADO DE FORMULARIOS
+// ==========================================
+let currentFormLlenar = null;
+
+window.abrirLlenarFormulario = (id) => {
+    let f = globalForms.find(x => x.id === id);
+    if (!f) return;
+    currentFormLlenar = f;
+    
+    $('fill-form-title').innerText = f.titulo;
+    $('fill-form-desc').innerText = f.descripcion || 'Por favor, complete los siguientes campos:';
+    
+    let container = $('fill-form-container');
+    if (!f.campos || f.campos.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Este formulario no tiene campos configurados.</p>';
+    } else {
+        let h = '';
+        f.campos.forEach(c => {
+            let reqHTML = c.requerido ? '<span style="color:var(--danger)">*</span>' : '';
+            let reqAttr = c.requerido ? 'required' : '';
+            h += `<div style="margin-bottom:20px;">
+                    <label style="font-size:14px; font-weight:600; color:var(--text-main); display:block; margin-bottom:8px;">${c.label} ${reqHTML}</label>`;
+            
+            if(c.tipo === 'text') h += `<input type="text" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'textarea') h += `<textarea id="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
+            else if(c.tipo === 'number') h += `<input type="number" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'date') h += `<input type="date" id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'checkbox') h += `<label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" id="ans_${c.id}" style="width:auto; margin:0;"> Marcar</label>`;
+            else if(c.tipo === 'select') {
+                h += `<select id="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;"><option value="">-- Seleccione --</option>`;
+                c.opciones.forEach(op => h += `<option value="${op}">${op}</option>`);
+                h += `</select>`;
+            }
+            else if(c.tipo === 'si_no') {
+                h += `<div style="display:flex; gap:15px; margin-top:5px;">
+                        <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="ans_${c.id}" value="Sí" ${reqAttr} style="width:auto; margin:0;"> Sí</label>
+                        <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="ans_${c.id}" value="No" ${reqAttr} style="width:auto; margin:0;"> No</label>
+                      </div>`;
+            }
+            else if(c.tipo === 'semaforo') {
+                h += `<div style="border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+                        <table style="width:100%; text-align:left; border-collapse:collapse;">
+                            <thead style="background:#e2e8f0; font-size:12px;"><tr><th style="padding:10px;">Ítem / Concepto evaluado</th><th style="padding:10px; width:120px; text-align:center;">Evaluación</th><th style="padding:10px; width:50px;"></th></tr></thead>
+                            <tbody id="tb_semaforo_${c.id}">
+                                <tr>
+                                    <td style="padding:8px;"><input type="text" class="sem-item search-bar" placeholder="Descripción..." style="width:100%; margin:0;" ${reqAttr}></td>
+                                    <td style="padding:8px;"><select class="sem-val search-bar" style="width:100%; margin:0;" ${reqAttr} onchange="this.style.backgroundColor = this.value==='Verde'?'#dcfce7':(this.value==='Amarillo'?'#fef3c7':(this.value==='Rojo'?'#fee2e2':'#fff'));"><option value="">--</option><option value="Verde">Verde (Ok)</option><option value="Amarillo">Amarillo (Alerta)</option><option value="Rojo">Rojo (Crítico)</option></select></td>
+                                    <td style="padding:8px; text-align:center;"><button class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="this.parentElement.parentElement.remove()"><span class="material-icons-round" style="font-size:14px;">delete</span></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="padding:10px; background:#f8fafc; text-align:center; border-top:1px solid var(--border);">
+                            <button class="btn btn-primary" onclick="window.addFilaSemaforo('${c.id}')" style="padding:4px 12px; font-size:12px;">+ Añadir Fila</button>
+                        </div>
+                      </div>`;
+            }
+            h += `</div>`;
+        });
+        container.innerHTML = h;
+    }
+    window.setDisplay('modal-fill-form', 'flex');
+};
+
+window.addFilaSemaforo = (cId) => {
+    let tb = document.getElementById(`tb_semaforo_${cId}`);
+    if(!tb) return;
+    let tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td style="padding:8px;"><input type="text" class="sem-item search-bar" placeholder="Descripción..." style="width:100%; margin:0;" required></td>
+        <td style="padding:8px;"><select class="sem-val search-bar" style="width:100%; margin:0;" required onchange="this.style.backgroundColor = this.value==='Verde'?'#dcfce7':(this.value==='Amarillo'?'#fef3c7':(this.value==='Rojo'?'#fee2e2':'#fff'));"><option value="">--</option><option value="Verde">Verde (Ok)</option><option value="Amarillo">Amarillo (Alerta)</option><option value="Rojo">Rojo (Crítico)</option></select></td>
+        <td style="padding:8px; text-align:center;"><button class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="this.parentElement.parentElement.remove()"><span class="material-icons-round" style="font-size:14px;">delete</span></button></td>
+    `;
+    tb.appendChild(tr);
+};
+
+window.guardarFormularioLleno = async () => {
+    if(!currentFormLlenar) return;
+    
+    // Validate inputs
+    let respuestas = [];
+    let isValid = true;
+
+    for (let c of currentFormLlenar.campos) {
+        let val = null;
+        if(c.tipo === 'checkbox') {
+            val = $(`ans_${c.id}`).checked;
+        } else if(c.tipo === 'si_no') {
+            let selected = document.querySelector(`input[name="ans_${c.id}"]:checked`);
+            if (selected) val = selected.value;
+            if (c.requerido && !val) isValid = false;
+        } else if(c.tipo === 'semaforo') {
+            let tb = document.getElementById(`tb_semaforo_${c.id}`);
+            let rows = tb.querySelectorAll('tr');
+            val = [];
+            rows.forEach(r => {
+                let item = r.querySelector('.sem-item').value;
+                let color = r.querySelector('.sem-val').value;
+                if(item || color) val.push({ item, color });
+                if(c.requerido && (!item || !color)) isValid = false;
+            });
+            if(c.requerido && val.length === 0) isValid = false;
+        } else {
+            val = getValSafe(`ans_${c.id}`);
+            if (c.requerido && !val) isValid = false;
+        }
+        
+        respuestas.push({ id_campo: c.id, label: c.label, tipo: c.tipo, respuesta: val });
+    }
+
+    if (!isValid) {
+        alert("Por favor, complete todos los campos obligatorios (*).");
+        return;
+    }
+
+    try {
+        window.showLoading();
+        import { addDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        const docRef = await addDoc(collection(db, "artifacts", appId, "public", "data", "FormulariosRespuestas"), {
+            id_formulario: currentFormLlenar.id,
+            titulo_formulario: currentFormLlenar.titulo,
+            respuestas: respuestas,
+            fecha_llenado: new Date().toISOString(),
+            usuario: currentUser.nombre || currentUser.email || 'Anónimo',
+            uid: currentUser.usuario || 'N/A'
+        });
+        window.hideLoading();
+        alert("¡Formulario guardado exitosamente!");
+        window.setDisplay('modal-fill-form', 'none');
+    } catch (e) {
+        window.hideLoading();
+        console.error("Error al guardar respuesta:", e);
+        alert("Ocurrió un error al enviar el formulario.");
+    }
 };
 
 window.guardarFormulario = async () => {
@@ -2378,7 +2526,7 @@ window.renderTablaForms = () => {
                 <td>${window.formatearFechaAbreviada(f.fecha_creacion)}</td>
                 <td><span class="badge ${bEst}">${f.estado}</span></td>
                 <td style="text-align:center;">
-                    <button class="btn btn-dark" style="padding:4px 8px; font-size:11px;"><span class="material-icons-round" style="font-size:14px;">preview</span></button>
+                    <button class="btn btn-dark" style="padding:4px 8px; font-size:11px;" onclick="window.abrirLlenarFormulario('${f.id}')"><span class="material-icons-round" style="font-size:14px;">preview</span> Llenar</button>
                     <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="window.del('Formularios','${f.id}')"><span class="material-icons-round" style="font-size:14px;">delete</span></button>
                 </td>
               </tr>`;
@@ -2450,16 +2598,26 @@ window.extraerTodaInformacion = () => {
         
         let wb = XLSX.utils.book_new();
 
+        const formatearDiferencia = (ini, fin) => { if(!ini || !fin) return "N/A"; const ms = new Date(fin) - new Date(ini); if(ms < 0) return "N/A"; const d = Math.floor(ms / 86400000); const h = Math.floor((ms % 86400000) / 3600000); const m = Math.floor((ms % 3600000) / 60000); if (d > 0) return `${d}d ${h}h ${m}m`; if (h > 0) return `${h}h ${m}m`; return `${m}m`; };
+
         // 1. Solicitudes
         let dataSolicitudes = [
-            ["ID / Código", "Fecha Creada", "Solicitante", "Título", "Gerencia", "Prioridad", "Estado", "SLA / Esperada", "Fecha Cierre", "Autorizado Por"]
+            ["ID / Código", "Fecha Creada", "Solicitante", "Título", "Gerencia", "Prioridad", "Estado", "SLA / Esperada", "Fecha Cierre", "Autorizado Por", "Tiempo Fase 1 (Documentado)", "Tiempo Fase 2 (Verificado)", "Tiempo Fase 3 (Gerencia)", "Tiempo Fase 4 (SGC)", "Tiempo Total Flujo"]
         ];
         if (globalSolicitudes) {
             globalSolicitudes.forEach(s => {
+                let isCanceled = (s.estado === 'Anulado' || s.estado === 'Rechazado');
+                let t1 = isCanceled ? 'N/A' : formatearDiferencia(s.fase_0_ini, s.fase_0_fin);
+                let t2 = isCanceled ? 'N/A' : formatearDiferencia(s.fase_1_ini, s.fase_1_fin);
+                let t3 = isCanceled ? 'N/A' : formatearDiferencia(s.fase_2_ini, s.fase_2_fin);
+                let t4 = isCanceled ? 'N/A' : formatearDiferencia(s.fase_3_ini, s.fase_3_fin);
+                let tTot = isCanceled ? 'N/A' : formatearDiferencia(s.fase_0_ini, s.fecha_final || s.fase_3_fin || s.fase_2_fin || s.fase_1_fin || s.fase_0_fin);
+
                 dataSolicitudes.push([
                     s.customId || s.id || '', s.fecha || '', s.solicitante || '', s.titulo || '', 
                     s.gerencia || '', s.prioridad || '', s.estado || '', 
-                    s.sla || s.fecha_esperada_cierre || '', s.fecha_final || '', s.autorizado_por || ''
+                    s.sla || s.fecha_esperada_cierre || '', s.fecha_final || '', s.autorizado_por || '',
+                    t1, t2, t3, t4, tTot
                 ]);
             });
         }
