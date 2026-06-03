@@ -2517,13 +2517,15 @@ window.renderFormPreview = () => {
     let h = '';
     formBuilderCampos.forEach((c, i) => {
         let reqHTML = c.requerido ? '<span style="color:var(--danger)">*</span>' : '';
-        h += `<div style="background:white; padding:15px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border); position:relative;">
-                <div style="position:absolute; right:10px; top:10px; display:flex; gap:5px;">
-                    ${i > 0 ? `<button type="button" onclick="window.moverCampoArriba(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer;"><span class="material-icons-round" style="font-size:18px;">arrow_upward</span></button>` : ''}
-                    ${i < formBuilderCampos.length - 1 ? `<button type="button" onclick="window.moverCampoAbajo(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer;"><span class="material-icons-round" style="font-size:18px;">arrow_downward</span></button>` : ''}
-                    <button type="button" onclick="window.eliminarCampoBuilder(${i})" style="background:none; border:none; color:var(--danger); cursor:pointer;"><span class="material-icons-round" style="font-size:18px;">delete</span></button>
-                </div>
-                <label style="font-size:13px; color:var(--sidebar); display:block; margin-bottom:5px;">${c.label} ${reqHTML}</label>`;
+        h += `<div style="background:white; padding:15px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
+                    <label style="font-size:13px; color:var(--sidebar); font-weight:600; margin:0; line-height:1.4;">${c.label} ${reqHTML}</label>
+                    <div style="display:flex; gap:2px; flex-shrink:0; background:#f8fafc; border-radius:6px; padding:2px;">
+                        ${i > 0 ? `<button type="button" onclick="window.moverCampoArriba(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px;" title="Subir"><span class="material-icons-round" style="font-size:16px;">arrow_upward</span></button>` : ''}
+                        ${i < formBuilderCampos.length - 1 ? `<button type="button" onclick="window.moverCampoAbajo(${i})" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px;" title="Bajar"><span class="material-icons-round" style="font-size:16px;">arrow_downward</span></button>` : ''}
+                        <button type="button" onclick="window.eliminarCampoBuilder(${i})" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px;" title="Eliminar"><span class="material-icons-round" style="font-size:16px;">delete</span></button>
+                    </div>
+                </div>`;
         
         if(c.tipo === 'text') h += `<input type="text" disabled placeholder="Campo de texto corto" style="margin-bottom:0; background:#f8fafc;">`;
         else if(c.tipo === 'textarea') h += `<textarea disabled placeholder="Campo de texto largo" rows="2" style="margin-bottom:0; background:#f8fafc;"></textarea>`;
