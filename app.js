@@ -1442,21 +1442,30 @@ window.verRespuestasFormulario = async (id) => {
             statsContainer.innerHTML = '';
             
             selectFields.forEach(c => {
-                let counts = {};
+                let statsData = {};
+                let validCount = 0;
                 docsData.forEach(d => {
                     let ansObj = d.respuestas ? d.respuestas.find(r => r.id_campo === c.id) : null;
                     let val = ansObj ? ansObj.respuesta : null;
-                    if(val) counts[val] = (counts[val] || 0) + 1;
+                    if(val) {
+                        if(!statsData[val]) statsData[val] = { count: 0, totalScore: 0 };
+                        statsData[val].count++;
+                        validCount++;
+                        if(f.is_eval && d._avgScore !== undefined) {
+                            statsData[val].totalScore += Number(d._avgScore);
+                        }
+                    }
                 });
                 
-                if(Object.keys(counts).length > 0) {
+                if(validCount > 0) {
                     let div = document.createElement('div');
                     div.style.flex = "1";
-                    div.style.minWidth = "300px";
-                    div.style.maxWidth = "450px";
+                    div.style.minWidth = "350px";
+                    div.style.maxWidth = "550px";
                     div.style.border = "1px solid var(--border)";
                     div.style.borderRadius = "8px";
                     div.style.padding = "15px";
+                    div.style.background = "#fff";
                     
                     let title = document.createElement('h5');
                     title.innerText = c.label;
@@ -1465,36 +1474,44 @@ window.verRespuestasFormulario = async (id) => {
                     title.style.color = "var(--sidebar)";
                     div.appendChild(title);
                     
-                    let canvasContainer = document.createElement('div');
-                    canvasContainer.style.position = "relative";
-                    canvasContainer.style.height = "180px";
-                    let canvas = document.createElement('canvas');
-                    canvasContainer.appendChild(canvas);
-                    div.appendChild(canvasContainer);
-                    statsContainer.appendChild(div);
+                    let table = document.createElement('table');
+                    table.style.width = "100%";
+                    table.style.borderCollapse = "collapse";
+                    table.style.fontSize = "12px";
                     
-                    let labels = Object.keys(counts);
-                    let data = Object.values(counts);
-                    let total = data.reduce((a,b)=>a+b, 0);
+                    let thScore = f.is_eval ? `<th style="padding:8px; border-bottom:2px solid var(--border); text-align:right;">Promedio Eval.</th>` : '';
+                    table.innerHTML = `<thead>
+                        <tr>
+                            <th style="padding:8px; border-bottom:2px solid var(--border); text-align:left;">Opción</th>
+                            <th style="padding:8px; border-bottom:2px solid var(--border); text-align:center;">Frecuencia</th>
+                            <th style="padding:8px; border-bottom:2px solid var(--border); text-align:right;">%</th>
+                            ${thScore}
+                        </tr>
+                    </thead><tbody></tbody>`;
                     
-                    let chart = new Chart(canvas, {
-                        type: 'doughnut',
-                        data: {
-                            labels: labels.map((l, i) => `${l.length > 25 ? l.substring(0,25)+'...' : l} (${Math.round((data[i]/total)*100)}%)`),
-                            datasets: [{
-                                data: data,
-                                backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9', '#ec4899', '#14b8a6']
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }
-                            }
+                    let tbodyTable = table.querySelector('tbody');
+                    let sortedOptions = Object.keys(statsData).sort((a,b) => statsData[b].count - statsData[a].count);
+                    
+                    sortedOptions.forEach(opt => {
+                        let data = statsData[opt];
+                        let pct = ((data.count / validCount) * 100).toFixed(1) + '%';
+                        let avgScoreHTML = '';
+                        if(f.is_eval) {
+                            let avgS = (data.totalScore / data.count).toFixed(1);
+                            let color = avgS >= 95 ? '#22c55e' : (avgS >= 85 ? '#3b82f6' : (avgS >= 75 ? '#eab308' : '#ef4444'));
+                            avgScoreHTML = `<td style="padding:8px; border-bottom:1px solid var(--border); text-align:right; font-weight:bold; color:${color};">${avgS}%</td>`;
                         }
+                        
+                        tbodyTable.innerHTML += `<tr>
+                            <td style="padding:8px; border-bottom:1px solid var(--border); color:var(--text-main);">${opt}</td>
+                            <td style="padding:8px; border-bottom:1px solid var(--border); text-align:center;">${data.count}</td>
+                            <td style="padding:8px; border-bottom:1px solid var(--border); text-align:right;">${pct}</td>
+                            ${avgScoreHTML}
+                        </tr>`;
                     });
-                    window.vrSelectCharts.push(chart);
+                    
+                    div.appendChild(table);
+                    statsContainer.appendChild(div);
                 }
             });
             if(statsContainer.innerHTML === '') statsContainer.style.display = 'none';
@@ -2875,10 +2892,10 @@ window.renderFormPreview = () => {
             if(c.matriz_cols) {
                 c.matriz_cols.forEach((col, colIdx) => {
                     fh += `<div style="display:flex; align-items:center; background:white; padding:4px; border-radius:4px; border:1px solid var(--border); gap:5px;">
-                            <input type="color" value="${col.color}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'color', this.value)" style="width:20px; height:20px; padding:0; border:none;">
-                            <input type="text" value="${col.label}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'label', this.value)" style="width:80px; padding:2px 5px; font-size:11px; margin:0;" placeholder="Etiqueta">
-                            <input type="number" value="${col.score}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'score', this.value)" style="width:50px; padding:2px 5px; font-size:11px; margin:0;" placeholder="Ptos">
-                            <button class="btn-icon-danger" style="padding:2px;" onclick="window.eliminarColMatriz(${i}, ${colIdx})"><span class="material-icons-round" style="font-size:14px;">close</span></button>
+                            <input type="color" id="mat_col_color_${i}_${colIdx}" name="mat_col_color_${i}_${colIdx}" aria-label="Color" value="${col.color}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'color', this.value)" style="width:20px; height:20px; padding:0; border:none;">
+                            <input type="text" id="mat_col_label_${i}_${colIdx}" name="mat_col_label_${i}_${colIdx}" aria-label="Etiqueta" value="${col.label}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'label', this.value)" style="width:80px; padding:2px 5px; font-size:11px; margin:0;" placeholder="Etiqueta">
+                            <input type="number" id="mat_col_score_${i}_${colIdx}" name="mat_col_score_${i}_${colIdx}" aria-label="Puntaje" value="${col.score}" onchange="window.actualizarColMatriz(${i}, ${colIdx}, 'score', this.value)" style="width:50px; padding:2px 5px; font-size:11px; margin:0;" placeholder="Ptos">
+                            <button type="button" class="btn-icon-danger" style="padding:2px;" onclick="window.eliminarColMatriz(${i}, ${colIdx})"><span class="material-icons-round" style="font-size:14px;">close</span></button>
                           </div>`;
                 });
             }
@@ -2890,8 +2907,8 @@ window.renderFormPreview = () => {
             if(c.matriz_filas) {
                 c.matriz_filas.forEach((fila, filaIdx) => {
                     fh += `<div style="display:flex; gap:5px;">
-                            <input type="text" value="${fila.label}" onchange="window.actualizarFilaMatriz(${i}, ${filaIdx}, this.value)" style="flex:1; padding:4px 8px; font-size:12px; margin:0;" placeholder="Concepto a evaluar...">
-                            <button class="btn-icon-danger" style="padding:4px 8px;" onclick="window.eliminarFilaMatriz(${i}, ${filaIdx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button>
+                            <input type="text" id="mat_fila_label_${i}_${filaIdx}" name="mat_fila_label_${i}_${filaIdx}" aria-label="Concepto a evaluar" value="${fila.label}" onchange="window.actualizarFilaMatriz(${i}, ${filaIdx}, this.value)" style="flex:1; padding:4px 8px; font-size:12px; margin:0;" placeholder="Concepto a evaluar...">
+                            <button type="button" class="btn-icon-danger" style="padding:4px 8px;" onclick="window.eliminarFilaMatriz(${i}, ${filaIdx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button>
                           </div>`;
                 });
             }
