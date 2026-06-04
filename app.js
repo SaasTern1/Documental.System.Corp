@@ -1862,11 +1862,31 @@ try {
     const fDiff = (ini, fin) => { if(!ini || !fin) return "-"; let ms = new Date(fin) - new Date(ini); if(ms < 0) return "-"; let d = Math.floor(ms / 86400000); let h = Math.floor((ms % 86400000) / 3600000); return `${d}d ${h}h`; };
 
     if($('m-asignados-panel')) {
-        if(stepIdx >= 0 && (s.asig_paso1 || s.asig_paso2 || s.asig_paso4)) {
+        if(stepIdx >= 0) {
             window.setDisplay('m-asignados-panel', 'block');
-            window.setTxt('m-asig-p1', s.asig_paso1 || 'Cualquiera (Gestor SGC)');
-            window.setTxt('m-asig-p2', s.asig_paso2 || 'Cualquiera (Gestor SGC)');
-            window.setTxt('m-asig-p4', s.asig_paso4 || 'Cualquiera (Gestor SGC)');
+            if (esAdminSGC && activo) {
+                let optsP1 = '<option value="">-- Cualquiera (Gestor SGC) --</option>';
+                let optsP2 = '<option value="">-- Cualquiera (Gestor SGC) --</option>';
+                let optsP4 = '<option value="">-- Cualquiera (Gestor SGC) --</option>';
+                
+                allUsers.forEach(u => {
+                    if (u.permisos.admin || u.permisos.p_gest_sgc || u.permisos.p_paso1) optsP1 += `<option value="${u.email}" ${s.asig_paso1 && s.asig_paso1.toLowerCase() === u.email.toLowerCase() ? 'selected' : ''}>${u.nombre} (${u.email})</option>`;
+                    if (u.permisos.admin || u.permisos.p_gest_sgc || u.permisos.p_paso2) optsP2 += `<option value="${u.email}" ${s.asig_paso2 && s.asig_paso2.toLowerCase() === u.email.toLowerCase() ? 'selected' : ''}>${u.nombre} (${u.email})</option>`;
+                    if (u.permisos.admin || u.permisos.p_gest_sgc || u.permisos.p_paso4) optsP4 += `<option value="${u.email}" ${s.asig_paso4 && s.asig_paso4.toLowerCase() === u.email.toLowerCase() ? 'selected' : ''}>${u.nombre} (${u.email})</option>`;
+                });
+
+                window.setHtml('m-asig-p1', `<select onchange="window.cambiarAsignado('asig_paso1', this.value)" style="width:100%; padding:4px; border-radius:4px; font-size:11px;">${optsP1}</select>`);
+                window.setHtml('m-asig-p2', `<select onchange="window.cambiarAsignado('asig_paso2', this.value)" style="width:100%; padding:4px; border-radius:4px; font-size:11px;">${optsP2}</select>`);
+                window.setHtml('m-asig-p4', `<select onchange="window.cambiarAsignado('asig_paso4', this.value)" style="width:100%; padding:4px; border-radius:4px; font-size:11px;">${optsP4}</select>`);
+            } else {
+                let p1Name = s.asig_paso1 || 'Cualquiera (Gestor SGC)'; if(s.asig_paso1) { let u = allUsers.find(x => (x.email||'').toLowerCase() === s.asig_paso1.toLowerCase()); if(u) p1Name = u.nombre; }
+                let p2Name = s.asig_paso2 || 'Cualquiera (Gestor SGC)'; if(s.asig_paso2) { let u = allUsers.find(x => (x.email||'').toLowerCase() === s.asig_paso2.toLowerCase()); if(u) p2Name = u.nombre; }
+                let p4Name = s.asig_paso4 || 'Cualquiera (Gestor SGC)'; if(s.asig_paso4) { let u = allUsers.find(x => (x.email||'').toLowerCase() === s.asig_paso4.toLowerCase()); if(u) p4Name = u.nombre; }
+                
+                window.setTxt('m-asig-p1', p1Name);
+                window.setTxt('m-asig-p2', p2Name);
+                window.setTxt('m-asig-p4', p4Name);
+            }
         } else {
             window.setDisplay('m-asignados-panel', 'none');
         }
@@ -1874,11 +1894,31 @@ try {
 
 
     if($('m-asignados-panel')) {
-        if(stepIdx >= 0 && (s.asig_paso1 || s.asig_paso2 || s.asig_paso4)) {
+        if(stepIdx >= 0) {
             window.setDisplay('m-asignados-panel', 'block');
-            window.setTxt('m-asig-p1', s.asig_paso1 || 'Cualquiera (Gestor SGC)');
-            window.setTxt('m-asig-p2', s.asig_paso2 || 'Cualquiera (Gestor SGC)');
-            window.setTxt('m-asig-p4', s.asig_paso4 || 'Cualquiera (Gestor SGC)');
+            if (esAdminSGC && activo) {
+                let optsP1 = '<option value="">-- Cualquiera (Gestor SGC) --</option>';
+                let optsP2 = '<option value="">-- Cualquiera (Gestor SGC) --</option>';
+                let optsP4 = '<option value="">-- Cualquiera (Gestor SGC) --</option>';
+                
+                allUsers.forEach(u => {
+                    if (u.permisos.admin || u.permisos.p_gest_sgc || u.permisos.p_paso1) optsP1 += `<option value="${u.email}" ${s.asig_paso1 && s.asig_paso1.toLowerCase() === u.email.toLowerCase() ? 'selected' : ''}>${u.nombre} (${u.email})</option>`;
+                    if (u.permisos.admin || u.permisos.p_gest_sgc || u.permisos.p_paso2) optsP2 += `<option value="${u.email}" ${s.asig_paso2 && s.asig_paso2.toLowerCase() === u.email.toLowerCase() ? 'selected' : ''}>${u.nombre} (${u.email})</option>`;
+                    if (u.permisos.admin || u.permisos.p_gest_sgc || u.permisos.p_paso4) optsP4 += `<option value="${u.email}" ${s.asig_paso4 && s.asig_paso4.toLowerCase() === u.email.toLowerCase() ? 'selected' : ''}>${u.nombre} (${u.email})</option>`;
+                });
+
+                window.setHtml('m-asig-p1', `<select onchange="window.cambiarAsignado('asig_paso1', this.value)" style="width:100%; padding:4px; border-radius:4px; font-size:11px;">${optsP1}</select>`);
+                window.setHtml('m-asig-p2', `<select onchange="window.cambiarAsignado('asig_paso2', this.value)" style="width:100%; padding:4px; border-radius:4px; font-size:11px;">${optsP2}</select>`);
+                window.setHtml('m-asig-p4', `<select onchange="window.cambiarAsignado('asig_paso4', this.value)" style="width:100%; padding:4px; border-radius:4px; font-size:11px;">${optsP4}</select>`);
+            } else {
+                let p1Name = s.asig_paso1 || 'Cualquiera (Gestor SGC)'; if(s.asig_paso1) { let u = allUsers.find(x => (x.email||'').toLowerCase() === s.asig_paso1.toLowerCase()); if(u) p1Name = u.nombre; }
+                let p2Name = s.asig_paso2 || 'Cualquiera (Gestor SGC)'; if(s.asig_paso2) { let u = allUsers.find(x => (x.email||'').toLowerCase() === s.asig_paso2.toLowerCase()); if(u) p2Name = u.nombre; }
+                let p4Name = s.asig_paso4 || 'Cualquiera (Gestor SGC)'; if(s.asig_paso4) { let u = allUsers.find(x => (x.email||'').toLowerCase() === s.asig_paso4.toLowerCase()); if(u) p4Name = u.nombre; }
+                
+                window.setTxt('m-asig-p1', p1Name);
+                window.setTxt('m-asig-p2', p2Name);
+                window.setTxt('m-asig-p4', p4Name);
+            }
         } else {
             window.setDisplay('m-asignados-panel', 'none');
         }
@@ -3629,5 +3669,32 @@ window.eliminarAuditoriaDetalle = async () => {
     } catch(e) {
         console.error(e);
         window.hideLoading();
+    }
+};
+
+window.cambiarAsignado = async (campo, email) => {
+    if(!confirm("¿Modificar responsable asignado?")) {
+        window.verDetalle(selectedId); // revert select
+        return;
+    }
+    window.showLoading();
+    try {
+        let updates = {};
+        updates[campo] = email;
+        let pName = "Cualquiera (Gestor SGC)";
+        if(email) {
+            let uFound = allUsers.find(u => (u.email||'').toLowerCase() === email.toLowerCase());
+            if(uFound) pName = uFound.nombre;
+        }
+        let stepName = campo === 'asig_paso1' ? 'Paso 1 (Documentar)' : (campo === 'asig_paso2' ? 'Paso 2 (Verificar)' : 'Paso 4 (Publicar)');
+        updates.chat = arrayUnion({u: currentUser.nombre, m: `✏️ <b>ASIGNACIÓN ACTUALIZADA:</b><br>${stepName} asignado a: ${pName}`, t: new Date().toLocaleString()});
+        
+        await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), updates);
+        selectedDocData[campo] = email;
+        window.hideLoading();
+    } catch(e) {
+        console.error(e);
+        window.hideLoading();
+        alert("Error al guardar asignación.");
     }
 };
