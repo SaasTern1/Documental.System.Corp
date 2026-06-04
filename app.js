@@ -502,7 +502,7 @@ window.cargarDatosCentrales = () => {
     sn.forEach(d => { 
       let u = d.data(); allUsers.push(u); let gs = u.gerencias ? u.gerencias.join(', ') : (u.gerencia || 'N/A');
       hU += `<tr><td>${u.nombre} (${u.usuario})</td><td>${u.email||''}</td><td>${u.role||''} / <small>${gs}</small></td><td class="no-export"><button type="button" class="btn btn-info" style="padding:4px 8px; font-size:10px;" onclick="window.cargarUsuarioParaEditar('${u.usuario}')">Editar</button> <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="window.eliminarUsuario('${u.usuario}')">Eliminar</button></td></tr>`;
-      cbU += `<label style="display:flex; gap:8px; font-size:13px; margin-bottom:6px;"><input type="checkbox" name="chk_user" value="${u.nombre}" data-email="${u.email}" style="margin:0; width:16px;" onchange="window.actualizarConteoPersonal()"> ${u.nombre} (${gs})</label>`;
+      cbU += `<label style="display:flex; gap:8px; font-size:13px; margin-bottom:6px;"><input aria-label="chk_user" type="checkbox" name="chk_user" value="${u.nombre}" data-email="${u.email}" style="margin:0; width:16px;" onchange="window.actualizarConteoPersonal()"> ${u.nombre} (${gs})</label>`;
       oU += `<option value="${u.nombre}" data-email="${u.email}">${u.nombre} (${gs})</option>`; if(u.email) oI += `<option value="${u.email}">${u.nombre} (${gs})</option>`;
     });
     window.setHtml('tbody-users', hU); window.setHtml('aud-auditado-list', cbU); window.setHtml('aud-auditor-list', cbU); window.setHtml('aud-formacion-list', cbU); window.setHtml('ah-auditor-list', cbU); 
@@ -523,7 +523,7 @@ window.cargarDatosCentrales = () => {
     window.setHtml('d-ger-sel', gH); window.setHtml('sol-ger', '<option value="">-- Seleccionar --</option>' + gH); window.setHtml('e-sol-ger', '<option value="">-- Seleccionar --</option>' + gH);
     window.setHtml('list-ger', gr.map((g, i) => `<div class="settings-item"><span>${g}</span><button type="button" class="btn-icon-danger" onclick="window.eliminarGerencia(${i})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`).join(''));
     window.setHtml('list-dep', dp.map((d, i) => `<div class="settings-item"><span>${d.nombre} <small>(${d.gerencia})</small></span><button type="button" class="btn-icon-danger" onclick="window.eliminarDepartamento(${i})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`).join(''));
-    window.setHtml('u-ger-list', gr.map(g => `<label style="display:flex; gap:8px; font-size:13px; margin-bottom:6px;"><input type="checkbox" name="chk_ger" value="${g}" style="margin:0; width:16px;"> ${g}</label>`).join(''));
+    window.setHtml('u-ger-list', gr.map(g => `<label style="display:flex; gap:8px; font-size:13px; margin-bottom:6px;"><input aria-label="chk_ger" type="checkbox" name="chk_ger" value="${g}" style="margin:0; width:16px;"> ${g}</label>`).join(''));
   });
   
   onSnapshot(doc(db, "artifacts", appId, "public", "data", "Configuracion", "SLA"), (sn) => {
@@ -933,7 +933,7 @@ window.renderNormaOEA = () => {
           </div>`;
       }).join('');
   }
-  let htmlOpts = requisitosOEA.map(r => { let n = typeof r === 'string' ? r : r.nombre; return `<label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:6px; cursor:pointer;"><input type="checkbox" name="chk_oea" value="${n}" style="margin:0; width:auto; flex-shrink:0;"> ${n}</label>`; }).join('');
+  let htmlOpts = requisitosOEA.map(r => { let n = typeof r === 'string' ? r : r.nombre; return `<label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:6px; cursor:pointer;"><input aria-label="chk_oea" type="checkbox" name="chk_oea" value="${n}" style="margin:0; width:auto; flex-shrink:0;"> ${n}</label>`; }).join('');
   window.setHtml('aud-req-list', htmlOpts); window.setHtml('oea-req-list-dl', requisitosOEA.map(r => `<option value="${typeof r === 'string' ? r : r.nombre}">`).join(''));
 };
 
@@ -975,9 +975,9 @@ let datosEdit = {}; if(docId) { const item = dataMaestro.find(x => x.docId === d
 let formHtml = "";
 columnasMaestro.forEach(col => {
   let cName = typeof col === 'string' ? col : col.nombre; let cType = typeof col === 'string' ? 'text' : col.tipo; let val = datosEdit[cName] || ""; let html = `<div><label for="in_dyn_${cName}">${cName}</label>`;
-  if(cName.toLowerCase().includes('estatus') || cName.toLowerCase().includes('estado')) { html += `<select id="in_dyn_${cName}" name="dyn_${cName}"><option value="">-- Seleccionar --</option>`; estatusMaestro.forEach(est => { html += `<option value="${est}" ${val===est?'selected':''}>${est}</option>`; }); html += `</select>`; } 
-  else if(cType === 'date' || cName.toLowerCase().includes('fecha')) { html += `<input type="date" id="in_dyn_${cName}" name="dyn_${cName}" value="${val}">`; } 
-  else if(cType === 'number') { html += `<input type="number" id="in_dyn_${cName}" name="dyn_${cName}" value="${val}" placeholder="0">`; } else { html += `<input type="text" id="in_dyn_${cName}" name="dyn_${cName}" value="${val}" placeholder="Escribe aquí...">`; }
+  if(cName.toLowerCase().includes('estatus') || cName.toLowerCase().includes('estado')) { html += `<select aria-label="in_dyn_${cName}" id="in_dyn_${cName}" name="dyn_${cName}"><option value="">-- Seleccionar --</option>`; estatusMaestro.forEach(est => { html += `<option value="${est}" ${val===est?'selected':''}>${est}</option>`; }); html += `</select>`; } 
+  else if(cType === 'date' || cName.toLowerCase().includes('fecha')) { html += `<input aria-label="in_dyn_${cName}" type="date" id="in_dyn_${cName}" name="dyn_${cName}" value="${val}">`; } 
+  else if(cType === 'number') { html += `<input aria-label="0" type="number" id="in_dyn_${cName}" name="dyn_${cName}" value="${val}" placeholder="0">`; } else { html += `<input aria-label="Escribe aquí..." type="text" id="in_dyn_${cName}" name="dyn_${cName}" value="${val}" placeholder="Escribe aquí...">`; }
   html += `</div>`; formHtml += html;
 });
 window.setHtml('dinamic-form-maestro', formHtml); window.setDisplay('modal-form-listado', 'flex');
@@ -1765,7 +1765,7 @@ try {
     let stepIdx = parseInt(s.idx) || 0; const activo = !apr && !cnc;
     
     let pr = String(s.prioridad || "Baja"); 
-    if(esAdminSGC && activo) window.setHtml('m-prioridad-container', `<select onchange="window.cambiarPrioridad(this.value)" name="mod_prioridad" style="padding:4px 8px; font-size:12px; border-radius:6px; background:#fff; font-weight:bold; border:1px solid var(--border); color:var(--text-main);"><option value="Baja" ${pr==='Baja'?'selected':''}>BAJA</option><option value="Media" ${pr==='Media'?'selected':''}>MEDIA</option><option value="Alta" ${pr==='Alta'?'selected':''}>ALTA (URGENTE)</option></select>`);
+    if(esAdminSGC && activo) window.setHtml('m-prioridad-container', `<select aria-label="mod_prioridad" onchange="window.cambiarPrioridad(this.value)" name="mod_prioridad" style="padding:4px 8px; font-size:12px; border-radius:6px; background:#fff; font-weight:bold; border:1px solid var(--border); color:var(--text-main);"><option value="Baja" ${pr==='Baja'?'selected':''}>BAJA</option><option value="Media" ${pr==='Media'?'selected':''}>MEDIA</option><option value="Alta" ${pr==='Alta'?'selected':''}>ALTA (URGENTE)</option></select>`);
     else window.setHtml('m-prioridad-container', `<span class="badge ${pr === 'Alta' ? 'badge-danger' : (pr === 'Media' ? 'badge-warning' : 'badge-info')}">${pr.toUpperCase()}</span>`);
 
     let adjOrigName = s.adjunto_nombre || "Archivo Adjunto"; let dlUrl = s.adjunto ? window.getDownloadUrl(s.adjunto) : "#"; 
@@ -2315,13 +2315,13 @@ window.renderF020 = () => {
             
             h += `<tr data-id="${i.id}">
                 <td>${idx+1}</td>
-                <td><textarea name="f020_pregunta_${idx}" class="table-input" rows="2" ${dis}>${i.pregunta||''}</textarea></td>
-                <td><select name="f020_req_${idx}" class="table-select" ${dis}>${rOpt}</select></td>
-                <td><textarea name="f020_comentario_${idx}" class="table-input" rows="2" ${dis}>${i.comentarios||''}</textarea></td>
-                <td><select name="f020_auditado_${idx}" class="table-select" ${dis}>${aOpt}</select></td>
-                <td><select name="f020_nc_${idx}" class="table-select hallazgo-sel" ${dis}>${nOpt}</select></td>
-                <td><textarea name="f020_obs_${idx}" class="table-input" rows="2" ${dis}>${i.observacion||''}</textarea></td>
-                <td><select name="f020_fort_${idx}" class="table-select" ${dis}>${fOpt}</select></td>
+                <td><textarea aria-label="f020_pregunta_${idx}" name="f020_pregunta_${idx}" class="table-input" rows="2" ${dis}>${i.pregunta||''}</textarea></td>
+                <td><select aria-label="f020_req_${idx}" name="f020_req_${idx}" class="table-select" ${dis}>${rOpt}</select></td>
+                <td><textarea aria-label="f020_comentario_${idx}" name="f020_comentario_${idx}" class="table-input" rows="2" ${dis}>${i.comentarios||''}</textarea></td>
+                <td><select aria-label="f020_auditado_${idx}" name="f020_auditado_${idx}" class="table-select" ${dis}>${aOpt}</select></td>
+                <td><select aria-label="f020_nc_${idx}" name="f020_nc_${idx}" class="table-select hallazgo-sel" ${dis}>${nOpt}</select></td>
+                <td><textarea aria-label="f020_obs_${idx}" name="f020_obs_${idx}" class="table-input" rows="2" ${dis}>${i.observacion||''}</textarea></td>
+                <td><select aria-label="f020_fort_${idx}" name="f020_fort_${idx}" class="table-select" ${dis}>${fOpt}</select></td>
                 <td class="f020-action-col">${canEd ? `<button type="button" class="btn-icon-danger" onclick="window.eliminarF020('${i.id}')"><span class="material-icons-round">delete</span></button>` : ''}</td>
             </tr>`;
         }); 
@@ -2336,7 +2336,7 @@ window.enviarPreguntasSGC = () => window.guardarF020(true);
 
 window.generarBloqueNCDinamico = (i, idx, t, canEd) => {
 let d = selectedAuditData?.reporte_auditoria?.detalles_nc?.[i.id] || {}; let dis = canEd ? '' : 'disabled';
-return `<div style="border:1px solid #ccc;font-size:12px;margin-bottom:15px;" class="f003-hallazgo-block" data-id="${i.id}"><div style="display:grid;grid-template-columns:150px 1fr;"><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">No. de ${t}</div><div style="padding:8px;border:1px solid #ccc;">${idx}</div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Dpto/Función</div><div style="padding:0;border:1px solid #ccc;"><input type="text" name="h_dep_${i.id}" class="h-dep" value="${d.departamento||i.auditado||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Doc Ref</div><div style="padding:0;border:1px solid #ccc;"><input type="text" name="h_doc_${i.id}" class="h-doc" value="${d.doc_ref||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Requisito Afectado</div><div style="padding:0;border:1px solid #ccc;"><input type="text" name="h_req_${i.id}" class="h-req" value="${d.requisito||i.requisito||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Detalle</div><div style="padding:0;border:1px solid #ccc;"><textarea name="h_det_${i.id}" class="h-det" ${dis} style="border:none;width:100%;height:100%;min-height:40px;padding:8px;">${d.detalle||i.comentarios||i.pregunta||''}</textarea></div></div></div>`;
+return `<div style="border:1px solid #ccc;font-size:12px;margin-bottom:15px;" class="f003-hallazgo-block" data-id="${i.id}"><div style="display:grid;grid-template-columns:150px 1fr;"><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">No. de ${t}</div><div style="padding:8px;border:1px solid #ccc;">${idx}</div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Dpto/Función</div><div style="padding:0;border:1px solid #ccc;"><input aria-label="h_dep_${i.id}" type="text" name="h_dep_${i.id}" class="h-dep" value="${d.departamento||i.auditado||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Doc Ref</div><div style="padding:0;border:1px solid #ccc;"><input aria-label="h_doc_${i.id}" type="text" name="h_doc_${i.id}" class="h-doc" value="${d.doc_ref||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Requisito Afectado</div><div style="padding:0;border:1px solid #ccc;"><input aria-label="h_req_${i.id}" type="text" name="h_req_${i.id}" class="h-req" value="${d.requisito||i.requisito||''}" ${dis} style="border:none;width:100%;height:100%;"></div><div style="padding:8px;background:#f1f5f9;border:1px solid #ccc;">Detalle</div><div style="padding:0;border:1px solid #ccc;"><textarea aria-label="h_det_${i.id}" name="h_det_${i.id}" class="h-det" ${dis} style="border:none;width:100%;height:100%;min-height:40px;padding:8px;">${d.detalle||i.comentarios||i.pregunta||''}</textarea></div></div></div>`;
 };
 
 window.actualizarMetricasF003 = (canEd) => {
@@ -2397,10 +2397,10 @@ window.addPlanRow = (d="", r="", i="", f="") => {
     let selHTML = window.getUsersSelectHTML(r);
     tr.innerHTML = `
     <td style="border:1px solid #ccc; text-align:center;">${tb.children.length+1}</td>
-    <td style="padding:0;"><textarea name="plan_d" class="plan-d" rows="2" style="width:100%;border:none;margin:0;resize:vertical;padding:8px;">${d}</textarea></td>
-    <td style="padding:0;"><select name="plan_r" class="plan-r" style="width:100%;border:none;margin:0;padding:8px;background:transparent;">${selHTML}</select></td>
-    <td style="padding:0;"><input type="date" name="plan_i" class="plan-i" value="${i}" style="width:100%;border:none;margin:0;padding:8px;"></td>
-    <td style="padding:0;"><input type="date" name="plan_f" class="plan-f" value="${f}" style="width:100%;border:none;margin:0;padding:8px;"></td>
+    <td style="padding:0;"><textarea aria-label="plan_d" name="plan_d" class="plan-d" rows="2" style="width:100%;border:none;margin:0;resize:vertical;padding:8px;">${d}</textarea></td>
+    <td style="padding:0;"><select aria-label="plan_r" name="plan_r" class="plan-r" style="width:100%;border:none;margin:0;padding:8px;background:transparent;">${selHTML}</select></td>
+    <td style="padding:0;"><input aria-label="plan_i" type="date" name="plan_i" class="plan-i" value="${i}" style="width:100%;border:none;margin:0;padding:8px;"></td>
+    <td style="padding:0;"><input aria-label="plan_f" type="date" name="plan_f" class="plan-f" value="${f}" style="width:100%;border:none;margin:0;padding:8px;"></td>
     <td style="text-align:center;"><button type="button" class="btn-icon-danger" onclick="this.parentElement.parentElement.remove()"><span class="material-icons-round">delete</span></button></td>`; 
     tb.appendChild(tr); 
 };
@@ -2411,9 +2411,9 @@ window.addSeguimientoRow = (res="", r="", f="") => {
     let selHTML = window.getUsersSelectHTML(r);
     tr.innerHTML = `
     <td style="border:1px solid #ccc; text-align:center;">${tb.children.length+1}</td>
-    <td style="padding:0;"><textarea name="seg_res" class="seg-res" rows="2" style="width:100%;border:none;margin:0;resize:vertical;padding:8px;">${res}</textarea></td>
-    <td style="padding:0;"><select name="seg_r" class="seg-r" style="width:100%;border:none;margin:0;padding:8px;background:transparent;">${selHTML}</select></td>
-    <td style="padding:0;"><input type="date" name="seg_f" class="seg-f" value="${f}" style="width:100%;border:none;margin:0;padding:8px;"></td>
+    <td style="padding:0;"><textarea aria-label="seg_res" name="seg_res" class="seg-res" rows="2" style="width:100%;border:none;margin:0;resize:vertical;padding:8px;">${res}</textarea></td>
+    <td style="padding:0;"><select aria-label="seg_r" name="seg_r" class="seg-r" style="width:100%;border:none;margin:0;padding:8px;background:transparent;">${selHTML}</select></td>
+    <td style="padding:0;"><input aria-label="seg_f" type="date" name="seg_f" class="seg-f" value="${f}" style="width:100%;border:none;margin:0;padding:8px;"></td>
     <td style="text-align:center;"><button type="button" class="btn-icon-danger" onclick="this.parentElement.parentElement.remove()"><span class="material-icons-round">delete</span></button></td>`; 
     tb.appendChild(tr); 
 };
@@ -2959,7 +2959,7 @@ window.renderFormPreview = () => {
                     <div style="display:flex; flex-direction:column; gap:5px; flex:1;">
                         <input type="text" id="fb_fld_lbl_${i}" name="fb_fld_lbl_${i}" aria-label="Título del campo" value="${c.label}" onchange="formBuilderCampos[${i}].label = this.value; window.renderFormPreview();" style="font-size:14px; font-weight:600; color:var(--sidebar); border:1px dashed transparent; background:transparent; padding:2px 5px; margin:0; width:100%; transition:all 0.2s;" onfocus="this.style.border='1px dashed var(--primary)'; this.style.background='#fff';" onblur="this.style.border='1px dashed transparent'; this.style.background='transparent';" title="Clic para editar el título">
                         <div style="display:flex; gap:10px; align-items:center;">
-                            <label for="fb_fld_req_${i}" style="font-size:11px; color:var(--text-muted); cursor:pointer; background:#f1f5f9; padding:2px 6px; border-radius:4px;"><input type="checkbox" id="fb_fld_req_${i}" name="fb_fld_req_${i}" style="width:auto; margin:0; vertical-align:middle;" ${c.requerido ? 'checked' : ''} onchange="formBuilderCampos[${i}].requerido = this.checked; window.renderFormPreview();"> Obligatorio</label>
+                            <label for="fb_fld_req_${i}" style="font-size:11px; color:var(--text-muted); cursor:pointer; background:#f1f5f9; padding:2px 6px; border-radius:4px;"><input aria-label="fb_fld_req_${i}" type="checkbox" id="fb_fld_req_${i}" name="fb_fld_req_${i}" style="width:auto; margin:0; vertical-align:middle;" ${c.requerido ? 'checked' : ''} onchange="formBuilderCampos[${i}].requerido = this.checked; window.renderFormPreview();"> Obligatorio</label>
                             ${catHtml}
                         </div>
                     </div>
@@ -2971,24 +2971,24 @@ window.renderFormPreview = () => {
                     </div>
                 </div>`;
         
-        if(c.tipo === 'text') fh += `<input type="text" id="prev_text_${i}" name="prev_text_${i}" disabled placeholder="Campo de texto corto" style="margin-bottom:0; background:#f8fafc;">`;
-        else if(c.tipo === 'textarea') fh += `<textarea id="prev_textarea_${i}" name="prev_textarea_${i}" disabled placeholder="Campo de texto largo" rows="2" style="margin-bottom:0; background:#f8fafc;"></textarea>`;
-        else if(c.tipo === 'number') fh += `<input type="number" id="prev_num_${i}" name="prev_num_${i}" disabled placeholder="123" style="margin-bottom:0; background:#f8fafc;">`;
-        else if(c.tipo === 'date') fh += `<input type="date" id="prev_date_${i}" name="prev_date_${i}" disabled style="margin-bottom:0; background:#f8fafc;">`;
-        else if(c.tipo === 'checkbox') fh += `<label style="font-size:12px; color:var(--text-muted);" for="prev_chk_${i}"><input type="checkbox" id="prev_chk_${i}" name="prev_chk_${i}" disabled style="margin-bottom:0; width:auto;"> Marcar casilla</label>`;
+        if(c.tipo === 'text') fh += `<input aria-label="Campo de texto corto" type="text" id="prev_text_${i}" name="prev_text_${i}" disabled placeholder="Campo de texto corto" style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'textarea') fh += `<textarea aria-label="Campo de texto largo" id="prev_textarea_${i}" name="prev_textarea_${i}" disabled placeholder="Campo de texto largo" rows="2" style="margin-bottom:0; background:#f8fafc;"></textarea>`;
+        else if(c.tipo === 'number') fh += `<input aria-label="123" type="number" id="prev_num_${i}" name="prev_num_${i}" disabled placeholder="123" style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'date') fh += `<input aria-label="prev_date_${i}" type="date" id="prev_date_${i}" name="prev_date_${i}" disabled style="margin-bottom:0; background:#f8fafc;">`;
+        else if(c.tipo === 'checkbox') fh += `<label style="font-size:12px; color:var(--text-muted);" for="prev_chk_${i}"><input aria-label="prev_chk_${i}" type="checkbox" id="prev_chk_${i}" name="prev_chk_${i}" disabled style="margin-bottom:0; width:auto;"> Marcar casilla</label>`;
         else if(c.tipo === 'select') {
-            fh += `<select id="prev_sel_${i}" name="prev_sel_${i}" disabled style="margin-bottom:0; background:#f8fafc;">`;
+            fh += `<select aria-label="prev_sel_${i}" id="prev_sel_${i}" name="prev_sel_${i}" disabled style="margin-bottom:0; background:#f8fafc;">`;
             c.opciones.forEach(op => fh += `<option>${op}</option>`);
             fh += `</select>`;
         }
         else if(c.tipo === 'si_no') {
             fh += `<div style="display:flex; gap:15px; margin-top:5px;">
-                    <label style="font-size:12px; color:var(--text-muted);" for="prev_si_${i}"><input type="radio" id="prev_si_${i}" name="prev_sino_${i}" disabled style="width:auto; margin-bottom:0;"> Sí</label>
-                    <label style="font-size:12px; color:var(--text-muted);" for="prev_no_${i}"><input type="radio" id="prev_no_${i}" name="prev_sino_${i}" disabled style="width:auto; margin-bottom:0;"> No</label>
+                    <label style="font-size:12px; color:var(--text-muted);" for="prev_si_${i}"><input aria-label="prev_si_${i}" type="radio" id="prev_si_${i}" name="prev_sino_${i}" disabled style="width:auto; margin-bottom:0;"> Sí</label>
+                    <label style="font-size:12px; color:var(--text-muted);" for="prev_no_${i}"><input aria-label="prev_no_${i}" type="radio" id="prev_no_${i}" name="prev_sino_${i}" disabled style="width:auto; margin-bottom:0;"> No</label>
                   </div>`;
         }
         else if(c.tipo === 'archivo') {
-            fh += `<input type="file" id="prev_file_${i}" name="prev_file_${i}" disabled style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
+            fh += `<input aria-label="prev_file_${i}" type="file" id="prev_file_${i}" name="prev_file_${i}" disabled style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
         }
         else if(c.tipo === 'semaforo') {
             fh += `<div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-top:5px; border:1px solid var(--border);">
@@ -3084,7 +3084,7 @@ window.abrirLlenarFormulario = (id) => {
                         <span class="material-icons-round">category</span>
                     </div>
                     <label style="font-weight:700; font-size:16px; color:#0f172a; margin-bottom:15px; display:block;">Seleccione la Categoría a Evaluar</label>
-                    <select id="master-dynamic-select" style="width:100%; max-width:400px; padding:12px; border-radius:8px; border:2px solid var(--primary); margin:0 auto; font-size:15px; font-weight:600; color:var(--primary); background:white; cursor:pointer; outline:none; display:block;" onchange="window.aplicarLogicaDinamica(this.value)">
+                    <select aria-label="master-dynamic-select" id="master-dynamic-select" style="width:100%; max-width:400px; padding:12px; border-radius:8px; border:2px solid var(--primary); margin:0 auto; font-size:15px; font-weight:600; color:var(--primary); background:white; cursor:pointer; outline:none; display:block;" onchange="window.aplicarLogicaDinamica(this.value)">
                         <option value="">-- Mostrar Todo --</option>`;
             f.dynamic_options.forEach(opt => {
                 h += `<option value="${opt}">${opt}</option>`;
@@ -3099,24 +3099,24 @@ window.abrirLlenarFormulario = (id) => {
             h += `<div class="dynamic-field-container" data-category="${c.categoria||''}" style="margin-bottom:25px; background:white; padding:20px; border-radius:10px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
                     <label for="ans_${c.id}" style="font-size:15px; font-weight:600; color:#1e293b; display:block; margin-bottom:12px;">${c.label} ${reqHTML}</label>`;
             
-            if(c.tipo === 'text') h += `<input type="text" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%; border:1px solid #cbd5e1; padding:10px; border-radius:6px;">`;
-            else if(c.tipo === 'textarea') h += `<textarea id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
-            else if(c.tipo === 'number') h += `<input type="number" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
-            else if(c.tipo === 'date') h += `<input type="date" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
-            else if(c.tipo === 'checkbox') h += `<label style="display:flex; align-items:center; gap:5px;" for="ans_chk_${c.id}"><input type="checkbox" id="ans_chk_${c.id}" name="ans_${c.id}" style="width:auto; margin:0;"> Marcar</label>`;
+            if(c.tipo === 'text') h += `<input aria-label="ans_${c.id}" type="text" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%; border:1px solid #cbd5e1; padding:10px; border-radius:6px;">`;
+            else if(c.tipo === 'textarea') h += `<textarea aria-label="ans_${c.id}" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
+            else if(c.tipo === 'number') h += `<input aria-label="ans_${c.id}" type="number" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'date') h += `<input aria-label="ans_${c.id}" type="date" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'checkbox') h += `<label style="display:flex; align-items:center; gap:5px;" for="ans_chk_${c.id}"><input aria-label="ans_chk_${c.id}" type="checkbox" id="ans_chk_${c.id}" name="ans_${c.id}" style="width:auto; margin:0;"> Marcar</label>`;
             else if(c.tipo === 'select') {
-                h += `<select id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;"><option value="">-- Seleccione --</option>`;
+                h += `<select aria-label="ans_${c.id}" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;"><option value="">-- Seleccione --</option>`;
                 c.opciones.forEach(op => h += `<option value="${op}">${op}</option>`);
                 h += `</select>`;
             }
             else if(c.tipo === 'si_no') {
                 h += `<div style="display:flex; gap:15px; margin-top:5px;">
-                        <label style="display:flex; align-items:center; gap:5px;" for="ans_${c.id}_si"><input type="radio" id="ans_${c.id}_si" name="ans_${c.id}" value="Sí" ${reqAttr} style="width:auto; margin:0;"> Sí</label>
-                        <label style="display:flex; align-items:center; gap:5px;" for="ans_${c.id}_no"><input type="radio" id="ans_${c.id}_no" name="ans_${c.id}" value="No" ${reqAttr} style="width:auto; margin:0;"> No</label>
+                        <label style="display:flex; align-items:center; gap:5px;" for="ans_${c.id}_si"><input aria-label="ans_${c.id}_si" type="radio" id="ans_${c.id}_si" name="ans_${c.id}" value="Sí" ${reqAttr} style="width:auto; margin:0;"> Sí</label>
+                        <label style="display:flex; align-items:center; gap:5px;" for="ans_${c.id}_no"><input aria-label="ans_${c.id}_no" type="radio" id="ans_${c.id}_no" name="ans_${c.id}" value="No" ${reqAttr} style="width:auto; margin:0;"> No</label>
                       </div>`;
             }
             else if(c.tipo === 'archivo') {
-                h += `<input type="file" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
+                h += `<input aria-label="ans_${c.id}" type="file" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
             }
             else if(c.tipo === 'semaforo') {
                 h += `<div style="border:1px solid var(--border); border-radius:8px; overflow-x:auto;">
@@ -3133,7 +3133,7 @@ window.abrirLlenarFormulario = (id) => {
                         if(c.matriz_cols) {
                             c.matriz_cols.forEach(col => {
                                 h += `  <td style="padding:10px; border-bottom:1px solid var(--border); text-align:center;">
-                                            <input type="radio" name="ans_${c.id}_${filaIdx}" value="${col.id}" style="width:18px; height:18px; accent-color:${col.color}; cursor:pointer;" ${reqAttr}>
+                                            <input aria-label="ans_${c.id}_${filaIdx}" type="radio" name="ans_${c.id}_${filaIdx}" value="${col.id}" style="width:18px; height:18px; accent-color:${col.color}; cursor:pointer;" ${reqAttr}>
                                         </td>`;
                             });
                         }

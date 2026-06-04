@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <title>Sistema de Gestión de Seguridad OEA</title>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: wss: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -57,12 +58,12 @@
                     <label for="login-user">Usuario ID</label>
                     <div style="position:relative;">
                         <span class="material-icons-round" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:18px; color:var(--text-muted); pointer-events:none; margin-top:-7px;">person</span>
-                        <input type="text" id="login-user" placeholder="Ingrese su usuario" style="padding-left:42px; border:1px solid #e2e8f0; background:#f8fafc;">
+                        <input aria-label="Ingrese su usuario" type="text" id="login-user" placeholder="Ingrese su usuario" style="padding-left:42px; border:1px solid #e2e8f0; background:#f8fafc;">
                     </div>
                     <label for="login-pass">Contraseña</label>
                     <div style="position:relative;">
                         <span class="material-icons-round" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:18px; color:var(--text-muted); pointer-events:none; margin-top:-7px;">lock</span>
-                        <input type="password" id="login-pass" placeholder="••••••" style="padding-left:42px; border:1px solid #e2e8f0; background:#f8fafc;">
+                        <input aria-label="••••••" type="password" id="login-pass" placeholder="••••••" style="padding-left:42px; border:1px solid #e2e8f0; background:#f8fafc;">
                     </div>
                 </div>
                 <button class="btn btn-primary" id="btnLogin" onclick="window.iniciarSesion()" style="width: 100%; padding: 14px; margin-top: 15px; font-size: 14px; letter-spacing:0.5px; box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);"><span class="material-icons-round" style="font-size:18px;">login</span> INICIAR SESIÓN</button>
@@ -174,7 +175,7 @@
                 </div>
                 <div class="section-header-actions" style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                     <label style="display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer; background:#fff; padding:6px 12px; border-radius:6px; border:1px solid var(--border);">
-                        <input type="checkbox" id="dash-exclude-anuladas" checked onchange="window.renderDashboardCharts()" style="margin:0;"> Excluir Anuladas
+                        <input aria-label="dash-exclude-anuladas" type="checkbox" id="dash-exclude-anuladas" checked onchange="window.renderDashboardCharts()" style="margin:0;"> Excluir Anuladas
                     </label>
                     <button class="btn btn-success" onclick="window.extraerTodaInformacion()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar Todo</button>
                 </div>
@@ -210,7 +211,7 @@
                 <div class="card" style="border:1px solid var(--border); box-shadow:0 4px 6px rgba(0,0,0,0.05);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <h4 style="color:var(--sidebar); font-size:15px; font-weight:700; margin:0;">Evolución Mensual (Solicitudes)</h4>
-                        <select style="font-size:11px; padding:4px; border:none; color:var(--text-muted); cursor:pointer;"><option>Sort By: Yearly</option></select>
+                        <select aria-label="campo" style="font-size:11px; padding:4px; border:none; color:var(--text-muted); cursor:pointer;"><option>Sort By: Yearly</option></select>
                     </div>
                     <div style="position: relative; height: 250px; width:100%;"><canvas id="chartMonthly"></canvas></div>
                 </div>
@@ -272,7 +273,7 @@
             
             <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
                 <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;">
-                    <input type="text" id="search-forms" class="search-bar" placeholder="🔍 Buscar formulario..." onkeyup="window.filtrarTabla('search-forms', 'tbody-forms')" style="margin:0; max-width:400px;">
+                    <input aria-label="Buscar formulario..." type="text" id="search-forms" class="search-bar" placeholder="🔍 Buscar formulario..." onkeyup="window.filtrarTabla('search-forms', 'tbody-forms')" style="margin:0; max-width:400px;">
                 </div>
                 <div class="table-responsive">
                     <table id="tabla-forms">
@@ -298,30 +299,30 @@
                 </div>
                 <form id="form-crear-solicitud" onsubmit="event.preventDefault(); window.crearSolicitud();">
                     <div class="resp-grid">
-                        <div><label for="sol-accion">Acción Requerida</label><select id="sol-accion" onchange="window.toggleModPanel(this.value)"><option value="Creación">Creación</option><option value="Modificación">Modificación</option><option value="Inactivación">Inactivación</option></select></div>
-                        <div><label for="sol-tipo-doc">Tipo Documento</label><select id="sol-tipo-doc" required></select></div>
-                        <div><label for="sol-prioridad">Prioridad de Solicitud</label><select id="sol-prioridad"><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta (Urgente)</option></select></div>
+                        <div><label for="sol-accion">Acción Requerida</label><select aria-label="sol-accion" id="sol-accion" onchange="window.toggleModPanel(this.value)"><option value="Creación">Creación</option><option value="Modificación">Modificación</option><option value="Inactivación">Inactivación</option></select></div>
+                        <div><label for="sol-tipo-doc">Tipo Documento</label><select aria-label="sol-tipo-doc" id="sol-tipo-doc" required></select></div>
+                        <div><label for="sol-prioridad">Prioridad de Solicitud</label><select aria-label="sol-prioridad" id="sol-prioridad"><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta (Urgente)</option></select></div>
                     </div>
                     <div id="panel-mod" class="resp-grid" style="display:none; background:#f8fafc; padding:20px; border-radius:12px; margin-bottom:20px; border:1px dashed var(--info);">
-                        <div><label for="sol-cod-prev">Código Actual</label><input type="text" id="sol-cod-prev" style="margin-bottom:0;"></div><div><label for="sol-ver-prev">Versión</label><input type="text" id="sol-ver-prev" style="margin-bottom:0;"></div><div><label for="sol-fecha-prev">Fecha Ult. Ver.</label><input type="date" id="sol-fecha-prev" style="margin-bottom:0;"></div>
+                        <div><label for="sol-cod-prev">Código Actual</label><input aria-label="sol-cod-prev" type="text" id="sol-cod-prev" style="margin-bottom:0;"></div><div><label for="sol-ver-prev">Versión</label><input aria-label="sol-ver-prev" type="text" id="sol-ver-prev" style="margin-bottom:0;"></div><div><label for="sol-fecha-prev">Fecha Ult. Ver.</label><input aria-label="sol-fecha-prev" type="date" id="sol-fecha-prev" style="margin-bottom:0;"></div>
                     </div>
-                    <label for="sol-tit">Título del Documento</label><input type="text" id="sol-tit" required>
+                    <label for="sol-tit">Título del Documento</label><input aria-label="sol-tit" type="text" id="sol-tit" required>
                     <div class="resp-grid">
-                        <div><label for="sol-ger">Gerencia</label><select id="sol-ger" onchange="window.actualizarGerenteSelect(this.value)" required></select></div>
-                        <div><label for="sol-dep">Departamento</label><select id="sol-dep" required><option value="">-- Seleccione Gerencia Primero --</option></select></div>
+                        <div><label for="sol-ger">Gerencia</label><select aria-label="sol-ger" id="sol-ger" onchange="window.actualizarGerenteSelect(this.value)" required></select></div>
+                        <div><label for="sol-dep">Departamento</label><select aria-label="sol-dep" id="sol-dep" required><option value="">-- Seleccione Gerencia Primero --</option></select></div>
                     </div>
                     <div class="resp-grid" style="background:#f0fdf4; padding:15px 20px; border-radius:12px; margin-bottom:20px; border:1px solid #bbf7d0;">
-                        <div><div class="custom-label" style="color:#166534; margin-bottom:2px;">Gerente(s) Responsable(s)</div><input type="text" id="sol-gerente-display" disabled style="background:transparent; border:none; font-weight:bold; color:#15803d; padding:0; margin:0; font-size:15px;"></div>
-                        <div><div class="custom-label" style="color:#166534; margin-bottom:2px;">Email Notificación</div><input type="text" id="sol-email-gerente" disabled style="background:transparent; border:none; font-weight:bold; color:#15803d; padding:0; margin:0; font-size:15px;"></div>
+                        <div><div class="custom-label" style="color:#166534; margin-bottom:2px;">Gerente(s) Responsable(s)</div><input aria-label="sol-gerente-display" type="text" id="sol-gerente-display" disabled style="background:transparent; border:none; font-weight:bold; color:#15803d; padding:0; margin:0; font-size:15px;"></div>
+                        <div><div class="custom-label" style="color:#166534; margin-bottom:2px;">Email Notificación</div><input aria-label="sol-email-gerente" type="text" id="sol-email-gerente" disabled style="background:transparent; border:none; font-weight:bold; color:#15803d; padding:0; margin:0; font-size:15px;"></div>
                     </div>
                     <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px;">
                         <label for="sol-involucrado-sel">Añadir Involucrados (Revisores extras)</label>
-                        <div style="display:flex; gap:10px; margin-bottom:10px;"><select id="sol-involucrado-sel" style="margin:0; flex:1; background:white;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn btn-info" onclick="window.addInvolucradoList()">Añadir</button></div>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;"><select aria-label="sol-involucrado-sel" id="sol-involucrado-sel" style="margin:0; flex:1; background:white;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn btn-info" onclick="window.addInvolucradoList()">Añadir</button></div>
                         <div id="lista-involucrados-tags" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
                     </div>
-                    <label for="sol-motivo">Justificación / Motivo</label><textarea id="sol-motivo" rows="4" required></textarea>
+                    <label for="sol-motivo">Justificación / Motivo</label><textarea aria-label="sol-motivo" id="sol-motivo" rows="4" required></textarea>
                     <div style="background: #eff6ff; padding: 20px; border-radius: 12px; border: 1px dashed var(--accent); margin-bottom: 25px;">
-                        <label for="sol-file" style="color:var(--primary)">Adjuntar Archivo Inicial (Word, PDF, Excel)</label><input type="file" id="sol-file" style="margin-bottom:0; background:white;">
+                        <label for="sol-file" style="color:var(--primary)">Adjuntar Archivo Inicial (Word, PDF, Excel)</label><input aria-label="sol-file" type="file" id="sol-file" style="margin-bottom:0; background:white;">
                     </div>
                     <button type="submit" class="btn btn-primary" id="btnSendSol" style="width:100%; padding: 16px; font-size:15px;">ENVIAR A REVISIÓN</button>
                 </form>
@@ -337,7 +338,7 @@
             </div>
             <div class="card" style="padding:0; overflow:hidden;">
                 <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
-                    <input type="text" id="search-hist" class="search-bar" style="margin:0;" placeholder="🔍 Buscar por ID o Título..." onkeyup="window.filtrarTabla('search-hist', 'tbody-historial')">
+                    <input aria-label="Buscar por ID o Título..." type="text" id="search-hist" class="search-bar" style="margin:0;" placeholder="🔍 Buscar por ID o Título..." onkeyup="window.filtrarTabla('search-hist', 'tbody-historial')">
                     <button class="btn btn-success" onclick="window.descargarExcelFiltrado('hist')"><span class="material-icons-round">download</span> Exportar</button>
                 </div>
                 <div class="table-responsive"><table id="tabla-mis-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-historial"></tbody></table></div>
@@ -353,7 +354,7 @@
             </div>
             <div class="card" style="padding:0; overflow:hidden;">
                 <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
-                    <input type="text" id="search-all" class="search-bar" style="margin:0;" placeholder="🔍 Buscar..." onkeyup="window.filtrarTabla('search-all', 'tbody-all')">
+                    <input aria-label="Buscar..." type="text" id="search-all" class="search-bar" style="margin:0;" placeholder="🔍 Buscar..." onkeyup="window.filtrarTabla('search-all', 'tbody-all')">
                     <button class="btn btn-success" onclick="window.descargarExcelFiltrado('all')"><span class="material-icons-round">download</span> Exportar Completo</button>
                 </div>
                 <div class="table-responsive"><table id="tabla-todas-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-all"></tbody></table></div>
@@ -369,7 +370,7 @@
             </div>
             <div class="card" style="padding:0; border-radius: 16px; overflow:hidden; border-top: 4px solid var(--warning);">
                 <div style="background: #f8fafc; padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:250px;"><input type="text" id="search-gest" class="search-bar" style="max-width:100%; margin-bottom:0;" placeholder="🔍 Buscar en tabla..." onkeyup="window.filtrarTabla('search-gest', 'tbody-gestionar')"></div>
+                    <div style="flex:1; min-width:250px;"><input aria-label="Buscar en tabla..." type="text" id="search-gest" class="search-bar" style="max-width:100%; margin-bottom:0;" placeholder="🔍 Buscar en tabla..." onkeyup="window.filtrarTabla('search-gest', 'tbody-gestionar')"></div>
                 </div>
                 <div class="table-responsive"><table id="tabla-gestion-solicitudes"><thead><tr><th style="width: 120px;">ID Sistema</th><th>Origen</th><th>Documento</th><th>Etapa Actual</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Gestión</th></tr></thead><tbody id="tbody-gestionar"></tbody></table></div>
             </div>
@@ -384,7 +385,7 @@
                 <div class="section-header-actions"><button class="btn btn-primary" id="btn-nuevo-maestro" onclick="window.abrirModalListadoMaestro()" style="display:none;"><span class="material-icons-round" style="font-size:18px;">add</span> Nuevo Registro</button><button class="btn btn-success" onclick="window.exportarExcelListado()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar</button></div>
             </div>
             <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
-                <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input type="text" id="search-maestro" class="search-bar" placeholder="🔍 Buscar en el listado maestro..." onkeyup="window.filtrarTabla('search-maestro', 'tbody-listado-maestro')" style="margin:0; max-width:400px;"></div>
+                <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input aria-label="Buscar en el listado maestro..." type="text" id="search-maestro" class="search-bar" placeholder="🔍 Buscar en el listado maestro..." onkeyup="window.filtrarTabla('search-maestro', 'tbody-listado-maestro')" style="margin:0; max-width:400px;"></div>
                 <div class="table-responsive"><table id="tabla-listado-maestro" style="white-space:nowrap;"><thead id="thead-listado-maestro"></thead><tbody id="tbody-listado-maestro"></tbody></table></div>
             </div>
         </section>
@@ -402,15 +403,15 @@
                     <div id="oea-manual-link" style="margin-bottom:20px; padding:20px; background:#f8fafc; border-radius:12px; border:1px solid var(--border); text-align:center;"></div>
                     <div id="oea-manual-upload-box" style="display:none; background:#eff6ff; padding:20px; border-radius:12px; border:1px dashed var(--primary);">
                         <label for="oea-file" style="color:var(--primary);">Subir Nueva Versión (PDF/Word)</label>
-                        <div style="display:flex; gap:10px; align-items:center;"><input type="file" id="oea-file" accept=".pdf,.doc,.docx" style="margin:0; flex:1; background:white;"><button class="btn btn-primary" onclick="window.subirManualOEA()">Subir Archivo</button></div>
+                        <div style="display:flex; gap:10px; align-items:center;"><input aria-label="oea-file" type="file" id="oea-file" accept=".pdf,.doc,.docx" style="margin:0; flex:1; background:white;"><button class="btn btn-primary" onclick="window.subirManualOEA()">Subir Archivo</button></div>
                     </div>
                 </div>
                 <div class="card" style="border-top: 4px solid var(--warning);">
                     <h3 style="color:var(--primary); margin-bottom:15px; font-size:16px;">Requisitos / Puntos de Control</h3>
                     <div id="oea-req-upload-box" style="display:none; flex-direction:column; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px; border:1px solid var(--border);">
-                        <input type="text" id="oea-req-input" placeholder="Nombre del Punto (Ej: 1.1 Seguridad)" style="margin:0;">
-                        <textarea id="oea-req-desc" placeholder="Descripción detallada o guía para el auditor..." rows="3" style="margin:0;"></textarea>
-                        <input type="text" id="oea-req-link" placeholder="Página del manual (Ej: 15) o enlace URL externo" style="margin:0;">
+                        <input aria-label="Nombre del Punto (Ej: 1.1 Seguridad)" type="text" id="oea-req-input" placeholder="Nombre del Punto (Ej: 1.1 Seguridad)" style="margin:0;">
+                        <textarea aria-label="Descripción detallada o guía para el auditor..." id="oea-req-desc" placeholder="Descripción detallada o guía para el auditor..." rows="3" style="margin:0;"></textarea>
+                        <input aria-label="Página del manual (Ej: 15) o enlace URL externo" type="text" id="oea-req-link" placeholder="Página del manual (Ej: 15) o enlace URL externo" style="margin:0;">
                         <button class="btn btn-success" onclick="window.agregarRequisitoOEA()" style="width:100%;"><span class="material-icons-round" style="font-size:16px;">add</span> Guardar Punto de Control</button>
                     </div>
                     <div id="oea-req-list-container" class="settings-list" style="max-height:350px;"></div>
@@ -426,7 +427,7 @@
                 </div>
                 <div style="display:flex; gap:10px; align-items:center; background:white; padding:8px 15px; border-radius:12px; border:1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                     <label for="aud-year-select" style="margin:0; font-size:12px;">Año:</label>
-                    <select id="aud-year-select" style="margin:0; width:100px; padding:8px; border:none; font-weight:bold; color:var(--primary); background:transparent; cursor:pointer; font-size:14px;" onchange="window.cambiarAnioAuditoria(this.value)"></select>
+                    <select aria-label="aud-year-select" id="aud-year-select" style="margin:0; width:100px; padding:8px; border:none; font-weight:bold; color:var(--primary); background:transparent; cursor:pointer; font-size:14px;" onchange="window.cambiarAnioAuditoria(this.value)"></select>
                     <div style="width:1px; height:20px; background:var(--border); margin:0 5px;"></div>
                     <button class="btn btn-info" id="btn-config-plan" style="display:none; padding:8px 12px; font-size:12px;" onclick="window.abrirModalPlan()"><span class="material-icons-round" style="font-size:16px;">settings</span> Configurar Plan</button>
                     <button class="btn btn-primary" id="btn-nueva-aud" style="display:none; padding:8px 12px; font-size:12px;" onclick="window.abrirNuevaAuditoria()"><span class="material-icons-round" style="font-size:16px;">add</span> Nueva Auditoría</button>
@@ -461,8 +462,8 @@
             </div>
             <div class="card" style="padding:0; margin-top:20px; overflow:hidden; border-top:4px solid var(--danger);">
                 <div style="padding: 20px; border-bottom: 1px solid var(--border); background:#f8fafc; display:flex; gap:15px; flex-wrap:wrap;">
-                    <input type="text" id="search-noconf" class="search-bar" placeholder="🔍 Buscar por Requisito, NC, o Estado..." onkeyup="window.filtrarTabla('search-noconf', 'tbody-noconf')" style="flex:1;">
-                    <select id="filter-noconf-estado" class="search-bar" style="width:220px;" onchange="window.setFilterGestNC(this.value)"><option value="">Todos los Estados</option><option value="Abierta (En Plan)">Abierta (En Plan)</option><option value="En Seguimiento">En Seguimiento</option><option value="Cerrada">Cerrada</option></select>
+                    <input aria-label="Buscar por Requisito, NC, o Estado..." type="text" id="search-noconf" class="search-bar" placeholder="🔍 Buscar por Requisito, NC, o Estado..." onkeyup="window.filtrarTabla('search-noconf', 'tbody-noconf')" style="flex:1;">
+                    <select aria-label="filter-noconf-estado" id="filter-noconf-estado" class="search-bar" style="width:220px;" onchange="window.setFilterGestNC(this.value)"><option value="">Todos los Estados</option><option value="Abierta (En Plan)">Abierta (En Plan)</option><option value="En Seguimiento">En Seguimiento</option><option value="Cerrada">Cerrada</option></select>
                 </div>
                 <div class="table-responsive"><table id="tabla-noconf" style="white-space:nowrap;"><thead><tr><th>SAC N°</th><th>Requisito Evaluado</th><th>Tipo</th><th>Responsable</th><th>Detalle</th><th>Apertura</th><th>Estado</th><th>Cierre</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-noconf"></tbody></table></div>
             </div>
@@ -478,8 +479,8 @@
             </div>
             <div class="card" style="padding:0; overflow:hidden; border-top: 4px solid var(--info);">
                 <div style="padding: 20px; border-bottom: 1px solid var(--border); background:#f8fafc; display:flex; gap:15px; flex-wrap:wrap;">
-                    <input type="text" id="search-prov" class="search-bar" placeholder="🔍 Buscar por nombre o RUC..." onkeyup="window.filtrarTabla('search-prov', 'tbody-proveedores')" style="flex:1;">
-                    <select id="filter-prov-riesgo" class="search-bar" style="width:200px;" onchange="window.renderTablaProveedores()"><option value="">Todos los Riesgos</option><option value="Bajo">Riesgo Bajo</option><option value="Medio">Riesgo Medio</option><option value="Alto">Riesgo Alto</option></select>
+                    <input aria-label="Buscar por nombre o RUC..." type="text" id="search-prov" class="search-bar" placeholder="🔍 Buscar por nombre o RUC..." onkeyup="window.filtrarTabla('search-prov', 'tbody-proveedores')" style="flex:1;">
+                    <select aria-label="filter-prov-riesgo" id="filter-prov-riesgo" class="search-bar" style="width:200px;" onchange="window.renderTablaProveedores()"><option value="">Todos los Riesgos</option><option value="Bajo">Riesgo Bajo</option><option value="Medio">Riesgo Medio</option><option value="Alto">Riesgo Alto</option></select>
                 </div>
                 <div class="table-responsive"><table id="tabla-proveedores" style="white-space:nowrap;"><thead><tr><th>Razón Social</th><th>Servicio</th><th>Certificaciones</th><th>Puntaje Global</th><th>Nivel Riesgo</th><th>Próxima Eval.</th><th>Estado</th><th class="no-export">Acciones</th></tr></thead><tbody id="tbody-proveedores"></tbody></table></div>
             </div>
@@ -495,8 +496,8 @@
             </div>
             <div class="card" style="padding:0; overflow:hidden; border-top: 4px solid var(--warning);">
                 <div style="padding: 20px; border-bottom: 1px solid var(--border); background:#f8fafc; display:flex; gap:15px; flex-wrap:wrap;">
-                    <input type="text" id="search-riesgo" class="search-bar" placeholder="🔍 Buscar por proceso o descripción..." onkeyup="window.filtrarTabla('search-riesgo', 'tbody-riesgos')" style="flex:1;">
-                    <select id="filter-riesgo-sev" class="search-bar" style="width:200px;" onchange="window.renderTablaRiesgos()"><option value="">Todas las Severidades</option><option value="Bajo">Bajo (1-4)</option><option value="Medio">Medio (5-9)</option><option value="Alto">Alto (10-15)</option><option value="Crítico">Crítico (16-25)</option></select>
+                    <input aria-label="Buscar por proceso o descripción..." type="text" id="search-riesgo" class="search-bar" placeholder="🔍 Buscar por proceso o descripción..." onkeyup="window.filtrarTabla('search-riesgo', 'tbody-riesgos')" style="flex:1;">
+                    <select aria-label="filter-riesgo-sev" id="filter-riesgo-sev" class="search-bar" style="width:200px;" onchange="window.renderTablaRiesgos()"><option value="">Todas las Severidades</option><option value="Bajo">Bajo (1-4)</option><option value="Medio">Medio (5-9)</option><option value="Alto">Alto (10-15)</option><option value="Crítico">Crítico (16-25)</option></select>
                 </div>
                 <div class="table-responsive"><table id="tabla-riesgos" style="white-space:nowrap;"><thead><tr><th>ID</th><th>Proceso Afectado</th><th>Amenaza Principal</th><th>Prob.</th><th>Imp.</th><th>Severidad</th><th>Acción Decidida</th><th>Responsable</th><th class="no-export">Acciones</th></tr></thead><tbody id="tbody-riesgos"></tbody></table></div>
             </div>
@@ -514,7 +515,7 @@
                 <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalUsuario()"><span class="material-icons-round" style="font-size:18px;">person_add</span> Nuevo Usuario</button><button class="btn btn-success" onclick="window.exportarExcelUsuarios()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar Lista</button></div>
             </div>
             <div class="card" style="padding:0; overflow:hidden;">
-                <div style="padding:20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input type="text" id="search-users" class="search-bar" placeholder="🔍 Buscar por nombre o email..." onkeyup="window.filtrarTabla('search-users', 'tbody-users')" style="margin:0; max-width:400px;"></div>
+                <div style="padding:20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input aria-label="Buscar por nombre o email..." type="text" id="search-users" class="search-bar" placeholder="🔍 Buscar por nombre o email..." onkeyup="window.filtrarTabla('search-users', 'tbody-users')" style="margin:0; max-width:400px;"></div>
                 <div class="table-responsive"><table id="table-users"><thead><tr><th>Usuario</th><th>Email</th><th>Rol/Gerencias</th><th class="no-export">Acciones</th></tr></thead><tbody id="tbody-users"></tbody></table></div>
             </div>
         </div></div>
@@ -530,14 +531,14 @@
                 </div>
             </div>
             <div class="resp-grid">
-                <div class="card" style="border-top: 4px solid var(--accent);"><h3>Gerencias</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input type="text" id="g-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarGerencia()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-ger" class="settings-list"></div></div>
-                <div class="card" style="border-top: 4px solid var(--info);"><h3>Departamentos</h3><div style="display:flex; gap:0; margin-bottom:15px;"><select id="d-ger-sel" style="margin:0; width:40%; border-radius: 10px 0 0 10px;"></select><input type="text" id="d-nom" style="margin:0; border-radius: 0; width:60%;"><button class="btn btn-success" onclick="window.agregarDepartamento()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-dep" class="settings-list"></div></div>
+                <div class="card" style="border-top: 4px solid var(--accent);"><h3>Gerencias</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input aria-label="g-nom" type="text" id="g-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarGerencia()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-ger" class="settings-list"></div></div>
+                <div class="card" style="border-top: 4px solid var(--info);"><h3>Departamentos</h3><div style="display:flex; gap:0; margin-bottom:15px;"><select aria-label="d-ger-sel" id="d-ger-sel" style="margin:0; width:40%; border-radius: 10px 0 0 10px;"></select><input aria-label="d-nom" type="text" id="d-nom" style="margin:0; border-radius: 0; width:60%;"><button class="btn btn-success" onclick="window.agregarDepartamento()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-dep" class="settings-list"></div></div>
             </div>
             <h3 style="margin:35px 0 20px; color:var(--primary); border-bottom:2px solid var(--border); padding-bottom:10px; font-size:20px;">Configuración Dinámica de Documentos</h3>
             <div class="resp-grid">
-                <div class="card" style="border-top: 4px solid var(--success);"><h3>Tipos de Documento</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input type="text" id="doc-tipo-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarTipoDoc()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-tipos-doc" class="settings-list"></div></div>
-                <div class="card" style="border-top: 4px solid #8b5cf6;"><h3>Columnas Listado Maestro</h3><div style="display:flex; gap:0; margin-bottom:15px; flex-wrap:wrap;"><input type="text" id="col-nom" style="margin:0; border-radius: 10px 0 0 10px; flex:1;"><select id="col-tipo" style="margin:0; width:110px; border-radius:0;"><option value="text">Texto</option><option value="date">Fecha</option><option value="number">Número</option><option value="url">Enlace</option></select><button class="btn btn-success" onclick="window.agregarColumna()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-columnas" class="settings-list"></div></div>
-                <div class="card" style="border-top: 4px solid var(--warning);"><h3>Estatus Listado Maestro</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input type="text" id="est-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarEstatus()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-estatus" class="settings-list"></div></div>
+                <div class="card" style="border-top: 4px solid var(--success);"><h3>Tipos de Documento</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input aria-label="doc-tipo-nom" type="text" id="doc-tipo-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarTipoDoc()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-tipos-doc" class="settings-list"></div></div>
+                <div class="card" style="border-top: 4px solid #8b5cf6;"><h3>Columnas Listado Maestro</h3><div style="display:flex; gap:0; margin-bottom:15px; flex-wrap:wrap;"><input aria-label="col-nom" type="text" id="col-nom" style="margin:0; border-radius: 10px 0 0 10px; flex:1;"><select aria-label="col-tipo" id="col-tipo" style="margin:0; width:110px; border-radius:0;"><option value="text">Texto</option><option value="date">Fecha</option><option value="number">Número</option><option value="url">Enlace</option></select><button class="btn btn-success" onclick="window.agregarColumna()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-columnas" class="settings-list"></div></div>
+                <div class="card" style="border-top: 4px solid var(--warning);"><h3>Estatus Listado Maestro</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input aria-label="est-nom" type="text" id="est-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarEstatus()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-estatus" class="settings-list"></div></div>
             </div>
             
             <h3 style="margin:35px 0 20px; color:var(--primary); border-bottom:2px solid var(--border); padding-bottom:10px; font-size:20px;">Configuración de Nivel de Servicio (SLA)</h3>
@@ -548,15 +549,15 @@
                     <div style="display:flex; flex-direction:column; gap:10px;">
                         <div>
                             <label style="font-size:11px; color:#991b1b; font-weight:700;">Alta</label>
-                            <input type="number" id="sla-alta" placeholder="Ej: 3" style="margin-bottom:0;">
+                            <input aria-label="Ej: 3" type="number" id="sla-alta" placeholder="Ej: 3" style="margin-bottom:0;">
                         </div>
                         <div>
                             <label style="font-size:11px; color:#92400e; font-weight:700;">Media</label>
-                            <input type="number" id="sla-media" placeholder="Ej: 7" style="margin-bottom:0;">
+                            <input aria-label="Ej: 7" type="number" id="sla-media" placeholder="Ej: 7" style="margin-bottom:0;">
                         </div>
                         <div>
                             <label style="font-size:11px; color:#1e40af; font-weight:700;">Baja</label>
-                            <input type="number" id="sla-baja" placeholder="Ej: 15" style="margin-bottom:0;">
+                            <input aria-label="Ej: 15" type="number" id="sla-baja" placeholder="Ej: 15" style="margin-bottom:0;">
                         </div>
                         <button class="btn btn-primary" onclick="window.guardarConfigSLA()" style="margin-top:10px; width:100%;">Guardar SLA Mínimos</button>
                     </div>
@@ -606,7 +607,7 @@
                 <div id="m-admin-sla" style="display:none; margin-bottom:20px; background:#fffbeb; padding:15px 20px; border-radius:12px; border: 1px dashed var(--warning); box-shadow: var(--shadow-sm);">
                     <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
                         <div style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--warning);">event</span><label for="m-sla-date" style="margin:0; width:auto; font-size:13px; color:#92400e;">FECHA LÍMITE (SLA)</label></div>
-                        <input type="date" id="m-sla-date" style="margin:0; width:auto; flex:1; border-color:#fcd34d; background:#fff;">
+                        <input aria-label="m-sla-date" type="date" id="m-sla-date" style="margin:0; width:auto; flex:1; border-color:#fcd34d; background:#fff;">
                         <button class="btn btn-warning" id="btn-save-sla" onclick="window.guardarSLA()" style="padding:10px 20px;"><span class="material-icons-round" style="font-size:16px;">save</span> Guardar SLA</button>
                     </div>
                 </div>
@@ -662,7 +663,7 @@
                     <div id="m-involucrados-container" style="margin-top:15px;">
                         <div class="custom-label">Personal Involucrado / Revisores Extras</div>
                         <div id="m-involucrados-list" style="margin-bottom:10px; min-height:30px; padding:10px; background:#f8fafc; border-radius:8px; border:1px solid var(--border);"></div>
-                        <div id="m-add-involucrado-section" style="display:flex; gap:10px; flex-wrap:wrap;"><select id="m-new-involucrado-sel" style="flex:1; margin:0; min-width:200px;"><option value="">-- Añadir usuario a este caso --</option></select><button type="button" class="btn btn-info" onclick="window.guardarNuevoInvolucrado()">Añadir Usuario</button></div>
+                        <div id="m-add-involucrado-section" style="display:flex; gap:10px; flex-wrap:wrap;"><select aria-label="m-new-involucrado-sel" id="m-new-involucrado-sel" style="flex:1; margin:0; min-width:200px;"><option value="">-- Añadir usuario a este caso --</option></select><button type="button" class="btn btn-info" onclick="window.guardarNuevoInvolucrado()">Añadir Usuario</button></div>
                     </div>
                 </div>
 
@@ -672,24 +673,24 @@
                         <span id="e-sol-doc-id-display" style="display:none; font-size:11px; background:var(--warning); color:white; padding:4px 8px; border-radius:6px; font-family:monospace;"></span>
                     </div>
                     <div class="resp-grid">
-                        <div><label for="e-sol-acc">Acción Requerida</label><select id="e-sol-acc"><option value="Creación">Creación</option><option value="Modificación">Modificación</option><option value="Inactivación">Inactivación</option></select></div>
-                        <div><label for="e-sol-tipo-doc">Tipo Documento</label><select id="e-sol-tipo-doc"></select></div>
-                        <div><label for="e-sol-pri">Prioridad</label><select id="e-sol-pri"><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta (Urgente)</option></select></div>
+                        <div><label for="e-sol-acc">Acción Requerida</label><select aria-label="e-sol-acc" id="e-sol-acc"><option value="Creación">Creación</option><option value="Modificación">Modificación</option><option value="Inactivación">Inactivación</option></select></div>
+                        <div><label for="e-sol-tipo-doc">Tipo Documento</label><select aria-label="e-sol-tipo-doc" id="e-sol-tipo-doc"></select></div>
+                        <div><label for="e-sol-pri">Prioridad</label><select aria-label="e-sol-pri" id="e-sol-pri"><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta (Urgente)</option></select></div>
                     </div>
-                    <label for="e-sol-tit">Título del Documento</label><input type="text" id="e-sol-tit">
+                    <label for="e-sol-tit">Título del Documento</label><input aria-label="e-sol-tit" type="text" id="e-sol-tit">
                     <div class="resp-grid">
-                        <div><label for="e-sol-ger">Gerencia</label><select id="e-sol-ger" onchange="window.actualizarGerenteSelectEdit(this.value)"></select></div>
-                        <div><label for="e-sol-dep">Departamento</label><select id="e-sol-dep"><option value="">-- Seleccione Gerencia Primero --</option></select></div>
+                        <div><label for="e-sol-ger">Gerencia</label><select aria-label="e-sol-ger" id="e-sol-ger" onchange="window.actualizarGerenteSelectEdit(this.value)"></select></div>
+                        <div><label for="e-sol-dep">Departamento</label><select aria-label="e-sol-dep" id="e-sol-dep"><option value="">-- Seleccione Gerencia Primero --</option></select></div>
                     </div>
                     <div style="background: #fef3c7; padding: 15px; border-radius: 12px; border: 1px solid #fcd34d; margin-bottom: 15px; margin-top:15px;">
                         <label for="e-sol-involucrado-sel">Añadir Involucrados (Revisores extras)</label>
                         <div style="display:flex; gap:10px; margin-bottom:10px;">
-                            <select id="e-sol-involucrado-sel" style="margin:0; flex:1; background:white;"><option value="">-- Seleccionar --</option></select>
+                            <select aria-label="e-sol-involucrado-sel" id="e-sol-involucrado-sel" style="margin:0; flex:1; background:white;"><option value="">-- Seleccionar --</option></select>
                             <button type="button" class="btn btn-warning" onclick="window.addInvolucradoListEdit()">Añadir</button>
                         </div>
                         <div id="lista-involucrados-tags-edit" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
                     </div>
-                    <label for="e-sol-mot">Justificación / Motivo</label><textarea id="e-sol-mot" rows="4"></textarea>
+                    <label for="e-sol-mot">Justificación / Motivo</label><textarea aria-label="e-sol-mot" id="e-sol-mot" rows="4"></textarea>
                     <div style="display:flex; gap:10px; margin-top:15px;">
                         <button class="btn btn-warning" onclick="window.guardarEdicionSol()" style="padding:10px 20px;">Guardar Cambios</button>
                         <button class="btn btn-dark" onclick="window.setDisplay('m-panel-edicion-sol', 'none'); window.setDisplay('btn-editar-sol', 'inline-block'); window.setDisplay('m-original-data', 'block');" style="padding:10px 20px;">Cancelar</button>
@@ -698,15 +699,15 @@
 
                 <div id="m-panel-update-sgc" style="display:none; margin-top:25px; background:#f8fafc; padding:20px; border-radius:12px; border: 1px dashed var(--info);">
                     <div class="section-title" style="margin-top:0;">AJUSTES SGC (Pre-Aprobación)</div>
-                    <div class="resp-grid"><div><label for="m-upd-tit">Título Corregido</label><input type="text" id="m-upd-tit"></div><div><label for="m-upd-cod">Código Asignado</label><input type="text" id="m-upd-cod"></div><div><label for="m-upd-ver">Versión</label><input type="text" id="m-upd-ver"></div><div><label for="m-upd-file">Adjunto Modificado (Opcional)</label><input type="file" id="m-upd-file"></div></div>
+                    <div class="resp-grid"><div><label for="m-upd-tit">Título Corregido</label><input aria-label="m-upd-tit" type="text" id="m-upd-tit"></div><div><label for="m-upd-cod">Código Asignado</label><input aria-label="m-upd-cod" type="text" id="m-upd-cod"></div><div><label for="m-upd-ver">Versión</label><input aria-label="m-upd-ver" type="text" id="m-upd-ver"></div><div><label for="m-upd-file">Adjunto Modificado (Opcional)</label><input aria-label="m-upd-file" type="file" id="m-upd-file"></div></div>
                     <button class="btn btn-info" onclick="window.actualizarDatosSGC()" style="width:100%; padding:12px;">Actualizar Datos del Expediente</button>
                 </div>
 
                 <div id="m-panel-final-sgc" style="display:none; margin-top:25px; background:#eff6ff; padding:20px; border-radius:12px; border: 2px dashed var(--primary);">
                     <div class="section-title" style="margin-top:0;">GENERACIÓN DE DOCUMENTO Y CIERRE SGC</div>
-                    <div class="resp-grid"><div><label for="m-final-cod">Cod. Oficial SGC</label><input type="text" id="m-final-cod" style="font-weight:bold; color:var(--primary);"></div><div><label for="m-final-ver">Ver. Oficial</label><input type="text" id="m-final-ver" style="font-weight:bold; color:var(--primary);"></div><div><label for="m-final-fecha">Fecha de Emisión</label><input type="date" id="m-final-fecha" style="font-weight:bold; color:var(--primary);"></div></div>
-                    <label for="m-final-file">Archivo Final Oficial PDF</label><input type="file" id="m-final-file">
-                    <input type="text" id="m-final-comentario" placeholder="Observaciones para el listado maestro...">
+                    <div class="resp-grid"><div><label for="m-final-cod">Cod. Oficial SGC</label><input aria-label="m-final-cod" type="text" id="m-final-cod" style="font-weight:bold; color:var(--primary);"></div><div><label for="m-final-ver">Ver. Oficial</label><input aria-label="m-final-ver" type="text" id="m-final-ver" style="font-weight:bold; color:var(--primary);"></div><div><label for="m-final-fecha">Fecha de Emisión</label><input aria-label="m-final-fecha" type="date" id="m-final-fecha" style="font-weight:bold; color:var(--primary);"></div></div>
+                    <label for="m-final-file">Archivo Final Oficial PDF</label><input aria-label="m-final-file" type="file" id="m-final-file">
+                    <input aria-label="Observaciones para el listado maestro..." type="text" id="m-final-comentario" placeholder="Observaciones para el listado maestro...">
                     <button class="btn btn-primary" onclick="window.guardarCierreFinal()" style="width:100%; padding:15px; font-size:15px;">PUBLICAR OFICIALMENTE Y CERRAR SOLICITUD</button>
                 </div>
 
@@ -725,17 +726,17 @@
                 <div id="applicant-actions" style="margin-top:20px; display:none;"><button type="button" class="btn btn-info" style="background:var(--accent); width:100%; padding:15px; font-size:14px;" onclick="window.responderSolicitante()">Responder Consulta u Observación</button></div>
 
                 <div id="m-input-area" style="display:none; margin-top:20px; background:#fffbeb; padding:20px; border-radius:12px; border:2px dashed var(--warning);">
-                    <div id="reunion-container" style="display:none; margin-bottom:15px;"><label for="m-date-meeting" style="color:#b45309;">Fecha y Hora de Reunión</label><input type="datetime-local" id="m-date-meeting" style="margin:0; border-color:#d97706; background:#fff;"></div>
+                    <div id="reunion-container" style="display:none; margin-bottom:15px;"><label for="m-date-meeting" style="color:#b45309;">Fecha y Hora de Reunión</label><input aria-label="m-date-meeting" type="datetime-local" id="m-date-meeting" style="margin:0; border-color:#d97706; background:#fff;"></div>
                     <div class="custom-label" style="color:#b45309;">Detalle a registrar y enviar por correo:</div>
                     <div id="m-extra-input" contenteditable="true" style="min-height:80px; border:1px solid #d97706; border-radius:8px; padding:15px; background:white; font-size:13px; line-height:1.5;"></div>
-                    <input type="file" id="m-file-gestion" style="margin-top:15px;">
+                    <input aria-label="m-file-gestion" type="file" id="m-file-gestion" style="margin-top:15px;">
                     <div class="resp-grid" style="margin-top:15px;"><button class="btn btn-warning" id="btnConfirmAction" onclick="window.guardarGestion()" style="padding:12px;">Confirmar y Enviar Notificación</button><button class="btn btn-ghost" onclick="window.setDisplay('m-input-area', 'none')">Cancelar</button></div>
                 </div>
 
                 <div id="general-comment-area" style="margin-top:30px; border-top:1px solid var(--border); padding-top:20px;">
                     <div class="section-title" style="margin-top:0;">CHAT INTERNO / NOTAS LIBRES</div>
                     <div id="m-comentario-libre" contenteditable="true" style="min-height:50px; border:1px solid #cbd5e1; border-radius:8px; padding:10px; background:white; font-size:12px; line-height:1.4;"></div>
-                    <div style="display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;"><input type="file" id="m-file-comentario" style="margin:0; flex:1; min-width:200px; padding:8px;"><button class="btn btn-success" onclick="window.enviarComentarioLibre()" style="padding:10px 20px; font-size:12px;">Subir Comentario</button></div>
+                    <div style="display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;"><input aria-label="m-file-comentario" type="file" id="m-file-comentario" style="margin:0; flex:1; min-width:200px; padding:8px;"><button class="btn btn-success" onclick="window.enviarComentarioLibre()" style="padding:10px 20px; font-size:12px;">Subir Comentario</button></div>
                 </div>
             </div>
             
@@ -751,19 +752,19 @@
              <span class="material-icons-round">local_shipping</span> Registrar / Editar Proveedor
            </h2>
            <div class="resp-grid">
-               <div style="grid-column: 1 / -1;"><label for="pr-rs">Razón Social</label><input type="text" id="pr-rs"></div>
-               <div><label for="pr-ruc">RUC / Identificación</label><input type="text" id="pr-ruc"></div>
-               <div><label for="pr-serv">Servicio o Producto Principal</label><input type="text" id="pr-serv"></div>
-               <div style="grid-column: 1 / -1;"><label for="pr-cert">Certificaciones (OEA, ISO, BASC...)</label><input type="text" id="pr-cert" placeholder="Separadas por comas"></div>
+               <div style="grid-column: 1 / -1;"><label for="pr-rs">Razón Social</label><input aria-label="pr-rs" type="text" id="pr-rs"></div>
+               <div><label for="pr-ruc">RUC / Identificación</label><input aria-label="pr-ruc" type="text" id="pr-ruc"></div>
+               <div><label for="pr-serv">Servicio o Producto Principal</label><input aria-label="pr-serv" type="text" id="pr-serv"></div>
+               <div style="grid-column: 1 / -1;"><label for="pr-cert">Certificaciones (OEA, ISO, BASC...)</label><input aria-label="Separadas por comas" type="text" id="pr-cert" placeholder="Separadas por comas"></div>
                
-               <div><label for="pr-ev-fisica">Evaluación Seg. Física (1-10)</label><input type="number" id="pr-ev-fisica" min="1" max="10" value="0" onchange="window.calcularRiesgoProveedor()"></div>
-               <div><label for="pr-ev-ti">Evaluación Seg. TI (1-10)</label><input type="number" id="pr-ev-ti" min="1" max="10" value="0" onchange="window.calcularRiesgoProveedor()"></div>
-               <div><label for="pr-ev-rrhh">Evaluación Seg. RRHH (1-10)</label><input type="number" id="pr-ev-rrhh" min="1" max="10" value="0" onchange="window.calcularRiesgoProveedor()"></div>
+               <div><label for="pr-ev-fisica">Evaluación Seg. Física (1-10)</label><input aria-label="pr-ev-fisica" type="number" id="pr-ev-fisica" min="1" max="10" value="0" onchange="window.calcularRiesgoProveedor()"></div>
+               <div><label for="pr-ev-ti">Evaluación Seg. TI (1-10)</label><input aria-label="pr-ev-ti" type="number" id="pr-ev-ti" min="1" max="10" value="0" onchange="window.calcularRiesgoProveedor()"></div>
+               <div><label for="pr-ev-rrhh">Evaluación Seg. RRHH (1-10)</label><input aria-label="pr-ev-rrhh" type="number" id="pr-ev-rrhh" min="1" max="10" value="0" onchange="window.calcularRiesgoProveedor()"></div>
                
-               <div><label for="pr-fecha-eval">Fecha Próxima Eval.</label><input type="date" id="pr-fecha-eval"></div>
-               <div><label for="pr-estado">Estado</label><select id="pr-estado"><option>Aprobado</option><option>Condicionado</option><option>Rechazado</option></select></div>
+               <div><label for="pr-fecha-eval">Fecha Próxima Eval.</label><input aria-label="pr-fecha-eval" type="date" id="pr-fecha-eval"></div>
+               <div><label for="pr-estado">Estado</label><select aria-label="pr-estado" id="pr-estado"><option>Aprobado</option><option>Condicionado</option><option>Rechazado</option></select></div>
                
-               <div style="grid-column: 1 / -1;"><label for="pr-obs">Observaciones / Recomendaciones</label><textarea id="pr-obs" rows="3"></textarea></div>
+               <div style="grid-column: 1 / -1;"><label for="pr-obs">Observaciones / Recomendaciones</label><textarea aria-label="pr-obs" id="pr-obs" rows="3"></textarea></div>
            </div>
            
            <div style="background:#f8fafc; padding:15px; border-radius:8px; margin:20px 0; text-align:center; border:1px dashed var(--info);">
@@ -784,21 +785,21 @@
              <span class="material-icons-round">warning</span> Registrar / Editar Riesgo
            </h2>
            <div class="resp-grid">
-               <div style="grid-column: 1 / -1;"><label for="ri-proceso">Proceso / Área Afectada</label><input type="text" id="ri-proceso"></div>
-               <div><label for="ri-amenaza">Amenaza / Vulnerabilidad</label><select id="ri-amenaza"><option>Robo / Pérdida</option><option>Ciberataque / Hackeo</option><option>Fallo en Operaciones</option><option>Incumplimiento Legal</option><option>Contaminación Carga</option><option>Desastre Natural</option><option>Otro</option></select></div>
-               <div><label for="ri-resp">Responsable (Gestor)</label><select id="ri-resp"><option>No Asignado</option></select></div>
-               <div style="grid-column: 1 / -1;"><label for="ri-desc">Descripción detallada del Riesgo</label><textarea id="ri-desc" rows="3"></textarea></div>
+               <div style="grid-column: 1 / -1;"><label for="ri-proceso">Proceso / Área Afectada</label><input aria-label="ri-proceso" type="text" id="ri-proceso"></div>
+               <div><label for="ri-amenaza">Amenaza / Vulnerabilidad</label><select aria-label="ri-amenaza" id="ri-amenaza"><option>Robo / Pérdida</option><option>Ciberataque / Hackeo</option><option>Fallo en Operaciones</option><option>Incumplimiento Legal</option><option>Contaminación Carga</option><option>Desastre Natural</option><option>Otro</option></select></div>
+               <div><label for="ri-resp">Responsable (Gestor)</label><select aria-label="ri-resp" id="ri-resp"><option>No Asignado</option></select></div>
+               <div style="grid-column: 1 / -1;"><label for="ri-desc">Descripción detallada del Riesgo</label><textarea aria-label="ri-desc" id="ri-desc" rows="3"></textarea></div>
                
-               <div><label for="ri-prob">Probabilidad (1-5)</label><input type="number" id="ri-prob" min="1" max="5" value="1" onchange="window.actualizarSeveridadColor()"></div>
-               <div><label for="ri-imp">Impacto (1-5)</label><input type="number" id="ri-imp" min="1" max="5" value="1" onchange="window.actualizarSeveridadColor()"></div>
+               <div><label for="ri-prob">Probabilidad (1-5)</label><input aria-label="ri-prob" type="number" id="ri-prob" min="1" max="5" value="1" onchange="window.actualizarSeveridadColor()"></div>
+               <div><label for="ri-imp">Impacto (1-5)</label><input aria-label="ri-imp" type="number" id="ri-imp" min="1" max="5" value="1" onchange="window.actualizarSeveridadColor()"></div>
                
                <div style="grid-column: 1 / -1; display:flex; align-items:center; gap:15px; margin: 10px 0;">
                    <b>Nivel de Severidad Automático:</b>
                    <span id="ri-sev-badge" class="badge badge-success" style="font-size:14px; padding:8px 12px;">SEVERIDAD: 1 (BAJO)</span>
                </div>
                
-               <div style="grid-column: 1 / -1;"><label for="ri-controles">Controles Actuales</label><textarea id="ri-controles" rows="2" placeholder="Describa los controles que ya existen para este riesgo..."></textarea></div>
-               <div><label for="ri-accion">Acción a Tomar</label><select id="ri-accion"><option>Mitigar (Tratar)</option><option>Aceptar</option><option>Transferir</option><option>Evitar</option></select></div>
+               <div style="grid-column: 1 / -1;"><label for="ri-controles">Controles Actuales</label><textarea aria-label="Describa los controles que ya existen para este riesgo..." id="ri-controles" rows="2" placeholder="Describa los controles que ya existen para este riesgo..."></textarea></div>
+               <div><label for="ri-accion">Acción a Tomar</label><select aria-label="ri-accion" id="ri-accion"><option>Mitigar (Tratar)</option><option>Aceptar</option><option>Transferir</option><option>Evitar</option></select></div>
            </div>
            
            <div style="display:flex; gap:10px; margin-top:20px; justify-content: flex-end;">
@@ -812,11 +813,11 @@
            <h2 style="color:var(--primary); margin: 20px 0; display:flex; align-items:center; gap:8px;" id="user-form-title"><span class="material-icons-round">person_add</span> Registrar / Editar Usuario</h2>
            
            <div class="resp-grid">
-               <div><label for="u-nom">Nombre Completo</label><input type="text" id="u-nom"></div>
-               <div><label for="u-usr">Usuario ID (login)</label><input type="text" id="u-usr"></div>
-               <div><label for="u-pas">Contraseña</label><input type="password" id="u-pas" value="123"></div>
-               <div><label for="u-rol">Rol o Cargo</label><input type="text" id="u-rol"></div>
-               <div style="grid-column: 1 / -1;"><label for="u-email">Email (Opcional, para notificaciones)</label><input type="email" id="u-email"></div>
+               <div><label for="u-nom">Nombre Completo</label><input aria-label="u-nom" type="text" id="u-nom"></div>
+               <div><label for="u-usr">Usuario ID (login)</label><input aria-label="u-usr" type="text" id="u-usr"></div>
+               <div><label for="u-pas">Contraseña</label><input aria-label="u-pas" type="password" id="u-pas" value="123"></div>
+               <div><label for="u-rol">Rol o Cargo</label><input aria-label="u-rol" type="text" id="u-rol"></div>
+               <div style="grid-column: 1 / -1;"><label for="u-email">Email (Opcional, para notificaciones)</label><input aria-label="u-email" type="email" id="u-email"></div>
            </div>
 
            <div class="card" style="margin-top: 15px;">
@@ -831,35 +832,35 @@
                <div class="resp-grid" style="gap: 20px;">
                    <div>
                        <h4 style="color:var(--primary); margin-bottom:10px;">Gestión de Solicitudes</h4>
-                       <label><input type="checkbox" id="p-solicitar"> Puede crear solicitudes</label><br>
-                       <label><input type="checkbox" id="p-ver-propias"> Ver sus propias solicitudes</label><br>
-                       <label><input type="checkbox" id="p-ver-ger"> Ver solicitudes de su gerencia</label><br>
-                       <label><input type="checkbox" id="p-ver-todas"> Ver TODAS las solicitudes</label>
+                       <label><input aria-label="p-solicitar" type="checkbox" id="p-solicitar"> Puede crear solicitudes</label><br>
+                       <label><input aria-label="p-ver-propias" type="checkbox" id="p-ver-propias"> Ver sus propias solicitudes</label><br>
+                       <label><input aria-label="p-ver-ger" type="checkbox" id="p-ver-ger"> Ver solicitudes de su gerencia</label><br>
+                       <label><input aria-label="p-ver-todas" type="checkbox" id="p-ver-todas"> Ver TODAS las solicitudes</label>
                    </div>
                    <div>
                        <h4 style="color:var(--warning); margin-bottom:10px;">Aprobaciones (SGC / Gerencia)</h4>
-                       <label><input type="checkbox" id="p-eval-sol"> Evaluar Solicitudes (Paso 0)</label><br>
-                       <label><input type="checkbox" id="p-paso1"> Aprobar Paso 1 (Documentado)</label><br>
-                       <label><input type="checkbox" id="p-paso2"> Aprobar Paso 2 (Verificado)</label><br>
-                       <label><input type="checkbox" id="p-paso4"> Aprobar Paso Final (SGC)</label><br>
-                       <label><input type="checkbox" id="p-gest-sgc"> Gestor SGC (Aprobación Global)</label><br>
-                       <label><input type="checkbox" id="p-ger-apr"> Aprobación como Gerente (Paso 3)</label>
+                       <label><input aria-label="p-eval-sol" type="checkbox" id="p-eval-sol"> Evaluar Solicitudes (Paso 0)</label><br>
+                       <label><input aria-label="p-paso1" type="checkbox" id="p-paso1"> Aprobar Paso 1 (Documentado)</label><br>
+                       <label><input aria-label="p-paso2" type="checkbox" id="p-paso2"> Aprobar Paso 2 (Verificado)</label><br>
+                       <label><input aria-label="p-paso4" type="checkbox" id="p-paso4"> Aprobar Paso Final (SGC)</label><br>
+                       <label><input aria-label="p-gest-sgc" type="checkbox" id="p-gest-sgc"> Gestor SGC (Aprobación Global)</label><br>
+                       <label><input aria-label="p-ger-apr" type="checkbox" id="p-ger-apr"> Aprobación como Gerente (Paso 3)</label>
                    </div>
                    <div>
                        <h4 style="color:var(--info); margin-bottom:10px;">Auditorías / Calidad</h4>
-                       <label><input type="checkbox" id="p-audit-ver"> Ver Auditorías / SAC</label><br>
-                       <label><input type="checkbox" id="p-audit-admin"> Administrar Auditorías</label><br>
-                       <label><input type="checkbox" id="p-audit-auditor"> Rol: Auditor Interno</label><br>
-                       <label><input type="checkbox" id="p-audit-dueno"> Rol: Dueño de Proceso</label>
+                       <label><input aria-label="p-audit-ver" type="checkbox" id="p-audit-ver"> Ver Auditorías / SAC</label><br>
+                       <label><input aria-label="p-audit-admin" type="checkbox" id="p-audit-admin"> Administrar Auditorías</label><br>
+                       <label><input aria-label="p-audit-auditor" type="checkbox" id="p-audit-auditor"> Rol: Auditor Interno</label><br>
+                       <label><input aria-label="p-audit-dueno" type="checkbox" id="p-audit-dueno"> Rol: Dueño de Proceso</label>
                    </div>
                    <div>
                        <h4 style="color:#d97706; margin-bottom:10px;">Otros Módulos / Admin</h4>
-                       <label><input type="checkbox" id="p-ver-listado"> Acceso al Listado Maestro</label><br>
-                       <label><input type="checkbox" id="p-proveedores"> Eval. Proveedores / OEA</label><br>
-                       <label><input type="checkbox" id="p-riesgos"> Matriz de Riesgos</label><br>
-                       <label><input type="checkbox" id="p-users"> Gestionar Usuarios</label><br>
-                       <label><input type="checkbox" id="p-struct"> Configurar Estructura</label><br>
-                       <label><input type="checkbox" id="p-admin"> <b>Super Administrador</b></label>
+                       <label><input aria-label="p-ver-listado" type="checkbox" id="p-ver-listado"> Acceso al Listado Maestro</label><br>
+                       <label><input aria-label="p-proveedores" type="checkbox" id="p-proveedores"> Eval. Proveedores / OEA</label><br>
+                       <label><input aria-label="p-riesgos" type="checkbox" id="p-riesgos"> Matriz de Riesgos</label><br>
+                       <label><input aria-label="p-users" type="checkbox" id="p-users"> Gestionar Usuarios</label><br>
+                       <label><input aria-label="p-struct" type="checkbox" id="p-struct"> Configurar Estructura</label><br>
+                       <label><input aria-label="p-admin" type="checkbox" id="p-admin"> <b>Super Administrador</b></label>
                    </div>
                </div>
            </div>
@@ -885,16 +886,16 @@
                 <button type="button" class="btn-icon-danger" onclick="window.cerrarModalPlan()"><span class="material-icons-round">close</span></button>
             </div>
             <div style="padding:30px;">
-                <div class="grid-2"><div><label for="ah-obj">Objetivo General</label><textarea id="ah-obj" rows="3"></textarea></div><div><label for="ah-alcance">Alcance</label><textarea id="ah-alcance" rows="3"></textarea></div></div>
-                <div class="grid-3"><div><label for="ah-tecnica">Técnica</label><input type="text" id="ah-tecnica"></div><div><label for="ah-criterios">Criterios de Auditoría</label><input type="text" id="ah-criterios"></div><div><div class="custom-label">Referencia y Fecha Elab.</div><div style="display:flex; gap:5px;"><input type="text" id="ah-ref" style="width:60%;"><input type="date" id="ah-fecha" style="width:40%;"></div></div></div>
+                <div class="grid-2"><div><label for="ah-obj">Objetivo General</label><textarea aria-label="ah-obj" id="ah-obj" rows="3"></textarea></div><div><label for="ah-alcance">Alcance</label><textarea aria-label="ah-alcance" id="ah-alcance" rows="3"></textarea></div></div>
+                <div class="grid-3"><div><label for="ah-tecnica">Técnica</label><input aria-label="ah-tecnica" type="text" id="ah-tecnica"></div><div><label for="ah-criterios">Criterios de Auditoría</label><input aria-label="ah-criterios" type="text" id="ah-criterios"></div><div><div class="custom-label">Referencia y Fecha Elab.</div><div style="display:flex; gap:5px;"><input aria-label="ah-ref" type="text" id="ah-ref" style="width:60%;"><input aria-label="ah-fecha" type="date" id="ah-fecha" style="width:40%;"></div></div></div>
                 <div class="grid-2" style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
-                    <div><label for="ah-lider" style="color:var(--primary);">Auditor Líder</label><select id="ah-lider" style="margin-bottom:15px; font-weight:bold; color:var(--primary);"></select></div>
+                    <div><label for="ah-lider" style="color:var(--primary);">Auditor Líder</label><select aria-label="ah-lider" id="ah-lider" style="margin-bottom:15px; font-weight:bold; color:var(--primary);"></select></div>
                     <div><div class="custom-label" style="color:var(--info);">Equipo Auditor</div><div id="ah-auditor-list" class="checkbox-list" style="height:120px;"></div></div>
                 </div>
-                <div class="grid-2"><div><label for="ah-tec">Recursos Tecnológicos</label><input type="text" id="ah-tec"></div><div><label for="ah-rrhh">Recursos Humanos</label><input type="text" id="ah-rrhh"></div></div>
+                <div class="grid-2"><div><label for="ah-tec">Recursos Tecnológicos</label><input aria-label="ah-tec" type="text" id="ah-tec"></div><div><label for="ah-rrhh">Recursos Humanos</label><input aria-label="ah-rrhh" type="text" id="ah-rrhh"></div></div>
                 <div style="background:#eff6ff; padding:20px; border-radius:12px; border:1px dashed var(--info); margin-bottom:20px;">
                     <label for="ah-extra-emails" style="color:var(--info);">Correos Adicionales / Notificaciones Externas</label>
-                    <input type="text" id="ah-extra-emails" placeholder="ej: asesor@mail.com, gerente@mail.com" style="margin-bottom:0;">
+                    <input aria-label="ej: asesor@mail.com, gerente@mail.com" type="text" id="ah-extra-emails" placeholder="ej: asesor@mail.com, gerente@mail.com" style="margin-bottom:0;">
                 </div>
                 <div style="display:flex; gap:15px; margin-top:10px;">
                     <button class="btn btn-primary" onclick="window.saveAuditPlan()" style="flex:2; padding:16px; font-size:15px;">GUARDAR PLAN ANUAL</button>
@@ -912,8 +913,8 @@
             </div>
             <div style="padding:30px;">
                 <div class="resp-grid">
-                    <div><label for="aud-fecha">Fecha Estimada</label><input type="date" id="aud-fecha"></div><div><label for="aud-h-ini">Hora Inicio</label><input type="time" id="aud-h-ini"></div>
-                    <div><label for="aud-h-fin">Hora Final</label><input type="time" id="aud-h-fin"></div><div><label for="aud-lugar">Lugar / Modalidad</label><input type="text" id="aud-lugar"></div>
+                    <div><label for="aud-fecha">Fecha Estimada</label><input aria-label="aud-fecha" type="date" id="aud-fecha"></div><div><label for="aud-h-ini">Hora Inicio</label><input aria-label="aud-h-ini" type="time" id="aud-h-ini"></div>
+                    <div><label for="aud-h-fin">Hora Final</label><input aria-label="aud-h-fin" type="time" id="aud-h-fin"></div><div><label for="aud-lugar">Lugar / Modalidad</label><input aria-label="aud-lugar" type="text" id="aud-lugar"></div>
                 </div>
                 <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
                     <div class="custom-label" style="color:var(--primary);">Puntos / Requisitos OEA a Evaluar</div>
@@ -924,11 +925,11 @@
                     <div><div class="custom-label" style="color:var(--info);">Auditor(es) a cargo</div><div id="aud-auditor-list" class="checkbox-list" style="margin-bottom:0;"></div></div>
                 </div>
                 <div class="grid-3" style="margin-bottom: 20px;">
-                    <div><label for="aud-org">Organización</label><input type="text" id="aud-org" placeholder="Ej: Empresa S.A."></div><div><label for="aud-dir">Dirección</label><input type="text" id="aud-dir" placeholder="Dirección principal"></div><div><label for="aud-sitios">Sitio(s) Auditado(s)</label><input type="text" id="aud-sitios"></div>
-                    <div><label for="aud-personal">No. de Personal</label><input type="number" id="aud-personal" placeholder="Ej: 50" readonly title="Calculado automáticamente"></div><div><label for="aud-turnos">No. de Turnos</label><input type="number" id="aud-turnos" placeholder="Ej: 2"></div>
+                    <div><label for="aud-org">Organización</label><input aria-label="Ej: Empresa S.A." type="text" id="aud-org" placeholder="Ej: Empresa S.A."></div><div><label for="aud-dir">Dirección</label><input aria-label="Dirección principal" type="text" id="aud-dir" placeholder="Dirección principal"></div><div><label for="aud-sitios">Sitio(s) Auditado(s)</label><input aria-label="aud-sitios" type="text" id="aud-sitios"></div>
+                    <div><label for="aud-personal">No. de Personal</label><input aria-label="Ej: 50" type="number" id="aud-personal" placeholder="Ej: 50" readonly title="Calculado automáticamente"></div><div><label for="aud-turnos">No. de Turnos</label><input aria-label="Ej: 2" type="number" id="aud-turnos" placeholder="Ej: 2"></div>
                     <div style="grid-column: span 3; margin-top:10px;"><div class="custom-label" style="color:var(--primary);">Auditores en Formación / Participantes (Opcional)</div><div id="aud-formacion-list" class="checkbox-list"></div></div>
                 </div>
-                <label for="aud-obs">Observaciones / Enfoque</label><textarea id="aud-obs" rows="3"></textarea>
+                <label for="aud-obs">Observaciones / Enfoque</label><textarea aria-label="aud-obs" id="aud-obs" rows="3"></textarea>
                 <div style="display:flex; gap:15px; margin-top:10px;">
                     <button class="btn btn-primary" id="btn-guardar-aud" onclick="window.guardarAuditoria()" style="flex:2; padding:16px; font-size:15px;">GENERAR AUDITORÍA Y NOTIFICAR</button>
                     <button class="btn btn-dark" id="btn-cancelar-aud" onclick="window.cancelarEdicionAuditoria()" style="flex:1; display:none;">CANCELAR</button>
@@ -993,7 +994,7 @@
                             <div id="ma-comentario-libre" contenteditable="true" style="min-height:50px; padding:10px;"></div>
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
-                            <input type="file" id="ma-file-comentario" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg" style="flex:1; margin:0;">
+                            <input aria-label="ma-file-comentario" type="file" id="ma-file-comentario" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg" style="flex:1; margin:0;">
                             <button class="btn btn-info" onclick="window.enviarComentarioAuditoria()">Guardar en Bitácora</button>
                         </div>
                     </div>
@@ -1083,22 +1084,22 @@
                     <h4 style="margin-bottom:5px; color:var(--primary);">6. Oportunidades de Mejora (OM)</h4><div id="container-om" style="margin-bottom:20px;"></div>
 
                     <h4 style="margin-bottom:10px; color:var(--primary);">7. Conclusiones de Auditoria</h4>
-                    <textarea id="f003-conclusiones" rows="4" style="width:100%; border:1px solid #ccc; padding:10px; font-size:12px; margin-bottom:20px;"></textarea>
+                    <textarea aria-label="f003-conclusiones" id="f003-conclusiones" rows="4" style="width:100%; border:1px solid #ccc; padding:10px; font-size:12px; margin-bottom:20px;"></textarea>
 
                     <h4 style="margin-bottom:5px; color:var(--primary);">8. Notas de Auditoría</h4>
                     <div style="display:grid; grid-template-columns: 150px 1fr; border:1px solid #ccc; font-size:12px; margin-bottom:20px;">
                         <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Nombre del Proceso</div>
-                        <div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="f003-n-proceso" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
+                        <div style="padding:0; border-bottom:1px solid #ccc;"><input aria-label="f003-n-proceso" type="text" id="f003-n-proceso" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
                         <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Personal Auditado</div>
-                        <div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="f003-n-personal" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
+                        <div style="padding:0; border-bottom:1px solid #ccc;"><input aria-label="f003-n-personal" type="text" id="f003-n-personal" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
                         <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Cargo del Auditado</div>
-                        <div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="f003-n-cargo" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
+                        <div style="padding:0; border-bottom:1px solid #ccc;"><input aria-label="f003-n-cargo" type="text" id="f003-n-cargo" style="border:none; margin:0; width:100%; border-radius:0; height:100%;"></div>
                         <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Requisitos Norma</div>
-                        <div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="f003-n-req" style="border:none; margin:0; width:100%; border-radius:0; height:100%; min-height:40px;"></textarea></div>
+                        <div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="f003-n-req" id="f003-n-req" style="border:none; margin:0; width:100%; border-radius:0; height:100%; min-height:40px;"></textarea></div>
                         <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Documentación</div>
-                        <div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="f003-n-doc" style="border:none; margin:0; width:100%; border-radius:0; height:100%; min-height:40px;"></textarea></div>
+                        <div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="f003-n-doc" id="f003-n-doc" style="border:none; margin:0; width:100%; border-radius:0; height:100%; min-height:40px;"></textarea></div>
                         <div style="padding:8px; border-right:1px solid #ccc; font-weight:bold; background:#f1f5f9;">Evidencias Evaluadas</div>
-                        <div style="padding:0;"><textarea id="f003-n-evidencia" style="border:none; margin:0; width:100%; border-radius:0; height:100%; min-height:60px;"></textarea></div>
+                        <div style="padding:0;"><textarea aria-label="f003-n-evidencia" id="f003-n-evidencia" style="border:none; margin:0; width:100%; border-radius:0; height:100%; min-height:60px;"></textarea></div>
                     </div>
                     <div style="text-align:right;"><button type="button" class="btn btn-primary" id="btn-save-f003" onclick="window.guardarF003()" style="display:none; padding:12px 25px; font-size:14px;">GUARDAR REPORTE SGC-F-003</button></div>
                 </div>
@@ -1114,20 +1115,20 @@
             </div>
             <div style="padding:30px;">
                 <div style="display:grid; grid-template-columns: 180px 1fr; border:1px solid #ccc; font-size:12px; margin-bottom:20px;">
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Fecha</div><div style="padding:0; border-bottom:1px solid #ccc;"><input type="date" id="sac-fecha" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Fecha</div><div style="padding:0; border-bottom:1px solid #ccc;"><input aria-label="sac-fecha" type="date" id="sac-fecha" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"></div>
                     <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;"># de Solicitud / Estado</div><div style="padding:8px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between;"><span id="sac-num" style="font-weight:bold; font-size:14px;"></span><span id="sac-estado-badge" class="badge"></span></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Requisito Evaluado</div><div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="sac-proceso" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Acción Correctiva / Mejora</div><div style="padding:0; border-bottom:1px solid #ccc;"><select id="sac-tipo" style="border:none; margin:0; width:100%; border-radius:0; height:100%; font-weight:bold; background:transparent; padding:8px;"><option value="NC Mayor">NC Mayor</option><option value="NC Menor">NC Menor</option><option value="OM">Oportunidad de Mejora (OM)</option></select></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Tipo de Doc. a Afectar/Crear</div><div style="padding:0; border-bottom:1px solid #ccc;"><select id="sac-tipo-doc-afectado" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"></select></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Fuente de No Conformidad</div><div style="padding:0; border-bottom:1px solid #ccc;"><select id="sac-fuente" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"><option value="Auditoría Interna">Auditoría Interna</option><option value="Auditoría Externa">Auditoría Externa</option><option value="Incidente">Incidente / Accidente</option><option value="Queja Cliente">Queja de Cliente</option><option value="Otro">Otro</option></select></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">En el caso de otro, detalle:</div><div style="padding:0; border-bottom:1px solid #ccc;"><input type="text" id="sac-fuente-otro" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Detalle NC / Problema</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="sac-detalle" rows="4" style="border:none; margin:0; width:100%; border-radius:0; background:#f8fafc; resize:vertical; padding:12px;"></textarea></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Requisito Evaluado</div><div style="padding:0; border-bottom:1px solid #ccc;"><input aria-label="sac-proceso" type="text" id="sac-proceso" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Acción Correctiva / Mejora</div><div style="padding:0; border-bottom:1px solid #ccc;"><select aria-label="sac-tipo" id="sac-tipo" style="border:none; margin:0; width:100%; border-radius:0; height:100%; font-weight:bold; background:transparent; padding:8px;"><option value="NC Mayor">NC Mayor</option><option value="NC Menor">NC Menor</option><option value="OM">Oportunidad de Mejora (OM)</option></select></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Tipo de Doc. a Afectar/Crear</div><div style="padding:0; border-bottom:1px solid #ccc;"><select aria-label="sac-tipo-doc-afectado" id="sac-tipo-doc-afectado" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"></select></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Fuente de No Conformidad</div><div style="padding:0; border-bottom:1px solid #ccc;"><select aria-label="sac-fuente" id="sac-fuente" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"><option value="Auditoría Interna">Auditoría Interna</option><option value="Auditoría Externa">Auditoría Externa</option><option value="Incidente">Incidente / Accidente</option><option value="Queja Cliente">Queja de Cliente</option><option value="Otro">Otro</option></select></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">En el caso de otro, detalle:</div><div style="padding:0; border-bottom:1px solid #ccc;"><input aria-label="sac-fuente-otro" type="text" id="sac-fuente-otro" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Detalle NC / Problema</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="sac-detalle" id="sac-detalle" rows="4" style="border:none; margin:0; width:100%; border-radius:0; background:#f8fafc; resize:vertical; padding:12px;"></textarea></div>
                     
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#e0f2fe; color:#0369a1;">Beneficio Esperado</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="sac-beneficio" rows="3" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:12px;"></textarea></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#e0f2fe; color:#0369a1;">Análisis de Causa-Raíz</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="sac-causa" rows="4" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:12px;"></textarea></div>
-                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#e0f2fe; color:#0369a1;">Acción a Implementar</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea id="sac-accion" rows="4" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:12px;"></textarea></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#e0f2fe; color:#0369a1;">Beneficio Esperado</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="sac-beneficio" id="sac-beneficio" rows="3" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:12px;"></textarea></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#e0f2fe; color:#0369a1;">Análisis de Causa-Raíz</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="sac-causa" id="sac-causa" rows="4" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:12px;"></textarea></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#e0f2fe; color:#0369a1;">Acción a Implementar</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="sac-accion" id="sac-accion" rows="4" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:12px;"></textarea></div>
                     
-                    <div style="padding:8px; border-right:1px solid #ccc; font-weight:bold; background:#fef3c7;">Responsable de la AC</div><div style="padding:0; display:flex; align-items:center;"><select id="sac-dueno" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px; font-weight:bold; color:var(--primary);"></select></div>
+                    <div style="padding:8px; border-right:1px solid #ccc; font-weight:bold; background:#fef3c7;">Responsable de la AC</div><div style="padding:0; display:flex; align-items:center;"><select aria-label="sac-dueno" id="sac-dueno" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px; font-weight:bold; color:var(--primary);"></select></div>
                 </div>
                 
                 <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">PLAN DE ACCIÓN</h4>
@@ -1139,7 +1140,7 @@
                 </div>
                 <button type="button" class="btn btn-info" id="btn-add-plan" onclick="window.addPlanRow()" style="font-size:11px; padding:6px 12px; margin-bottom:20px;">+ Añadir Fila al Plan</button>
 
-                <div style="display:flex; gap:20px; align-items:center; border:1px dashed #d97706; padding:15px; background:#fffbeb; border-radius:8px; margin-bottom:20px; font-size:13px;"><b style="color:#b45309;">Aprobación del Plan de Acción (SGC/Auditor):</b><input type="date" id="sac-fecha-aprob-plan" style="margin:0; width:200px; padding:8px;"></div>
+                <div style="display:flex; gap:20px; align-items:center; border:1px dashed #d97706; padding:15px; background:#fffbeb; border-radius:8px; margin-bottom:20px; font-size:13px;"><b style="color:#b45309;">Aprobación del Plan de Acción (SGC/Auditor):</b><input aria-label="sac-fecha-aprob-plan" type="date" id="sac-fecha-aprob-plan" style="margin:0; width:200px; padding:8px;"></div>
 
                 <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">ACTIVIDADES DE SEGUIMIENTO</h4>
                 <div class="table-responsive" style="margin-bottom:10px;">
@@ -1150,7 +1151,7 @@
                 </div>
                 <button type="button" class="btn btn-dark" id="btn-add-seguimiento" onclick="window.addSeguimientoRow()" style="font-size:11px; padding:6px 12px; margin-bottom:20px;">+ Añadir Fila de Seguimiento</button>
 
-                <div id="sac-panel-cierre" style="border:2px dashed var(--success); padding:20px; border-radius:8px; margin-bottom:20px; background:#f0fdf4;"><h4 style="color:var(--success); margin-bottom:10px; font-size:14px;">Aprobación de Cierre</h4><div class="grid-2"><div><label for="sac-resp-cierre">Responsable</label><input type="text" id="sac-resp-cierre" disabled style="background:#e2e8f0;"></div><div><label for="sac-fecha-cierre">Fecha de Cierre</label><input type="date" id="sac-fecha-cierre" style="background:#fff;"></div></div><div style="display:flex; align-items:center; gap:10px; margin-top:10px;"><input type="checkbox" id="sac-check-cerrar" style="width:20px; height:20px; cursor:pointer; margin:0;"> <label for="sac-check-cerrar" style="margin:0; font-size:14px; color:var(--success); cursor:pointer;"><b>CERRAR ACCIÓN CORRECTIVA DEFINITIVAMENTE</b></label></div></div>
+                <div id="sac-panel-cierre" style="border:2px dashed var(--success); padding:20px; border-radius:8px; margin-bottom:20px; background:#f0fdf4;"><h4 style="color:var(--success); margin-bottom:10px; font-size:14px;">Aprobación de Cierre</h4><div class="grid-2"><div><label for="sac-resp-cierre">Responsable</label><input aria-label="sac-resp-cierre" type="text" id="sac-resp-cierre" disabled style="background:#e2e8f0;"></div><div><label for="sac-fecha-cierre">Fecha de Cierre</label><input aria-label="sac-fecha-cierre" type="date" id="sac-fecha-cierre" style="background:#fff;"></div></div><div style="display:flex; align-items:center; gap:10px; margin-top:10px;"><input aria-label="sac-check-cerrar" type="checkbox" id="sac-check-cerrar" style="width:20px; height:20px; cursor:pointer; margin:0;"> <label for="sac-check-cerrar" style="margin:0; font-size:14px; color:var(--success); cursor:pointer;"><b>CERRAR ACCIÓN CORRECTIVA DEFINITIVAMENTE</b></label></div></div>
                 
                 <div style="display:flex; gap:10px; margin-top:20px;"><button type="button" class="btn btn-primary" id="btn-save-sac" onclick="window.guardarSAC()" style="flex:1; padding:15px; font-size:16px;">Guardar Avances de la SAC</button><button type="button" class="btn btn-ghost" onclick="window.setDisplay('modal-sac', 'none')" style="padding:15px; width:150px; background:#e2e8f0;">Cancelar</button></div>
             </div>
@@ -1166,8 +1167,8 @@
             <div style="margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border);">
                 <label style="font-weight:800; font-size:13px; margin-bottom:10px; display:block;">Decisión de SGC:</label>
                 <div style="display:flex; gap:20px;">
-                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="eval_decision" value="valida" checked onchange="window.toggleEvalDecision()"> <span style="color:var(--success); font-weight:700;">✅ Aprobar (Válida)</span></label>
-                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="eval_decision" value="invalida" onchange="window.toggleEvalDecision()"> <span style="color:var(--danger); font-weight:700;">❌ Rechazar / Anular</span></label>
+                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input aria-label="eval_decision" type="radio" name="eval_decision" value="valida" checked onchange="window.toggleEvalDecision()"> <span style="color:var(--success); font-weight:700;">✅ Aprobar (Válida)</span></label>
+                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input aria-label="eval_decision" type="radio" name="eval_decision" value="invalida" onchange="window.toggleEvalDecision()"> <span style="color:var(--danger); font-weight:700;">❌ Rechazar / Anular</span></label>
                 </div>
             </div>
 
@@ -1175,26 +1176,26 @@
                 <h4 style="font-size:12px; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px; color:var(--primary);">Asignar Responsables Específicos</h4>
                 <div style="margin-bottom:10px;">
                     <label style="font-size:11px;">Paso 1: Documentación</label>
-                    <select id="eval-asig-p1" style="margin-bottom:0;"></select>
+                    <select aria-label="eval-asig-p1" id="eval-asig-p1" style="margin-bottom:0;"></select>
                 </div>
                 <div style="margin-bottom:10px;">
                     <label style="font-size:11px;">Paso 2: Verificación</label>
-                    <select id="eval-asig-p2" style="margin-bottom:0;"></select>
+                    <select aria-label="eval-asig-p2" id="eval-asig-p2" style="margin-bottom:0;"></select>
                 </div>
                 <div style="margin-bottom:15px;">
                     <label style="font-size:11px;">Paso 4: Aprobación Final SGC</label>
-                    <select id="eval-asig-p4" style="margin-bottom:0;"></select>
+                    <select aria-label="eval-asig-p4" id="eval-asig-p4" style="margin-bottom:0;"></select>
                 </div>
                 <div style="background:#fffbeb; padding:15px; border-radius:8px; border:1px solid #fcd34d;">
                     <label style="font-size:12px; color:#92400e; font-weight:800; margin-bottom:5px; display:block;"><span class="material-icons-round" style="font-size:14px; vertical-align:middle;">event_available</span> Días de SLA (Calculado por Prioridad)</label>
-                    <input type="number" id="eval-sla-dias" style="margin-bottom:0;">
+                    <input aria-label="eval-sla-dias" type="number" id="eval-sla-dias" style="margin-bottom:0;">
                     <p style="font-size:10px; margin:5px 0 0; color:#b45309;">Puedes ajustar manualmente los días si es un caso especial. Se sumarán a partir de hoy.</p>
                 </div>
             </div>
 
             <div id="eval-invalida-panel" style="display:none;">
                 <label style="font-weight:700; color:var(--danger); font-size:13px;">Motivo de Rechazo / Anulación:</label>
-                <textarea id="eval-motivo" rows="4" placeholder="Explique por qué no procede esta solicitud..."></textarea>
+                <textarea aria-label="Explique por qué no procede esta solicitud..." id="eval-motivo" rows="4" placeholder="Explique por qué no procede esta solicitud..."></textarea>
             </div>
 
             <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
@@ -1218,21 +1219,21 @@
                 <h4 style="margin:0 0 15px 0; font-size:14px; color:var(--text-main); border-bottom:1px solid var(--border); padding-bottom:5px;">Permisos del Formulario</h4>
                 <label style="font-size:12px;">Personas permitidas para LLENAR (Vacío = Todos)</label>
                 <div style="display:flex; gap:5px; margin-bottom:5px;">
-                    <select id="fb-perm-llenar-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
+                    <select aria-label="fb-perm-llenar-sel" id="fb-perm-llenar-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
                     <button type="button" class="btn btn-primary" onclick="window.addPermUser('llenar')">Añadir</button>
                 </div>
                 <div id="fb-perm-llenar-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px; min-height:10px;"></div>
 
                 <label style="font-size:12px;">Personas permitidas para VER (Vacío = Todos)</label>
                 <div style="display:flex; gap:5px; margin-bottom:5px;">
-                    <select id="fb-perm-ver-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
+                    <select aria-label="fb-perm-ver-sel" id="fb-perm-ver-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
                     <button type="button" class="btn btn-primary" onclick="window.addPermUser('ver')">Añadir</button>
                 </div>
                 <div id="fb-perm-ver-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px; min-height:10px;"></div>
 
                 <label style="font-size:12px;">Personas permitidas para EDITAR (Vacío = Solo Creador)</label>
                 <div style="display:flex; gap:5px; margin-bottom:5px;">
-                    <select id="fb-perm-editar-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
+                    <select aria-label="fb-perm-editar-sel" id="fb-perm-editar-sel" style="flex:1; margin:0;" class="search-bar"><option value="">Cargando usuarios...</option></select>
                     <button type="button" class="btn btn-primary" onclick="window.addPermUser('editar')">Añadir</button>
                 </div>
                 <div id="fb-perm-editar-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:5px; min-height:10px;"></div>
@@ -1242,25 +1243,25 @@
                 <!-- Panel Izquierdo: Datos Básicos y Controles -->
                 <div>
                     <label for="fb-titulo" style="font-size:12px;">Título del Formulario</label>
-                    <input type="text" id="fb-titulo" name="fb-titulo" placeholder="Ej: Encuesta de Satisfacción" style="margin-bottom:10px;">
+                    <input aria-label="Ej: Encuesta de Satisfacción" type="text" id="fb-titulo" name="fb-titulo" placeholder="Ej: Encuesta de Satisfacción" style="margin-bottom:10px;">
                     <label for="fb-desc" style="font-size:12px;">Descripción Corta</label>
-                    <textarea id="fb-desc" name="fb-desc" rows="2" placeholder="Opcional..." style="margin-bottom:10px;"></textarea>
+                    <textarea aria-label="Opcional..." id="fb-desc" name="fb-desc" rows="2" placeholder="Opcional..." style="margin-bottom:10px;"></textarea>
 
                     <label style="display:flex; align-items:center; gap:8px; font-weight:600; color:var(--text-main); margin-bottom:10px; background:#f8fafc; padding:8px 10px; border-radius:6px; border:1px solid var(--border); font-size:12px;">
-                        <input type="checkbox" id="fb-is-eval" style="margin:0; width:auto;"> Este formulario es una Evaluación Calificada (Score Auto)
+                        <input aria-label="fb-is-eval" type="checkbox" id="fb-is-eval" style="margin:0; width:auto;"> Este formulario es una Evaluación Calificada (Score Auto)
                     </label>
 
                     <label style="display:flex; align-items:center; gap:8px; font-weight:600; color:var(--text-main); margin-bottom:10px; background:#f8fafc; padding:8px 10px; border-radius:6px; border:1px solid var(--border); font-size:12px;">
-                        <input type="checkbox" id="fb-is-dynamic" style="margin:0; width:auto;" onchange="document.getElementById('fb-dynamic-options-panel').style.display = this.checked ? 'block' : 'none'; window.renderFormPreview();"> Activar Categorías Dinámicas (Selector Maestro)
+                        <input aria-label="fb-is-dynamic" type="checkbox" id="fb-is-dynamic" style="margin:0; width:auto;" onchange="document.getElementById('fb-dynamic-options-panel').style.display = this.checked ? 'block' : 'none'; window.renderFormPreview();"> Activar Categorías Dinámicas (Selector Maestro)
                     </label>
                     <div id="fb-dynamic-options-panel" style="display:none; background:#f1f5f9; padding:10px; border-radius:6px; margin-bottom:15px; border:1px solid var(--border);">
                         <label style="font-size:11px;">Opciones del Selector (separadas por coma)</label>
-                        <input type="text" id="fb-dynamic-options" class="search-bar" placeholder="Ej: Auto, Moto, Camión" style="width:100%; margin-bottom:0;" onchange="window.renderFormPreview()">
+                        <input aria-label="Ej: Auto, Moto, Camión" type="text" id="fb-dynamic-options" class="search-bar" placeholder="Ej: Auto, Moto, Camión" style="width:100%; margin-bottom:0;" onchange="window.renderFormPreview()">
                     </div>
                     
                     <h4 style="font-size:13px; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">Añadir Nuevo Campo</h4>
                     <label for="fb-tipo-campo">Tipo de Campo</label>
-                    <select id="fb-tipo-campo" name="fb-tipo-campo" style="margin-bottom:10px;">
+                    <select aria-label="fb-tipo-campo" id="fb-tipo-campo" name="fb-tipo-campo" style="margin-bottom:10px;">
                         <option value="text">Texto Corto</option>
                         <option value="textarea">Texto Largo (Párrafo)</option>
                         <option value="number">Número</option>
@@ -1272,16 +1273,16 @@
                         <option value="archivo">Archivo Adjunto</option>
                     </select>
                     <label for="fb-label-campo">Etiqueta (Pregunta)</label>
-                    <input type="text" id="fb-label-campo" name="fb-label-campo" placeholder="Ej: ¿Cuál es su nombre?">
+                    <input aria-label="Ej: ¿Cuál es su nombre?" type="text" id="fb-label-campo" name="fb-label-campo" placeholder="Ej: ¿Cuál es su nombre?">
                     
                     <!-- Opciones para Select -->
                     <div id="fb-opciones-panel" style="display:none; background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:15px;">
                         <label for="fb-opciones-campo" style="font-size:11px;">Opciones (separadas por coma)</label>
-                        <input type="text" id="fb-opciones-campo" name="fb-opciones-campo" placeholder="Opción 1, Opción 2, Opción 3" style="margin-bottom:0;">
+                        <input aria-label="Opción 1, Opción 2, Opción 3" type="text" id="fb-opciones-campo" name="fb-opciones-campo" placeholder="Opción 1, Opción 2, Opción 3" style="margin-bottom:0;">
                     </div>
                     
                     <label for="fb-req-campo" style="display:flex; align-items:center; gap:5px; font-size:12px; margin-bottom:15px; cursor:pointer;">
-                        <input type="checkbox" id="fb-req-campo" name="fb-req-campo" style="margin:0; width:auto;"> Campo Obligatorio
+                        <input aria-label="fb-req-campo" type="checkbox" id="fb-req-campo" name="fb-req-campo" style="margin:0; width:auto;"> Campo Obligatorio
                     </label>
 
                     <button class="btn btn-info" onclick="window.agregarCampoBuilder()" style="width:100%;"><span class="material-icons-round" style="font-size:16px;">add_circle</span> Añadir Campo a la Vista Previa</button>
