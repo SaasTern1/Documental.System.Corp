@@ -534,7 +534,16 @@ window.cargarDatosCentrales = () => {
     let placeholder = document.getElementById('drive-placeholder');
     let btnOpen = document.getElementById('btn-open-drive');
     if(window.systemDriveUrl && window.systemDriveUrl.trim() !== '') {
-        if(iframe && iframe.src !== window.systemDriveUrl) iframe.src = window.systemDriveUrl;
+        let embedUrl = window.systemDriveUrl;
+        if (embedUrl.includes('drive.google.com') && !embedUrl.includes('embeddedfolderview')) {
+            let match = embedUrl.match(/folders\/([a-zA-Z0-9-_]+)/);
+            if (!match) match = embedUrl.match(/id=([a-zA-Z0-9-_]+)/);
+            if (!match) match = embedUrl.match(/d\/([a-zA-Z0-9-_]+)/);
+            if (match && match[1]) {
+                embedUrl = `https://drive.google.com/embeddedfolderview?id=${match[1]}#list`;
+            }
+        }
+        if(iframe && iframe.src !== embedUrl) iframe.src = embedUrl;
         if(iframe) iframe.style.display = 'block';
         if(placeholder) placeholder.style.display = 'none';
         if(btnOpen) btnOpen.style.display = 'inline-flex';
