@@ -36,13 +36,10 @@
     --header-accent:  linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
 
     /* ── Elevation (shadows) ──────────────────────────────────────────────── */
-    --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.04),
-                  0 1px 2px rgba(0, 0, 0, 0.06);
-    --shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.07),
-                  0 2px 4px -1px rgba(0, 0, 0, 0.04);
-    --shadow-lg:  0 10px 25px -5px rgba(0, 0, 0, 0.08),
-                  0 8px 10px -6px rgba(0, 0, 0, 0.03);
-    --shadow-xl:  0 20px 40px -8px rgba(0, 0, 0, 0.12);
+    --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md:  0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-lg:  0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-xl:  0 8px 24px rgba(0, 0, 0, 0.12);
 
     /* ── Radii ────────────────────────────────────────────────────────────── */
     --radius-sm: 8px;
@@ -153,7 +150,7 @@ body {
 #login-screen {
     position: fixed;
     inset: 0;
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%);
+    background: #0f172a;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -260,7 +257,7 @@ body {
    ========================================================================== */
 .sidebar {
     width: 280px;
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    background: var(--sidebar);
     color: #fff;
     display: none;
     flex-direction: column;
@@ -331,16 +328,14 @@ body {
 }
 
 .nav-link.active {
-    background: rgba(59, 130, 246, 0.15);
+    background: rgba(255, 255, 255, 0.08);
     color: #fff;
     font-weight: 600;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.08);
 }
 
 .nav-link.active::before {
     transform: scaleY(1);
     background: var(--accent);
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
 }
 
 .nav-link span {
@@ -647,82 +642,81 @@ textarea::placeholder {
 
 /* ── Primary ──────────────────────────────────────────────────────────────── */
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary), #2563eb);
+    background: var(--primary);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.25);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary-hover), var(--primary));
+    background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(30, 64, 175, 0.35);
+    box-shadow: var(--shadow-md);
 }
 
 /* ── Success ──────────────────────────────────────────────────────────────── */
 .btn-success {
-    background: linear-gradient(135deg, var(--success), #10b981);
+    background: var(--success);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-success:hover {
-    background: linear-gradient(135deg, #047857, var(--success));
+    background: #047857;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.35);
+    box-shadow: var(--shadow-md);
 }
 
 /* ── Warning ──────────────────────────────────────────────────────────────── */
 .btn-warning {
-    background: linear-gradient(135deg, var(--warning), #f59e0b);
+    background: var(--warning);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-warning:hover {
-    background: linear-gradient(135deg, #b45309, var(--warning));
+    background: #b45309;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(217, 119, 6, 0.35);
+    box-shadow: var(--shadow-md);
 }
 
 /* ── Danger ────────────────────────────────────────────────────────────────── */
 .btn-danger {
-    background: linear-gradient(135deg, var(--danger), #ef4444);
+    background: var(--danger);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-danger:hover {
-    background: linear-gradient(135deg, #b91c1c, var(--danger));
+    background: #b91c1c;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
+    box-shadow: var(--shadow-md);
 }
 
 /* ── Info ──────────────────────────────────────────────────────────────────── */
 .btn-info {
-    background: linear-gradient(135deg, var(--info), #38bdf8);
+    background: var(--info);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.25);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-info:hover {
-    background: linear-gradient(135deg, #0284c7, var(--info));
+    background: #0284c7;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+    box-shadow: var(--shadow-md);
 }
 
 /* ── Ghost ─────────────────────────────────────────────────────────────────── */
 .btn-ghost {
     background: var(--card-bg);
     color: var(--text-main);
-    border: 1.5px solid var(--border);
+    border: 1px solid var(--border);
     box-shadow: none;
 }
 
 .btn-ghost:hover {
     background: var(--bg);
-    border-color: var(--accent);
+    border-color: var(--border);
     color: var(--primary);
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
 .btn-ghost::after {
@@ -731,14 +725,14 @@ textarea::placeholder {
 
 /* ── Dark ──────────────────────────────────────────────────────────────────── */
 .btn-dark {
-    background: linear-gradient(135deg, var(--sidebar), #1e293b);
+    background: var(--sidebar);
     color: #fff;
 }
 
 .btn-dark:hover {
-    background: linear-gradient(135deg, #000, var(--sidebar));
+    background: #000;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-md);
 }
 
 /* ── Icon Danger ──────────────────────────────────────────────────────────── */
