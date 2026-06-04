@@ -2945,7 +2945,7 @@ window.renderFormPreview = () => {
         
         let catHtml = '';
         if(isDyn && dynOpts.length > 0) {
-            catHtml = `<select style="margin:0; padding:2px 5px; font-size:11px; max-width:140px; border-radius:4px; border:1px solid var(--border);" onchange="window.actualizarCategoriaCampo(${i}, this.value)">
+            catHtml = `<select id="fb_cat_${i}" name="fb_cat_${i}" aria-label="Categoría del campo" style="margin:0; padding:2px 5px; font-size:11px; max-width:140px; border-radius:4px; border:1px solid var(--border);" onchange="window.actualizarCategoriaCampo(${i}, this.value)">
                 <option value="">(Mostrar siempre)</option>`;
             dynOpts.forEach(opt => {
                 let sel = (c.categoria === opt) ? 'selected' : '';
