@@ -518,7 +518,31 @@ window.cargarDatosCentrales = () => {
   });
 
   onSnapshot(doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"), (sn) => {
-    let dp = [], gr = []; if(sn.exists()) { const d = sn.data(); dp = d.departamentos || []; gr = d.gerencias || []; } allDepartamentos = dp;
+    let dp = [], gr = []; 
+    if(sn.exists()) { 
+        const d = sn.data(); 
+        dp = d.departamentos || []; 
+        gr = d.gerencias || []; 
+        window.systemDriveUrl = d.driveUrl || ""; 
+    } else {
+        window.systemDriveUrl = "";
+    }
+    allDepartamentos = dp;
+    
+    window.setVal('sys-drive-url', window.systemDriveUrl);
+    let iframe = document.getElementById('drive-iframe');
+    let placeholder = document.getElementById('drive-placeholder');
+    let btnOpen = document.getElementById('btn-open-drive');
+    if(window.systemDriveUrl && window.systemDriveUrl.trim() !== '') {
+        if(iframe && iframe.src !== window.systemDriveUrl) iframe.src = window.systemDriveUrl;
+        if(iframe) iframe.style.display = 'block';
+        if(placeholder) placeholder.style.display = 'none';
+        if(btnOpen) btnOpen.style.display = 'inline-flex';
+    } else {
+        if(iframe) iframe.style.display = 'none';
+        if(placeholder) placeholder.style.display = 'flex';
+        if(btnOpen) btnOpen.style.display = 'none';
+    }
     let gH = ""; gr.forEach(g => gH += `<option value="${g}">${g}</option>`);
     window.setHtml('d-ger-sel', gH); window.setHtml('sol-ger', '<option value="">-- Seleccionar --</option>' + gH); window.setHtml('e-sol-ger', '<option value="">-- Seleccionar --</option>' + gH);
     window.setHtml('list-ger', gr.map((g, i) => `<div class="settings-item"><span>${g}</span><button type="button" class="btn-icon-danger" onclick="window.eliminarGerencia(${i})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`).join(''));
@@ -751,7 +775,7 @@ window.completarLoginUI = () => {
 
   const p = currentUser.permisos || {}; const isAdm = p.admin || false;
   const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
-  window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-forms', (isAdm || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none');
+  window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-forms', (isAdm || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-drive', 'flex');
   window.setDisplay('nav-admin-group', (isAdm || p.p_users || p.p_struct) ? 'block' : 'none');
 
   
@@ -890,6 +914,25 @@ window.actualizarGraficoEvaluacion = (campoId, campoLabel) => {
 
 window.exportarExcelUsuarios = () => {
   if(allUsers.length === 0) return; let dE = allUsers.map(u => ({ "Nombre": u.nombre, "Usuario ID": u.usuario, "Email": u.email || '', "Rol": u.role || '', "Gerencias": u.gerencias ? u.gerencias.join(', ') : (u.gerencia || ''), "Admin": u.permisos.admin ? 'Sí' : 'No', "Gestor SGC": u.permisos.p_gest_sgc ? 'Sí' : 'No', "Auditor": u.permisos.p_audit_auditor ? 'Sí' : 'No' })); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dE), "Usuarios_Registrados"); XLSX.writeFile(wb, "Reporte_Usuarios_SGC.xlsx");
+};
+
+window.guardarConfigDrive = async () => {
+    let val = document.getElementById('sys-drive-url').value.trim();
+    window.showLoading();
+    try {
+        await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"), { driveUrl: val }, {merge: true});
+        alert("Configuración de Drive guardada exitosamente.");
+    } catch(e) {
+        console.error(e);
+        alert("Error al guardar la URL de Drive.");
+    }
+    window.hideLoading();
+};
+
+window.openDriveFolder = () => {
+    if(window.systemDriveUrl) {
+        window.open(window.systemDriveUrl, '_blank');
+    }
 };
 
 window.agregarGerencia = async () => { let val = $('g-nom').value.trim().toUpperCase(); if(!val) return; window.showLoading(); let gers = []; const docRef = doc(db, "artifacts", appId, "public", "data", "Configuracion", "Estructura"); const snap = await getDoc(docRef); if(snap.exists() && snap.data().gerencias) gers = snap.data().gerencias; if(gers.includes(val)) { window.hideLoading(); return alert("Ya existe."); } gers.push(val); await setDoc(docRef, { gerencias: gers }, {merge: true}); window.setVal('g-nom', ''); window.hideLoading(); };
