@@ -1283,7 +1283,20 @@ if(selectedDocData.idx === 3) { updates.idx = 4; updates.fase_3_fin = now; updat
 
 await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), updates);
 let dataMaestro = { estatus: "Vigente", registrado_por: "Sistema (Automático)", fecha_registro: new Date().toISOString() };
-columnasMaestro.forEach(c => { let cName = typeof c === 'string' ? c : c.nombre; let low = cName.toLowerCase(); if(low.includes('código') || low === 'codigo') dataMaestro[cName] = codFinal || selectedDocData.cod_ref || "POR_ASIGNAR"; else if(low.includes('gerencia')) dataMaestro[cName] = selectedDocData.gerencia; else if(low.includes('departamento')) dataMaestro[cName] = selectedDocData.departamento; else if(low.includes('tipo')) dataMaestro[cName] = selectedDocData.tipoDoc; else if(low.includes('nombre')) dataMaestro[cName] = selectedDocData.titulo; else if(low.includes('vers')) dataMaestro[cName] = ver; else if(low.includes('ubicaci') || low.includes('archivo') || low.includes('documento')) dataMaestro[cName] = fileUrl; else if(low.includes('fecha última') || low.includes('fecha ultima') || low === 'fecha') dataMaestro[cName] = fecha; });
+columnasMaestro.forEach(c => { 
+    let cName = typeof c === 'string' ? c : c.nombre; 
+    let low = cName.toLowerCase(); 
+    let lowNorm = low.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    if(lowNorm.includes('cod')) dataMaestro[cName] = codFinal || selectedDocData.cod_ref || "POR_ASIGNAR"; 
+    else if(lowNorm.includes('geren')) dataMaestro[cName] = selectedDocData.gerencia || ""; 
+    else if(lowNorm.includes('depar') || lowNorm.includes('depto')) dataMaestro[cName] = selectedDocData.departamento || ""; 
+    else if(lowNorm.includes('tipo')) dataMaestro[cName] = selectedDocData.tipoDoc || ""; 
+    else if(lowNorm.includes('vers')) dataMaestro[cName] = ver || ""; 
+    else if(lowNorm.includes('nom') || lowNorm.includes('titu') || lowNorm.includes('descripcion')) dataMaestro[cName] = selectedDocData.titulo || ""; 
+    else if(lowNorm.includes('fech')) dataMaestro[cName] = fecha || ""; 
+    else if(lowNorm.includes('ubic') || lowNorm.includes('arch') || lowNorm.includes('enlace') || lowNorm.includes('link') || lowNorm.includes('url') || lowNorm.includes('doc')) dataMaestro[cName] = fileUrl || ""; 
+});
 await addDoc(collection(db, "artifacts", appId, "public", "data", "ListadoMaestro"), dataMaestro);
 
 const dest = await window.getDatosEnvio(selectedDocData); 
