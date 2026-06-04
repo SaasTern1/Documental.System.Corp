@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sgc-pwa-cache-v17';
+const CACHE_NAME = 'sgc-pwa-cache-v19';
 const urlsToCache = [
   './',
   './index.html',

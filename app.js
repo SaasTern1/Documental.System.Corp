@@ -98,15 +98,18 @@ window.del = async (c, id) => { if(confirm("¿Eliminar este registro?")) { windo
 window.getDownloadUrl = (url) => url ? url : "#";
 window.formatearFechaAbreviada = (fISO) => { if(!fISO) return ''; let f = fISO; if(f.length===10) f+='T12:00:00'; const d = new Date(f); if(isNaN(d)) return fISO; const m = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]; return `${d.getDate()}-${m[d.getMonth()]}-${d.getFullYear()}`; };
 window.sendNotification = async (dest, sub, msg) => { 
-    console.log("[EmailJS] Iniciando envío de notificación...");
+    console.log("[AppsScript] Iniciando envío de notificación...");
     
-    if (typeof emailjs === "undefined") {
-        console.error("[EmailJS] Error: La librería emailjs no está cargada o inicializada.");
+    // CONFIGURA AQUÍ LA URL DE TU SCRIPT DE GOOGLE APP SCRIPT
+    const APPS_SCRIPT_URL = "REEMPLAZA_ESTA_URL_CON_LA_TUYA";
+    
+    if (APPS_SCRIPT_URL === "REEMPLAZA_ESTA_URL_CON_LA_TUYA") {
+        console.warn("[AppsScript] Cancelado: Aún no has configurado la URL del Google Script en app.js.");
         return false;
     }
 
     if (!dest || (!dest.to && !dest.cc)) {
-        console.warn("[EmailJS] Cancelado: No hay destinatarios válidos (to / cc).");
+        console.warn("[AppsScript] Cancelado: No hay destinatarios válidos (to / cc).");
         return false;
     }
 
@@ -115,7 +118,7 @@ window.sendNotification = async (dest, sub, msg) => {
     let cleanCc = dest.cc ? dest.cc.split(',').map(e => e.trim()).filter(e => regex.test(e)).join(',') : "";
 
     if (!cleanTo && !cleanCc) {
-        console.warn("[EmailJS] Cancelado: Los correos proporcionados no tienen un formato válido.");
+        console.warn("[AppsScript] Cancelado: Los correos no tienen formato válido.");
         return false;
     }
 
@@ -124,22 +127,28 @@ window.sendNotification = async (dest, sub, msg) => {
         senderName = currentUser.nombre;
     }
 
-    let params = { 
-        subject: sub || "Notificación SGC", 
-        message: msg || "",
-        name: senderName,
-        to_email: cleanTo || "",
-        cc_email: cleanCc || ""
-    }; 
-    
-    console.log("[EmailJS] Parámetros a enviar:", params);
+    let payload = {
+        to: cleanTo || "",
+        cc: cleanCc || "",
+        subject: sub || "Notificación SGC",
+        body: msg || "",
+        senderName: senderName
+    };
+
+    console.log("[AppsScript] Parámetros a enviar:", payload);
 
     try {
-        const response = await emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, params);
-        console.log("[EmailJS] Éxito:", response.status, response.text);
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        
+        console.log("[AppsScript] Petición enviada exitosamente al script.");
         return true;
     } catch (e) {
-        console.error("[EmailJS] FAILED. Error al enviar el correo:", e);
+        console.error("[AppsScript] FAILED. Error al enviar la petición:", e);
         return false;
     }
 };
@@ -1119,7 +1128,7 @@ window.crearSolicitud = async () => {
             <p style="margin: 0;">Por favor, ingrese al Sistema de Gestión para revisarla.</p>
         </div>
     </div>`;
-    window.sendNotification(destinatarios, `Nueva Solicitud Creada: ${fci}`, msgMail);
+    window.sendNotification(destinatarios, `Nueva Solicitud Creada: ${fci} - ${s.titulo}`, msgMail);
     window.hideLoading(); alert("Solicitud Creada: " + fci); window.cambiarVista('sec-hist', $('nav-hist'));
 };
 window.abrirEvalModal = () => {
@@ -1157,6 +1166,12 @@ window.guardarEvaluacion = async () => {
         let fSLA = dObj.toISOString().split('T')[0];
         let p1Name = p1 || 'No especificado (Cualquiera)'; let p2Name = p2 || 'No especificado (Cualquiera)'; let p4Name = p4 || 'No especificado (Cualquiera)';
         await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { idx: 0, estado: PASOS_NOMBRES[0], fase_eval_fin: now, fase_0_ini: now, sla: fSLA, fecha_esperada_cierre: fSLA, asig_paso1: p1, asig_paso2: p2, asig_paso4: p4, chat: arrayUnion({u: currentUser.nombre, m: `✅ EVALUACIÓN APROBADA. SLA Fijado para: ${fSLA}. <br><br><b>Asignados SGC:</b><br>- Paso 1: ${p1Name}<br>- Paso 2: ${p2Name}<br>- Paso 4: ${p4Name}`, t: new Date().toLocaleString()}) });
+        
+        let reqTitle = selectedDocData ? selectedDocData.titulo : "";
+        let reqCode = selectedDocData ? selectedDocData.customId : "";
+        if(p1) window.sendNotification({to: p1}, `Asignación SGC: ${reqCode} - ${reqTitle}`, `<div style="font-family:sans-serif;">Has sido asignado para ejecutar el <b>Paso 1 (Documentar)</b> de esta solicitud.<br>Ingresa al Sistema de Gestión para proceder.</div>`);
+        if(p2) window.sendNotification({to: p2}, `Asignación SGC: ${reqCode} - ${reqTitle}`, `<div style="font-family:sans-serif;">Has sido asignado para ejecutar el <b>Paso 2 (Verificar)</b> de esta solicitud.<br>Ingresa al Sistema de Gestión para proceder.</div>`);
+        if(p4) window.sendNotification({to: p4}, `Asignación SGC: ${reqCode} - ${reqTitle}`, `<div style="font-family:sans-serif;">Has sido asignado para ejecutar el <b>Paso 4 (Publicar)</b> de esta solicitud.<br>Ingresa al Sistema de Gestión para proceder.</div>`);
     }
     window.hideLoading(); window.setDisplay('modal-eval-sol', 'none'); window.verDetalle(selectedId);
 };
@@ -1180,7 +1195,7 @@ let msgMail = `
         <p style="margin: 0;">Ingrese al Sistema de Gestión para continuar el flujo.</p>
     </div>
 </div>`;
-window.sendNotification(dest, `Avance SGC: ${s.customId}`, msgMail); window.closeModal();
+window.sendNotification(dest, `Avance SGC: ${s.customId} - ${s.titulo}`, msgMail); window.closeModal();
 };
 
 window.gestionar = (accion) => {
@@ -1257,7 +1272,7 @@ window.reabrirSolicitud = async () => {
             updatedAt: new Date().toISOString()
         });
         
-        window.sendNotification(await window.getDatosEnvio(selectedDocData), `Solicitud Reabierta: ${selectedDocData.customId}`, `La solicitud ha sido reabierta. Motivo: ${obs}`);
+        window.sendNotification(await window.getDatosEnvio(selectedDocData), `Solicitud Reabierta: ${selectedDocData.customId} - ${selectedDocData.titulo}`, `La solicitud ha sido reabierta. Motivo: ${obs}`);
         
         alert("Solicitud reabierta con éxito.");
         window.closeModal();
@@ -1333,7 +1348,7 @@ let msgMail = `
         <p style="margin: 0;">Ya puede consultar la versión oficial en el sistema.</p>
     </div>
 </div>`;
-window.sendNotification(dest, `✅ Documento Publicado: ${codFinal} (Ver. ${ver})`, msgMail); 
+window.sendNotification(dest, `✅ Documento Publicado: ${codFinal} (Ver. ${ver}) - ${s.titulo}`, msgMail); 
 window.hideLoading(); window.closeModal();
 };
 
@@ -1436,7 +1451,7 @@ window.enviarComentarioLibre = async () => {
             <p style="margin: 0;">Revise la bitácora en el Sistema de Gestión.</p>
         </div>
     </div>`;
-    window.sendNotification(dest, `Nuevo Comentario: ${selectedDocData.customId}`, msgMail);
+    window.sendNotification(dest, `Nuevo Comentario: ${selectedDocData.customId} - ${selectedDocData.titulo}`, msgMail);
     box.innerHTML = ""; f.value = ""; window.hideLoading(); window.closeModal();
 };
 
@@ -3692,6 +3707,12 @@ window.cambiarAsignado = async (campo, email) => {
         await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), updates);
         selectedDocData[campo] = email;
         window.hideLoading();
+        
+        if(email) {
+            let reqTitle = selectedDocData ? selectedDocData.titulo : "";
+            let reqCode = selectedDocData ? selectedDocData.customId : "";
+            window.sendNotification({to: email}, `Asignación SGC: ${reqCode} - ${reqTitle}`, `<div style="font-family:sans-serif;">Has sido asignado para ejecutar el <b>${stepName}</b> de esta solicitud.<br>Ingresa al Sistema de Gestión para proceder.</div>`);
+        }
     } catch(e) {
         console.error(e);
         window.hideLoading();
