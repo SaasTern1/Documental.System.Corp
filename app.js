@@ -779,9 +779,19 @@ window.iniciarSesion = async () => {
   const u = $('login-user').value.toLowerCase().trim(); const p = $('login-pass').value.trim();
   if (!u || !p) return alert("Por favor, ingresa tu usuario y contraseña."); window.showLoading();
   try {
+    console.log("Iniciando sesión con usuario:", u);
     const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", u), where("pass", "==", p)));
-    if(!qs.empty) { localStorage.setItem('sgc_session_user', u); currentUser = qs.docs[0].data(); window.completarLoginUI(); } else alert("Credenciales incorrectas.");
-  } catch (error) { alert("Error de red."); } finally { window.hideLoading(); }
+    if(!qs.empty) { 
+        console.log("Usuario encontrado. Autenticación exitosa.");
+        localStorage.setItem('sgc_session_user', u); currentUser = qs.docs[0].data(); window.completarLoginUI(); 
+    } else {
+        console.warn("Credenciales incorrectas.");
+        alert("Credenciales incorrectas.");
+    }
+  } catch (error) { 
+      console.error("Error al iniciar sesión:", error);
+      alert("Error de red."); 
+  } finally { window.hideLoading(); }
 };
 
 window.cargarUsuarioParaEditar = (id) => {
@@ -1032,7 +1042,10 @@ window.crearSolicitud = async () => {
 
     const fci = await window.getNextFCI(); const gerenteEmailVisible = $('sol-email-gerente').value; const now = new Date().toISOString();
     const data = { customId: fci, titulo: tit, accion: $('sol-accion').value, tipoDoc: $('sol-tipo-doc').value, prioridad: $('sol-prioridad').value, gerencia: gerTarget, departamento: $('sol-dep').value, motivo: $('sol-motivo').value, cod_ref: $('sol-cod-prev').value, ver_ref: $('sol-ver-prev').value, fecha_ref: $('sol-fecha-prev').value, solicitante: currentUser.nombre, solicitante_email: currentUser.email, uid: currentUser.usuario, involucrados: extraEmails, idx: -1, estado: "Pendiente Evaluación", fase_eval_ini: now, adjunto: url, adjunto_nombre: fileName, chat: [{u: "SISTEMA", m: "Solicitud creada exitosamente.", t: new Date().toLocaleString()}], fecha: now };
+    
+    console.log("Creando solicitud en la base de datos:", data);
     await addDoc(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), data); 
+    console.log("Solicitud enviada (guardada exitosamente).");
 
     if($('form-crear-solicitud')) $('form-crear-solicitud').reset();
     window.setHtml('lista-involucrados-tags', ""); window.setVal('sol-gerente-display', ''); window.setVal('sol-email-gerente', ''); $('sol-dep').innerHTML = '<option value="">-- Seleccione Gerencia Primero --</option>';
