@@ -1124,9 +1124,16 @@ window.crearSolicitud = async () => {
     window.hideLoading(); alert("Solicitud Creada: " + fci); window.cambiarVista('sec-hist', $('nav-hist'));
 };
 window.abrirEvalModal = () => {
-    let opts = '<option value="">-- No Asignar (Cualquier gestor) --</option>';
-    allUsers.forEach(u => { opts += `<option value="${u.email}">${u.nombre} (${u.email})</option>`; });
-    window.setHtml('eval-asig-p1', opts); window.setHtml('eval-asig-p2', opts); window.setHtml('eval-asig-p4', opts);
+    let optsP1 = '<option value="">-- No Asignar (Cualquier gestor SGC) --</option>';
+    let optsP2 = '<option value="">-- No Asignar (Cualquier gestor SGC) --</option>';
+    let optsP4 = '<option value="">-- No Asignar (Cualquier gestor SGC) --</option>';
+    allUsers.forEach(u => { 
+        let p = u.permisos || {};
+        if (p.admin || p.p_gest_sgc || p.p_paso1) optsP1 += `<option value="${u.email}">${u.nombre} (${u.email})</option>`;
+        if (p.admin || p.p_gest_sgc || p.p_paso2) optsP2 += `<option value="${u.email}">${u.nombre} (${u.email})</option>`;
+        if (p.admin || p.p_gest_sgc || p.p_paso4) optsP4 += `<option value="${u.email}">${u.nombre} (${u.email})</option>`;
+    });
+    window.setHtml('eval-asig-p1', optsP1); window.setHtml('eval-asig-p2', optsP2); window.setHtml('eval-asig-p4', optsP4);
     let pr = String(selectedDocData.prioridad || "Baja").toLowerCase();
     window.setVal('eval-sla-dias', slaConfigDias[pr] || 7);
     window.setVal('eval-motivo', '');

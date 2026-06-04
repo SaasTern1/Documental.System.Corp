@@ -1,10 +1,19 @@
 const fs = require('fs');
 let content = fs.readFileSync('index.html', 'utf8');
 
-const anchor1 = `                        <tbody id="tbody-plan-accion"></tbody>\r\n                    </table>\r\n                </div>`;
+const anchor1 = `<div style="padding:8px; border-right:1px solid #ccc; font-weight:bold; background:#fef3c7;">Responsable de la AC</div><div style="padding:0; display:flex; align-items:center;"><select aria-label="sac-dueno" id="sac-dueno" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px; font-weight:bold; color:var(--primary);"></select></div>`;
 const anchor2 = `    <!-- MODAL CONSTRUCTOR DE FORMULARIOS -->`;
 
 const replacement = `
+                </div>
+                
+                <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">PLAN DE ACCIÓN</h4>
+                <div class="table-responsive" style="margin-bottom:10px;">
+                    <table style="width:100%; border:1px solid #ccc; font-size:12px; text-align:left;">
+                        <thead style="background:#f1f5f9;"><tr><th style="border:1px solid #ccc; width:30px; padding:8px;">#</th><th style="border:1px solid #ccc; padding:8px;">Detalle</th><th style="border:1px solid #ccc; width:200px; padding:8px;">Responsable</th><th style="border:1px solid #ccc; width:130px; padding:8px;">Fecha Inicio</th><th style="border:1px solid #ccc; width:130px; padding:8px;">Fecha Cierre</th><th style="border:1px solid #ccc; width:40px;"></th></tr></thead>
+                        <tbody id="tbody-plan-accion"></tbody>
+                    </table>
+                </div>
                 <button type="button" class="btn btn-info" id="btn-add-plan" onclick="window.addPlanRow()" style="font-size:11px; padding:6px 12px; margin-bottom:20px;">+ Añadir Fila al Plan</button>
 
                 <div style="display:flex; gap:20px; align-items:center; border:1px dashed #d97706; padding:15px; background:#fffbeb; border-radius:8px; margin-bottom:20px; font-size:13px;"><b style="color:#b45309;">Aprobación del Plan de Acción (SGC/Auditor):</b><input aria-label="sac-fecha-aprob-plan" type="date" id="sac-fecha-aprob-plan" style="margin:0; width:200px; padding:8px;"></div>
@@ -73,18 +82,11 @@ const replacement = `
     </div>
 `;
 
-// Also check for unix line endings
 let startIdx = content.indexOf(anchor1);
-if (startIdx === -1) {
-    const anchor1n = `                        <tbody id="tbody-plan-accion"></tbody>\n                    </table>\n                </div>`;
-    startIdx = content.indexOf(anchor1n);
-}
-
 let endIdx = content.indexOf(anchor2);
 
 if (startIdx !== -1 && endIdx !== -1) {
-    const startStr = content.substring(startIdx, startIdx + 110);
-    const fixedContent = content.substring(0, startIdx + startStr.length) + '\n' + replacement + '\n    ' + content.substring(endIdx);
+    const fixedContent = content.substring(0, startIdx + anchor1.length) + '\n' + replacement + '\n    ' + content.substring(endIdx);
     fs.writeFileSync('index.html', fixedContent);
     console.log('Fixed! Anchors found.');
 } else {

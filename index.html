@@ -130,7 +130,7 @@
 
             <div id="nav-oea-group" style="display:none;">
                 <p style="font-size:10px; color:#475569; font-weight:800; margin-left:16px; margin-bottom:8px; margin-top:20px;">CUMPLIMIENTO OEA</p>
-                <button class="nav-link" id="nav-proveedores" onclick="window.cambiarVista('sec-proveedores', this)"><span class="material-icons-round">local_shipping</span> Evaluación Proveedores</button>
+                        <button class="nav-link" id="nav-proveedores" onclick="window.cambiarVista('sec-proveedores', this)"><span class="material-icons-round">local_shipping</span> Evaluación Proveedores</button>
                 <button class="nav-link" id="nav-riesgos" onclick="window.cambiarVista('sec-riesgos', this)"><span class="material-icons-round">query_stats</span> Matriz de Riesgos</button>
             </div>
 
@@ -138,8 +138,8 @@
                 <p style="font-size:10px; color:#475569; font-weight:800; margin-left:16px; margin-bottom:8px; margin-top:20px;">SISTEMA</p>
                 <div class="nav-accordion">
                     <button class="nav-link" onclick="let sub = document.getElementById('nav-admin-sub'); sub.style.display = sub.style.display === 'none' ? 'block' : 'none';" style="justify-content:space-between; width:100%;">
-                        <span style="display:flex; align-items:center; gap:10px;"><span class="material-icons-round">settings</span> Configuración</span>
-                        <span class="material-icons-round" style="font-size:16px;">expand_more</span>
+                        <div style="display:flex; align-items:center;"><span class="material-icons-round">settings</span> Configuración</div>
+                        <span class="material-icons-round" style="font-size:18px; margin-right:0;">expand_more</span>
                     </button>
                     <div id="nav-admin-sub" style="display:none; background:rgba(0,0,0,0.1); border-radius:8px; margin: 0 10px 10px 10px; padding:5px 0;">
                         <button class="nav-link" onclick="window.setDisplay('sec-usuarios', 'flex')" style="padding-left:35px; font-size:12px; height:auto; padding-top:8px; padding-bottom:8px;">
@@ -1176,6 +1176,7 @@
                     <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#e0f2fe; color:#0369a1;">Acción a Implementar</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="sac-accion" id="sac-accion" rows="4" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:12px;"></textarea></div>
                     
                     <div style="padding:8px; border-right:1px solid #ccc; font-weight:bold; background:#fef3c7;">Responsable de la AC</div><div style="padding:0; display:flex; align-items:center;"><select aria-label="sac-dueno" id="sac-dueno" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px; font-weight:bold; color:var(--primary);"></select></div>
+
                 </div>
                 
                 <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">PLAN DE ACCIÓN</h4>
@@ -1222,15 +1223,15 @@
             <div id="eval-valida-panel">
                 <h4 style="font-size:12px; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px; color:var(--primary);">Asignar Responsables Específicos</h4>
                 <div style="margin-bottom:10px;">
-                    <label style="font-size:11px;">Paso 1: Documentación</label>
+                    <label style="font-size:12px; font-weight:700; color:var(--primary);">Paso 1: ¿Quién debe documentar?</label>
                     <select aria-label="eval-asig-p1" id="eval-asig-p1" style="margin-bottom:0;"></select>
                 </div>
                 <div style="margin-bottom:10px;">
-                    <label style="font-size:11px;">Paso 2: Verificación</label>
+                    <label style="font-size:12px; font-weight:700; color:var(--primary);">Paso 2: ¿Quién debe verificar?</label>
                     <select aria-label="eval-asig-p2" id="eval-asig-p2" style="margin-bottom:0;"></select>
                 </div>
                 <div style="margin-bottom:15px;">
-                    <label style="font-size:11px;">Paso 4: Aprobación Final SGC</label>
+                    <label style="font-size:12px; font-weight:700; color:var(--primary);">Paso 4: ¿Quién debe publicar?</label>
                     <select aria-label="eval-asig-p4" id="eval-asig-p4" style="margin-bottom:0;"></select>
                 </div>
                 <div style="background:#fffbeb; padding:15px; border-radius:8px; border:1px solid #fcd34d;">
@@ -1252,7 +1253,7 @@
         </div>
     </div>
 
-    <!-- MODAL CONSTRUCTOR DE FORMULARIOS -->
+        <!-- MODAL CONSTRUCTOR DE FORMULARIOS -->
     <div class="modal-overlay" id="modal-form-builder" style="display:none; z-index:3000;">
         <div class="modal-content" style="max-width: 1200px; width:95%; display:block; padding:30px; height:auto; max-height:90vh; overflow-y:auto; background:#fff; position:relative;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
