@@ -101,9 +101,9 @@ window.sendNotification = async (dest, sub, msg) => {
     console.log("[AppsScript] Iniciando envío de notificación...");
     
     // CONFIGURA AQUÍ LA URL DE TU SCRIPT DE GOOGLE APP SCRIPT
-    const APPS_SCRIPT_URL = "REEMPLAZA_ESTA_URL_CON_LA_TUYA";
+    const APPS_SCRIPT_URL = "https://script.google.com/a/macros/fcipty.com/s/AKfycbymKD51rjtWCH5qFhm21TBLBgJXWMNfnDOYGI128HtGVNGnuWG5i68lE9PNb_1CLVbz/exec";
     
-    if (APPS_SCRIPT_URL === "REEMPLAZA_ESTA_URL_CON_LA_TUYA") {
+    if (APPS_SCRIPT_URL === "https://script.google.com/a/macros/fcipty.com/s/AKfycbymKD51rjtWCH5qFhm21TBLBgJXWMNfnDOYGI128HtGVNGnuWG5i68lE9PNb_1CLVbz/exec") {
         console.warn("[AppsScript] Cancelado: Aún no has configurado la URL del Google Script en app.js.");
         return false;
     }
