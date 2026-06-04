@@ -383,7 +383,6 @@ window.verDetalleHeatmap = (p, i, sev, color) => {
     let risks = globalRiesgos.filter(r => parseInt(r.probabilidad) === p && parseInt(r.impacto) === i);
     if(risks.length === 0) return;
     
-    window.setDisplay('heatmap-details-panel', 'block');
     let titleEl = $('heatmap-details-title');
     if(titleEl) {
         titleEl.innerHTML = `<span class="material-icons-round" style="color:${color}">zoom_in</span> Riesgos en Cuadrante (Prob: ${p} x Imp: ${i} = Severidad ${sev})`;
@@ -393,7 +392,7 @@ window.verDetalleHeatmap = (p, i, sev, color) => {
     let trs = '';
     risks.forEach(r => { trs += `<tr><td style="padding:10px; border-bottom:1px solid #e2e8f0;"><b>${r.rsk_id}</b></td><td style="padding:10px; border-bottom:1px solid #e2e8f0;">${r.proceso}</td><td style="padding:10px; border-bottom:1px solid #e2e8f0;">${r.amenaza}</td><td style="padding:10px; border-bottom:1px solid #e2e8f0; color:var(--primary); font-weight:600;">${r.accion_mitigacion}</td></tr>`; });
     window.setHtml('tbody-heatmap-details', trs);
-    $('heatmap-details-panel').scrollIntoView({ behavior: 'smooth', block: 'end' });
+    window.setDisplay('modal-heatmap-details', 'flex');
 };
 
 // ==========================================
@@ -1156,7 +1155,8 @@ window.guardarEvaluacion = async () => {
         let p1 = $('eval-asig-p1').value, p2 = $('eval-asig-p2').value, p4 = $('eval-asig-p4').value;
         let dias = parseInt($('eval-sla-dias').value) || 0; let dObj = new Date(); dObj.setDate(dObj.getDate() + dias);
         let fSLA = dObj.toISOString().split('T')[0];
-        await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { idx: 0, estado: PASOS_NOMBRES[0], fase_eval_fin: now, fase_0_ini: now, sla: fSLA, fecha_esperada_cierre: fSLA, asig_paso1: p1, asig_paso2: p2, asig_paso4: p4, chat: arrayUnion({u: currentUser.nombre, m: `✅ EVALUACIÓN APROBADA. SLA Fijado para: ${fSLA}.`, t: new Date().toLocaleString()}) });
+        let p1Name = p1 || 'No especificado (Cualquiera)'; let p2Name = p2 || 'No especificado (Cualquiera)'; let p4Name = p4 || 'No especificado (Cualquiera)';
+        await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { idx: 0, estado: PASOS_NOMBRES[0], fase_eval_fin: now, fase_0_ini: now, sla: fSLA, fecha_esperada_cierre: fSLA, asig_paso1: p1, asig_paso2: p2, asig_paso4: p4, chat: arrayUnion({u: currentUser.nombre, m: `✅ EVALUACIÓN APROBADA. SLA Fijado para: ${fSLA}. <br><br><b>Asignados SGC:</b><br>- Paso 1: ${p1Name}<br>- Paso 2: ${p2Name}<br>- Paso 4: ${p4Name}`, t: new Date().toLocaleString()}) });
     }
     window.hideLoading(); window.setDisplay('modal-eval-sol', 'none'); window.verDetalle(selectedId);
 };
@@ -1860,6 +1860,30 @@ try {
     window.setHtml('m-involucrados-list', invHTML);
 
     const fDiff = (ini, fin) => { if(!ini || !fin) return "-"; let ms = new Date(fin) - new Date(ini); if(ms < 0) return "-"; let d = Math.floor(ms / 86400000); let h = Math.floor((ms % 86400000) / 3600000); return `${d}d ${h}h`; };
+
+    if($('m-asignados-panel')) {
+        if(stepIdx >= 0 && (s.asig_paso1 || s.asig_paso2 || s.asig_paso4)) {
+            window.setDisplay('m-asignados-panel', 'block');
+            window.setTxt('m-asig-p1', s.asig_paso1 || 'Cualquiera (Gestor SGC)');
+            window.setTxt('m-asig-p2', s.asig_paso2 || 'Cualquiera (Gestor SGC)');
+            window.setTxt('m-asig-p4', s.asig_paso4 || 'Cualquiera (Gestor SGC)');
+        } else {
+            window.setDisplay('m-asignados-panel', 'none');
+        }
+    }
+
+
+    if($('m-asignados-panel')) {
+        if(stepIdx >= 0 && (s.asig_paso1 || s.asig_paso2 || s.asig_paso4)) {
+            window.setDisplay('m-asignados-panel', 'block');
+            window.setTxt('m-asig-p1', s.asig_paso1 || 'Cualquiera (Gestor SGC)');
+            window.setTxt('m-asig-p2', s.asig_paso2 || 'Cualquiera (Gestor SGC)');
+            window.setTxt('m-asig-p4', s.asig_paso4 || 'Cualquiera (Gestor SGC)');
+        } else {
+            window.setDisplay('m-asignados-panel', 'none');
+        }
+    }
+
     if ($('m-tiempos-panel')) {
         if(esAdminSGC) {
             window.setDisplay('m-tiempos-panel', 'block');
@@ -2291,7 +2315,7 @@ try {
         window.setTxt('ma-duracion', `${Math.floor(m/3600000)}h ${Math.floor((m%3600000)/60000)}m`); 
     }
     
-    const isAdm = currentUser.permisos.admin || currentUser.permisos.p_audit_admin;
+    const isAdm = currentUser.permisos.admin || currentUser.permisos.p_audit_admin || currentUser.permisos.p_gest_sgc;
     const isAud = a.auditor && a.auditor.includes(currentUser.nombre);
     
     const canEd = (isAdm || isAud) && e !== 'Completada'; 

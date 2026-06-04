@@ -293,7 +293,8 @@
                 <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;">
                     <input aria-label="Buscar formulario..." type="text" id="search-forms" class="search-bar" placeholder="🔍 Buscar formulario..." onkeyup="window.filtrarTabla('search-forms', 'tbody-forms')" style="margin:0; max-width:400px;">
                 </div>
-                <div class="table-responsive">
+                </div> <!-- end audit-plan-body -->
+               <div class="table-responsive">
                     <table id="tabla-forms">
                         <thead style="background:var(--table-header);">
                             <tr><th>Nombre del Formulario</th><th>Descripción</th><th>Campos</th><th>Fecha de Creación</th><th>Estado</th><th style="text-align:center;">Acciones</th></tr>
@@ -620,7 +621,7 @@
                     <h2 id="m-dash-tit" style="margin:0; font-size:20px; color:var(--text-main);"></h2>
                     <button class="btn btn-dark" onclick="window.setDisplay('modal-dash-details', 'none')" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
                 </div>
-                <div class="table-responsive" style="max-height:400px; overflow-y:auto; border-radius:8px; border:1px solid var(--border);">
+                <div class="table-responsive" style="flex:1; overflow-y:auto; border-radius:8px; border:1px solid var(--border);">
                     <table style="width:100%; text-align:left; white-space:nowrap;">
                         <thead style="position:sticky; top:0; background:#f8fafc; z-index:10;">
                             <tr><th>Código</th><th>Tipo</th><th>Solicitante</th><th>Estado</th><th class="no-export">Ver</th></tr>
@@ -656,6 +657,15 @@
                         <div style="display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="color:var(--warning);">event</span><label for="m-sla-date" style="margin:0; width:auto; font-size:13px; color:#92400e;">FECHA LÍMITE (SLA)</label></div>
                         <input aria-label="m-sla-date" type="date" id="m-sla-date" style="margin:0; width:auto; flex:1; border-color:#fcd34d; background:#fff;">
                         <button class="btn btn-warning" id="btn-save-sla" onclick="window.guardarSLA()" style="padding:10px 20px;"><span class="material-icons-round" style="font-size:16px;">save</span> Guardar SLA</button>
+                    </div>
+                </div>
+                
+                <div id="m-asignados-panel" style="display:none; margin-bottom:20px; background:#f0f9ff; padding:15px; border-radius:10px; border:1px solid #bae6fd;">
+                    <div class="custom-label" style="color:var(--primary); font-weight:800; font-size:12px; margin-bottom:10px; display:flex; align-items:center; gap:6px;"><span class="material-icons-round" style="font-size:16px;">people</span> Responsables Asignados (Evaluación SGC)</div>
+                    <div class="resp-grid" style="gap:10px;">
+                        <div><div class="custom-label">Paso 1 (Documentar)</div><p id="m-asig-p1" style="font-size:13px; font-weight:600;"></p></div>
+                        <div><div class="custom-label">Paso 2 (Verificar)</div><p id="m-asig-p2" style="font-size:13px; font-weight:600;"></p></div>
+                        <div><div class="custom-label">Paso 4 (Publicar)</div><p id="m-asig-p4" style="font-size:13px; font-weight:600;"></p></div>
                     </div>
                 </div>
                 
@@ -1025,10 +1035,11 @@
                             <div><div class="custom-label">Fin Real</div><p id="ma-fin-real" style="font-weight:bold;">---</p></div>
                         </div>
                         <div><div class="custom-label">Duración Total</div><p id="ma-duracion" style="color:var(--success); font-weight:800; font-size:16px;">---</p></div>
-                        <div id="ma-controles-tiempo" style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+                        <div id="ma-controles-tiempo" style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; align-items:center;">
                             <button type="button" id="btn-comenzar-auditoria" class="btn btn-primary" onclick="window.comenzarAuditoria()" style="display:none; padding:15px;"></button>
                             <button type="button" id="btn-pausar-auditoria" class="btn btn-warning" onclick="window.pausarAuditoria()" style="display:none; padding:15px;">⏸️ PAUSAR (NUEVA RONDA)</button>
                             <button type="button" id="btn-finalizar-auditoria" class="btn btn-success" onclick="window.finalizarAuditoria()" style="display:none; padding:15px;">⏹️ FINALIZAR AUDITORÍA</button>
+                            <button type="button" id="btn-eliminar-auditoria" class="btn btn-danger" onclick="window.eliminarAuditoriaDetalle()" style="display:none; padding:15px; margin-left:auto;"><span class="material-icons-round" style="font-size:18px; vertical-align:middle; margin-right:5px;">delete</span> Eliminar Auditoría</button>
                         </div>
                     </div>
 
@@ -1407,5 +1418,24 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL HEATMAP RIESGOS -->
+    <div class="modal-overlay" id="modal-heatmap-details" style="display:none; z-index:3000;">
+        <div class="modal-content" style="max-width:900px; width:95%; max-height:85vh; padding:30px; display:flex; flex-direction:column; background:var(--card-bg);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px;">
+                <h2 id="heatmap-details-title" style="margin:0; font-size:20px; display:flex; align-items:center; gap:10px;"></h2>
+                <button class="btn btn-dark" onclick="window.setDisplay('modal-heatmap-details', 'none')" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
+            </div>
+            <div class="table-responsive" style="flex:1; overflow-y:auto; border-radius:8px; border:1px solid var(--border);">
+                <table style="width:100%; text-align:left; border-collapse:collapse;">
+                    <thead style="background:var(--table-header); position:sticky; top:0; z-index:5;">
+                        <tr><th style="padding:12px; font-weight:700; color:var(--sidebar);">ID Riesgo</th><th style="padding:12px; font-weight:700; color:var(--sidebar);">Proceso / Área</th><th style="padding:12px; font-weight:700; color:var(--sidebar);">Amenaza / Riesgo</th><th style="padding:12px; font-weight:700; color:var(--sidebar);">Acción de Mitigación</th></tr>
+                    </thead>
+                    <tbody id="tbody-heatmap-details"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
