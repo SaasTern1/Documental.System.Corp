@@ -20,7 +20,7 @@ let isSuperAdmin = false;
 let currentEmpresaConfig = null;
 let empresasDisponibles = [];
 
-const EMAIL_SERVICE_ID = "service" + "_vus" + "xptj", 
+const EMAIL_SERVICE_ID = "service" + "_vum" + "xptj", 
   EMAIL_TEMPLATE_ID = "template" + "_z27" + "y5yk", 
   EMAIL_PUBLIC_KEY = "kWsovO" + "fdi7dB" + "qLMw2", 
   EMAIL_ADMIN_SGC = "sistemadegestion@fcipty.com"; 
@@ -823,56 +823,104 @@ window.logout = () => {
   localStorage.removeItem('sgc_appId');
   localStorage.removeItem('sgc_empresaId');
   currentUser = null; isSuperAdmin = false; appId = 'sgc-final-v6'; currentEmpresaId = '1'; currentEmpresaConfig = null; empresasDisponibles = [];
-  window.setDisplay('sidebar', 'none'); window.setDisplay('main', 'none'); window.setDisplay('login-screen', 'flex'); window.setVal('login-user', ''); window.setVal('login-pass', '');
+  window.setDisplay('sidebar', 'none'); window.setDisplay('main', 'none'); window.setDisplay('login-screen', 'flex');
+  window.setVal('login-user', ''); window.setVal('login-pass', '');
+  if ($('login-empresa-id')) $('login-empresa-id').value = '';
 };
 
 window.iniciarSesion = async () => {
-  const u = $('login-user').value.toLowerCase().trim(); const p = $('login-pass').value.trim();
-  if (!u || !p) return alert("Por favor, ingresa tu usuario y contraseña."); window.showLoading();
-  try {
-    console.log("[Multiempresa] Iniciando sesión:", u);
+  const u = $('login-user').value.toLowerCase().trim();
+  const p = $('login-pass').value.trim();
+  const empIdInput = $('login-empresa-id') ? $('login-empresa-id').value.trim() : '';
 
-    // PASO 1: Consultar el índice global para saber a qué empresa pertenece el usuario
+  if (!u || !p) return alert('Por favor, ingresa tu usuario y contraseña.');
+  window.showLoading();
+
+  try {
+    console.log('[Multiempresa] Iniciando sesión:', u, '| Empresa ID:', empIdInput || '(auto)');
+
+    // ── CASO 1: SUPER ADMIN ──
+    // Super Admin puede ingresar con empresa "0" o sin número de empresa si su usuario está indexado
+    const looksLikeSuperAdmin = (u === 'sysadm2006' || empIdInput === '0');
+    if (looksLikeSuperAdmin) {
+        const saSnap = await getDoc(doc(db, 'plataforma', 'main', 'superAdmins', u));
+        if (!saSnap.exists() || saSnap.data().pass !== p) { alert('Credenciales incorrectas.'); window.hideLoading(); return; }
+        appId = 'sgc-final-v6'; currentEmpresaId = '1'; isSuperAdmin = true;
+        currentUser = { ...saSnap.data(), permisos: { admin: true } };
+        localStorage.setItem('sgc_session_user', u); localStorage.setItem('sgc_appId', appId); localStorage.setItem('sgc_empresaId', '1');
+        console.log('[Multiempresa] Super Admin autenticado.');
+        window.completarLoginUI(); window.hideLoading(); return;
+    }
+
+    // ── CASO 2: NÚMERO DE EMPRESA INGRESADO ──
+    if (empIdInput) {
+        // Buscar la empresa por ID directamente
+        const empSnap = await getDoc(doc(db, 'plataforma', 'main', 'empresas', empIdInput));
+        if (!empSnap.exists()) {
+            alert(`No existe la empresa N° "${empIdInput}". Verifica el número e intenta de nuevo.`);
+            window.hideLoading(); return;
+        }
+        const empData = empSnap.data();
+        if (empData.estado === 'Inactivo') {
+            alert(`La empresa N° "${empIdInput}" está inactiva. Contacta al administrador.`);
+            window.hideLoading(); return;
+        }
+        appId = empData.appId; currentEmpresaId = empIdInput; currentEmpresaConfig = empData;
+        console.log('[Multiempresa] Empresa encontrada:', empData.nombre, '| appId:', appId);
+
+        // Verificar credenciales en esa empresa
+        const qs = await getDocs(query(collection(db, 'artifacts', appId, 'public', 'data', 'Usuarios'), where('usuario', '==', u), where('pass', '==', p)));
+        if (!qs.empty) {
+            localStorage.setItem('sgc_session_user', u); localStorage.setItem('sgc_appId', appId); localStorage.setItem('sgc_empresaId', currentEmpresaId);
+            currentUser = qs.docs[0].data();
+            console.log('[Multiempresa] Usuario autenticado en empresa:', empData.nombre);
+            window.completarLoginUI();
+        } else {
+            alert('Usuario o contraseña incorrectos para la empresa N° ' + empIdInput + '.');
+        }
+        window.hideLoading(); return;
+    }
+
+    // ── CASO 3: AUTO-DETECCIÓN (sin número de empresa) ──
+    // Consultar el índice global para saber a qué empresa pertenece el usuario
     let idxSnap;
     try { idxSnap = await getDoc(doc(db, 'plataforma', 'main', 'usuariosIndex', u)); } catch(e) { idxSnap = null; }
 
     if (idxSnap && idxSnap.exists()) {
       const idx = idxSnap.data();
       if (idx.isSuperAdmin) {
-        // Super Admin: verificar contraseña en plataforma/superAdmins
         const saSnap = await getDoc(doc(db, 'plataforma', 'main', 'superAdmins', u));
-        if (!saSnap.exists() || saSnap.data().pass !== p) { alert("Credenciales incorrectas."); window.hideLoading(); return; }
+        if (!saSnap.exists() || saSnap.data().pass !== p) { alert('Credenciales incorrectas.'); window.hideLoading(); return; }
         appId = 'sgc-final-v6'; currentEmpresaId = '1'; isSuperAdmin = true;
         currentUser = { ...saSnap.data(), permisos: { admin: true } };
         localStorage.setItem('sgc_session_user', u); localStorage.setItem('sgc_appId', appId); localStorage.setItem('sgc_empresaId', '1');
-        console.log("[Multiempresa] Super Admin autenticado.");
         window.completarLoginUI(); window.hideLoading(); return;
       }
-      // Usuario normal: setear appId de su empresa
       appId = idx.empresaAppId || 'sgc-final-v6';
       currentEmpresaId = idx.empresaId || '1';
-      // Cargar config de empresa
       try { const empSnap = await getDoc(doc(db, 'plataforma', 'main', 'empresas', currentEmpresaId)); if(empSnap.exists()) currentEmpresaConfig = empSnap.data(); } catch(e){}
     } else {
-      // Fallback: si no existe el índice aún, usar empresa 1 por defecto (compatibilidad)
-      console.warn("[Multiempresa] usuariosIndex no encontrado, usando empresa 1 por defecto.");
+      // Fallback: empresa 1 (compatibilidad pre-migración)
+      console.warn('[Multiempresa] usuariosIndex no encontrado, usando empresa 1 por defecto.');
       appId = 'sgc-final-v6'; currentEmpresaId = '1';
     }
 
-    // PASO 2: Verificar credenciales en la colección de la empresa
-    const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", u), where("pass", "==", p)));
-    if(!qs.empty) { 
-        console.log("[Multiempresa] Usuario autenticado en empresa:", currentEmpresaId);
+    const qs = await getDocs(query(collection(db, 'artifacts', appId, 'public', 'data', 'Usuarios'), where('usuario', '==', u), where('pass', '==', p)));
+    if (!qs.empty) {
+        console.log('[Multiempresa] Usuario autenticado en empresa:', currentEmpresaId);
         localStorage.setItem('sgc_session_user', u); localStorage.setItem('sgc_appId', appId); localStorage.setItem('sgc_empresaId', currentEmpresaId);
-        currentUser = qs.docs[0].data(); window.completarLoginUI(); 
+        currentUser = qs.docs[0].data(); window.completarLoginUI();
     } else {
-        alert("Credenciales incorrectas.");
+        alert('Credenciales incorrectas. Si perteneces a otra empresa, ingresa su número.');
     }
-  } catch (error) { 
-      console.error("Error al iniciar sesión:", error);
-      alert("Error de red."); 
+  } catch (error) {
+      console.error('[iniciarSesion] Error:', error);
+      alert('Error de conexión. Intenta de nuevo.');
   } finally { window.hideLoading(); }
 };
+
+
+
 
 window.cargarUsuarioParaEditar = (id) => {
   const u = allUsers.find(x => x.usuario === id); if(!u) return;
