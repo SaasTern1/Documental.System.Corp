@@ -20,7 +20,7 @@ let isSuperAdmin = false;
 let currentEmpresaConfig = null;
 let empresasDisponibles = [];
 
-const EMAIL_SERVICE_ID = "service" + "_vum" + "xptj", 
+const EMAIL_SERVICE_ID = "service" + "_vus" + "xptj", 
   EMAIL_TEMPLATE_ID = "template" + "_z27" + "y5yk", 
   EMAIL_PUBLIC_KEY = "kWsovO" + "fdi7dB" + "qLMw2", 
   EMAIL_ADMIN_SGC = "sistemadegestion@fcipty.com"; 
