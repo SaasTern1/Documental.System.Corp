@@ -363,6 +363,7 @@ body {
     overflow-y: auto;
     display: none;
     width: calc(100% - 280px);
+    height: 100vh;
     background: var(--bg);
     transition: background 0.35s ease;
 }
@@ -1418,16 +1419,6 @@ body.dark-theme div[style*="background:#bfdbfe"] {
    32. RESPONSIVE — TABLET  (max-width: 992px)
    ========================================================================== */
 @media (max-width: 992px) {
-    .modal-content {
-        grid-template-columns: 1fr;
-    }
-
-    .modal-side {
-        border-left: none;
-        border-top: 1px solid var(--border);
-        min-height: 400px;
-    }
-
     .grid-4 {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1493,7 +1484,9 @@ body.dark-theme div[style*="background:#bfdbfe"] {
     }
 
     .modal-side {
-        min-height: 300px;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        min-height: 400px;
     }
 
     .search-bar {

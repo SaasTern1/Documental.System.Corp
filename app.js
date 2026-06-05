@@ -1852,7 +1852,7 @@ try {
     
     if(s.accion !== 'Creación') { window.setDisplay('m-extra-panel', 'block'); window.setTxt('m-cod', s.cod_ref || "N/A"); window.setTxt('m-ver', s.ver_ref || "N/A"); window.setTxt('m-fecha-ult', window.formatearFechaAbreviada(s.fecha_ref)); } else { window.setDisplay('m-extra-panel', 'none'); }
 
-    for(let i=1; i<=4; i++) { const st = $('s'+i); if(st) { st.className = 'step'; if(cnc) continue; if(i <= stepIdx) st.classList.add('completed'); if(i === stepIdx + 1 && !apr) st.classList.add('active'); } }
+    for(let i=0; i<=4; i++) { const st = $('s'+i); if(st) { st.className = 'step'; if(cnc) continue; if(i <= stepIdx) st.classList.add('completed'); if(i === stepIdx + 1 && !apr) st.classList.add('active'); } }
 
     const esGer = p.p_ger_apr && gerenciasUsuario.includes(s.gerencia); 
     let invHTML = "No hay personas extras añadidas.";
@@ -2089,7 +2089,28 @@ window.descargarExcelFiltrado = (origen = 'hist') => {
 
     let dataExport = datosFiltrados.map(s => {
         let p = s.idx === -1 ? 'Evaluación' : (PASOS_NOMBRES[s.idx] || ''); let estadoFormat = s.estado === 'Aprobado Final' ? 'Aprobado Final' : (s.estado === 'Anulado' || s.estado === 'Rechazado' ? s.estado : `${s.estado} (${p})`);
-        let baseObj = { "ID Solicitud": s.customId, "Solicitante": s.solicitante || '', "Email Solicitante": s.solicitante_email || '', "Gerencia": s.gerencia || '', "Departamento": s.departamento || '', "Acción": s.accion || '', "Prioridad": s.prioridad || 'Baja', "Tipo Documento": s.tipoDoc || '', "Título Documento": s.titulo || '', "Estado Actual": estadoFormat, "Fecha Límite (SLA)": s.fecha_esperada_cierre || 'No definida', "Fecha de Creación": s.fecha ? new Date(s.fecha).toLocaleString() : '', "Código Ref. Original": s.cod_ref || '', "Versión Original": s.ver_ref || '', "Código Final Asignado": s.codigo_final || '', "Versión Final Asignada": s.version_final || '', "Fecha Final": s.fecha_final || '' };
+        let fObj = s.fecha ? new Date(s.fecha) : null;
+        let baseObj = { 
+            "ID Solicitud": s.customId, 
+            "Solicitante": s.solicitante || '', 
+            "Email Solicitante": s.solicitante_email || '', 
+            "Gerencia": s.gerencia || '', 
+            "Departamento": s.departamento || '', 
+            "Acción": s.accion || '', 
+            "Prioridad": s.prioridad || 'Baja', 
+            "Tipo Documento": s.tipoDoc || '', 
+            "Título Documento": s.titulo || '', 
+            "Estado Actual": estadoFormat, 
+            "Fecha Límite (SLA)": s.fecha_esperada_cierre || 'No definida', 
+            "Mes de Creación": fObj ? fObj.toLocaleString('es-ES', { month: 'long' }).toUpperCase() : '', 
+            "Fecha de Creación": fObj ? fObj.toLocaleDateString('es-ES') : '', 
+            "Hora de Creación": fObj ? fObj.toLocaleTimeString('es-ES') : '', 
+            "Código Ref. Original": s.cod_ref || '', 
+            "Versión Original": s.ver_ref || '', 
+            "Código Final Asignado": s.codigo_final || '', 
+            "Versión Final Asignada": s.version_final || '', 
+            "Fecha Final": s.fecha_final || '' 
+        };
         if (esAdminSGC) { 
             let isCanceled = s.estado === 'Anulado' || s.estado === 'Rechazado';
             baseObj["Tiempo Fase 1 (Documentado)"] = isCanceled ? 'N/A' : formatearDiferencia(s.fase_0_ini, s.fase_0_fin); 
@@ -3709,4 +3730,101 @@ window.cambiarAsignado = async (campo, email) => {
         window.hideLoading();
         alert("Error al guardar asignación.");
     }
+};
+
+// ==========================================
+// NUEVO: TOGGLE PLAN Y CALENDARIO ANUAL
+// ==========================================
+window.toggleAuditPlanDetails = () => {
+    const details = document.getElementById('audit-plan-details');
+    const icon = document.getElementById('icon-toggle-audit-plan');
+    if (!details) return;
+    
+    if (details.style.display === 'none') {
+        details.style.display = 'block';
+        if(icon) icon.style.transform = 'rotate(0deg)';
+    } else {
+        details.style.display = 'none';
+        if(icon) icon.style.transform = 'rotate(180deg)';
+    }
+};
+
+window.abrirModalCalendarioMensual = async () => {
+    const year = parseInt(document.getElementById('aud-year-select').value) || new Date().getFullYear();
+    document.getElementById('cal-year-title').innerText = year;
+    
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+    
+    // Obtener las fechas de las auditorías de ese año de forma local
+    let auditDates = new Set();
+    try {
+        if (typeof globalAllAuditorias !== 'undefined' && globalAllAuditorias) {
+            globalAllAuditorias.forEach(a => {
+                if (a.fecha) {
+                    const d = new Date(a.fecha);
+                    if (d.getFullYear() === year) {
+                        const mStr = (d.getMonth() + 1).toString().padStart(2, '0');
+                        const dStr = d.getDate().toString().padStart(2, '0');
+                        auditDates.add(`${year}-${mStr}-${dStr}`);
+                    }
+                }
+            });
+        }
+    } catch(e) { console.error("Error procesando auditorias para calendario", e); }
+
+    const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const daysOfWeek = ["D", "L", "M", "M", "J", "V", "S"];
+    
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    const currentDate = today.getDate();
+    
+    let html = '';
+    
+    for (let m = 0; m < 12; m++) {
+        let firstDay = new Date(year, m, 1).getDay();
+        let daysInMonth = new Date(year, m + 1, 0).getDate();
+        
+        let monthHtml = `<div style="background:white; border:1px solid var(--border); border-radius:8px; padding:15px; box-shadow:var(--shadow-sm);">
+            <div style="font-weight:bold; color:var(--primary); text-align:center; margin-bottom:10px; padding-bottom:5px; border-bottom:1px solid var(--border);">${months[m]}</div>
+            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:2px; text-align:center; font-size:11px; margin-bottom:5px; color:#64748b; font-weight:bold;">`;
+            
+        daysOfWeek.forEach(d => {
+            monthHtml += `<div>${d}</div>`;
+        });
+        monthHtml += `</div><div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:2px; text-align:center; font-size:12px;">`;
+        
+        // Celdas vacías iniciales
+        for (let i = 0; i < firstDay; i++) {
+            monthHtml += `<div style="padding:4px;"></div>`;
+        }
+        
+        // Días
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${(m+1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+            const isAudit = auditDates.has(dateStr);
+            const isToday = (year === currentYear && m === currentMonth && d === currentDate);
+            
+            let style = "padding:4px; border-radius:4px; margin:2px; ";
+            if (isAudit) {
+                style += "background:var(--primary); color:white; font-weight:bold; cursor:pointer; box-shadow:0 2px 4px rgba(30,64,175,0.3);";
+            } else if (isToday) {
+                style += "border:2px solid var(--danger); color:var(--danger); font-weight:bold;";
+            } else {
+                style += "color:#334155; background:#f8fafc;";
+            }
+            
+            let title = isAudit ? 'title="Auditoría Programada"' : '';
+            
+            monthHtml += `<div style="${style}" ${title}>${d}</div>`;
+        }
+        
+        monthHtml += `</div></div>`;
+        html += monthHtml;
+    }
+    
+    grid.innerHTML = html;
+    window.setDisplay('modal-calendario-anual', 'flex');
 };

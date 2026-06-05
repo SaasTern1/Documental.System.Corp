@@ -1,7 +1,10 @@
 const fs = require('fs');
 let html = fs.readFileSync('index.html', 'utf8');
 
-const missingBlock = `
+const replacement = `                </div>
+            </div>
+        </section>
+
         <section id="sec-audit" class="section">
             <div class="section-header">
                 <div class="section-header-info">
@@ -46,9 +49,15 @@ const missingBlock = `
                 <div class="section-header-info">
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #dc2626, #ef4444);"><span class="material-icons-round">warning</span></div>
                     <div><h1>Control de NC y Mejoras (F-023)</h1><p>Gestión de no conformidades, acciones correctivas y oportunidades de mejora</p></div>
-                </div>`;
+                </div>
+                <div class="section-header-actions"><button class="btn btn-success" onclick="window.exportarExcelNoConf()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar F-023</button></div>
+            </div>`;
 
 let lines = html.split('\\n');
-lines.splice(438, 2, missingBlock);
+let startIdx = 436; // 437 is 1-indexed
+let endIdx = 440; // 441 is 1-indexed (the line before `<div class="card" style="padding:0; margin-top:20px; overflow:hidden; border-top:4px solid var(--danger);">`)
+
+lines.splice(startIdx, endIdx - startIdx, replacement);
+
 fs.writeFileSync('index.html', lines.join('\\n'), 'utf8');
-console.log("Restored properly");
+console.log("Restored");

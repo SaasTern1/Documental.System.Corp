@@ -1,7 +1,24 @@
 const fs = require('fs');
 let html = fs.readFileSync('index.html', 'utf8');
 
-const missingBlock = `
+const targetBlock = `                <div class="card" style="border-top: 4px solid var(--warning);">
+                    <h3 style="color:var(--primary); margin-bottom:15px; font-size:16px;">Requisitos / Puntos de Control</h3>
+            </div>
+        </section>`;
+
+const correctBlock = `                <div class="card" style="border-top: 4px solid var(--warning);">
+                    <h3 style="color:var(--primary); margin-bottom:15px; font-size:16px;">Requisitos / Puntos de Control</h3>
+                    <div id="oea-req-upload-box" style="display:none; flex-direction:column; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px; border:1px solid var(--border);">
+                        <input aria-label="Nombre del Punto (Ej: 1.1 Seguridad)" type="text" id="oea-req-input" placeholder="Nombre del Punto (Ej: 1.1 Seguridad)" style="margin:0;">
+                        <textarea aria-label="Descripción detallada o guía para el auditor..." id="oea-req-desc" placeholder="Descripción detallada o guía para el auditor..." rows="3" style="margin:0;"></textarea>
+                        <input aria-label="Página del manual (Ej: 15) o enlace URL externo" type="text" id="oea-req-link" placeholder="Página del manual (Ej: 15) o enlace URL externo" style="margin:0;">
+                        <button class="btn btn-success" onclick="window.agregarRequisitoOEA()" style="width:100%;"><span class="material-icons-round" style="font-size:16px;">add</span> Guardar Punto de Control</button>
+                    </div>
+                    <div id="oea-req-list-container" class="settings-list" style="max-height:350px;"></div>
+                </div>
+            </div>
+        </section>
+
         <section id="sec-audit" class="section">
             <div class="section-header">
                 <div class="section-header-info">
@@ -37,7 +54,7 @@ const missingBlock = `
                </div>
             </div>
             <div class="card" style="padding:0; overflow:hidden;">
-                <div class="table-responsive"><table id="tabla-auditorias"><thead><tr><th>N° Auditoría</th><th>Fecha / Hora</th><th>Requisitos OEA</th><th>Auditado(s)</th><th>Auditor(es)</th><th>Estado</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-auditorias"></tbody></table></div>
+                <div class="table-responsive"><table id="tabla-auditorias" style="white-space:nowrap;"><thead><tr><th>N° Auditoría</th><th>Fecha / Hora</th><th>Requisitos OEA</th><th>Auditado(s)</th><th>Auditor(es)</th><th>Estado</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-auditorias"></tbody></table></div>
             </div>
         </section>
 
@@ -46,9 +63,22 @@ const missingBlock = `
                 <div class="section-header-info">
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #dc2626, #ef4444);"><span class="material-icons-round">warning</span></div>
                     <div><h1>Control de NC y Mejoras (F-023)</h1><p>Gestión de no conformidades, acciones correctivas y oportunidades de mejora</p></div>
-                </div>`;
+                </div>
+                <div class="section-header-actions"><button class="btn btn-success" onclick="window.exportarExcelNoConf()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar F-023</button></div>
+            </div>
+            <div class="card" style="padding:0; margin-top:20px; overflow:hidden; border-top:4px solid var(--danger);">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); background:#f8fafc; display:flex; gap:15px; flex-wrap:wrap;">
+                    <input aria-label="Buscar por Requisito, NC, o Estado..." type="text" id="search-noconf" class="search-bar" placeholder="🔍 Buscar por Requisito, NC, o Estado..." onkeyup="window.filtrarTabla('search-noconf', 'tbody-noconf')" style="flex:1;">
+                    <select aria-label="filter-noconf-estado" id="filter-noconf-estado" class="search-bar" style="width:220px;" onchange="window.setFilterGestNC(this.value)"><option value="">Todos los Estados</option><option value="Abierta (En Plan)">Abierta (En Plan)</option><option value="En Seguimiento">En Seguimiento</option><option value="Cerrada">Cerrada</option></select>
+                </div>
+                <div class="table-responsive"><table id="tabla-noconf" style="white-space:nowrap;"><thead><tr><th>SAC N°</th><th>Requisito Evaluado</th><th>Tipo</th><th>Responsable</th><th>Detalle</th><th>Apertura</th><th>Estado</th><th>Cierre</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-noconf"></tbody></table></div>
+            </div>
+        </section>`;
 
-let lines = html.split('\\n');
-lines.splice(438, 2, missingBlock);
-fs.writeFileSync('index.html', lines.join('\\n'), 'utf8');
-console.log("Restored properly");
+if (html.includes(targetBlock)) {
+    html = html.replace(targetBlock, correctBlock);
+    fs.writeFileSync('index.html', html, 'utf8');
+    console.log("Reconstructed perfectly.");
+} else {
+    console.log("Not found.");
+}
