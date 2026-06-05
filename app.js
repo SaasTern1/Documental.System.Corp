@@ -4082,6 +4082,9 @@ window.abrirModalEmpresa = (empresaId = null) => {
     const modal = $('modal-empresa');
     if (!modal) return;
     if (empresaId) {
+        // MODO EDITAR: ocultar campo N° Cuenta (no se puede cambiar el ID)
+        if ($('emp-cuenta-row')) $('emp-cuenta-row').style.display = 'none';
+        if ($('emp-cuenta-id')) $('emp-cuenta-id').value = '';
         const emp = empresasDisponibles.find(e => e.id === empresaId);
         if (!emp) return;
         window.setVal('emp-nombre', emp.nombre || '');
@@ -4090,12 +4093,26 @@ window.abrirModalEmpresa = (empresaId = null) => {
         window.setVal('emp-estado', emp.estado || 'Activo');
         window.setVal('emp-logo-url', emp.logoUrl || '');
         if ($('btn-save-empresa')) $('btn-save-empresa').setAttribute('data-edit-id', empresaId);
+        // Actualizar título modal
+        const h2 = modal.querySelector('h2');
+        if (h2) h2.innerHTML = '<span class="material-icons-round" style="color:#7c3aed;">edit</span> Editar Empresa: ' + emp.nombre;
     } else {
+        // MODO CREAR: mostrar campo N° Cuenta
+        if ($('emp-cuenta-row')) $('emp-cuenta-row').style.display = 'block';
+        if ($('emp-cuenta-id')) $('emp-cuenta-id').value = '';
         ['emp-nombre','emp-razon','emp-ruc','emp-logo-url'].forEach(id => window.setVal(id, ''));
         window.setVal('emp-estado', 'Activo');
         if ($('btn-save-empresa')) $('btn-save-empresa').removeAttribute('data-edit-id');
+        // Actualizar título modal
+        const h2 = modal.querySelector('h2');
+        if (h2) h2.innerHTML = '<span class="material-icons-round" style="color:#7c3aed;">add_business</span> Nueva Empresa';
     }
     modal.style.display = 'flex';
+    // Focus en el primer campo relevante
+    setTimeout(() => {
+        const firstInput = $('emp-cuenta-id') && $('emp-cuenta-row') && $('emp-cuenta-row').style.display !== 'none' ? 'emp-cuenta-id' : 'emp-nombre';
+        if ($(firstInput)) $(firstInput).focus();
+    }, 100);
 };
 
 window.editarEmpresa = (id) => window.abrirModalEmpresa(id);
@@ -4111,35 +4128,58 @@ window.guardarEmpresa = async () => {
     const editId = $('btn-save-empresa') ? $('btn-save-empresa').getAttribute('data-edit-id') : null;
     
     if (!nombre || !ruc) return alert('Nombre y RUC son obligatorios.');
-    window.showLoading();
-    
-    try {
-        if (editId) {
-            // Editar empresa existente
-            await setDoc(doc(db, 'plataforma', 'main', 'empresas', editId), { nombre, razonSocial, ruc, estado, logoUrl }, { merge: true });
-            alert(`✓ Empresa "${nombre}" actualizada.`);
-        } else {
-            // Crear nueva empresa
+
+    if (!editId) {
+        // Crear: requiere Nº de cuenta
+        const cuentaId = $('emp-cuenta-id') ? $('emp-cuenta-id').value.trim() : '';
+        if (!cuentaId) return alert('El Nº de Cuenta es obligatorio para crear una empresa.');
+        if (cuentaId === '1') return alert('El Nº 1 está reservado para FCI Logistic. Por favor usa otro número.');
+        if (!/^[a-zA-Z0-9_-]+$/.test(cuentaId)) return alert('El Nº de Cuenta solo puede contener letras, números, guiones o guiones bajos.');
+        
+        // Verificar que no exista ya ese ID
+        window.showLoading();
+        try {
+            const existSnap = await getDoc(doc(db, 'plataforma', 'main', 'empresas', cuentaId));
+            if (existSnap.exists()) {
+                window.hideLoading();
+                return alert(`Ya existe una empresa con el Nº de Cuenta "${cuentaId}". Elige otro.`);
+            }
+            // Generar appId único basado en nombre y cuenta
             const slug = nombre.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').substring(0, 20);
-            const newAppId = `sgc-${slug}-${Date.now()}`;
-            const newEmpRef = await addDoc(collection(db, 'plataforma', 'main', 'empresas'), {
-                nombre, razonSocial, ruc, estado, logoUrl,
+            const newAppId = `sgc-${slug}-${cuentaId}`;
+            
+            await setDoc(doc(db, 'plataforma', 'main', 'empresas', cuentaId), {
+                id: cuentaId, nombre, razonSocial, ruc, estado, logoUrl,
                 appId: newAppId, esEmpresaPrincipal: false,
                 fechaCreacion: new Date().toISOString(), configuraciones: {}
             });
-            // Crear estructura inicial en Firestore para la nueva empresa
+            // Estructura inicial en Firestore para la nueva empresa
             await setDoc(doc(db, 'artifacts', newAppId, 'public', 'data', 'Configuracion', 'Estructura'), {
                 gerencias: [], departamentos: [], cargos: []
             });
             await setDoc(doc(db, 'artifacts', newAppId, 'public', 'data', 'Configuracion', 'SLA'), { alta: 3, media: 7, baja: 15 });
             await setDoc(doc(db, 'artifacts', newAppId, 'public', 'data', 'Contadores', 'solicitudes'), { count: 0 });
-            alert(`✓ Empresa "${nombre}" creada con ID: ${newEmpRef.id}`);
+            alert(`✓ Empresa "${nombre}" creada con Nº de Cuenta: ${cuentaId}\n\nLos usuarios ingresan el número ${cuentaId} en el login.`);
+            window.cerrarModalEmpresa();
+            window.cargarTodasEmpresas();
+        } catch(e) {
+            console.error('[guardarEmpresa/crear]', e);
+            alert('Error al crear la empresa: ' + e.message);
         }
+        window.hideLoading();
+        return;
+    }
+
+    // EDITAR empresa existente
+    window.showLoading();
+    try {
+        await setDoc(doc(db, 'plataforma', 'main', 'empresas', editId), { nombre, razonSocial, ruc, estado, logoUrl }, { merge: true });
+        alert(`✓ Empresa "${nombre}" actualizada.`);
         window.cerrarModalEmpresa();
         window.cargarTodasEmpresas();
     } catch(e) {
-        console.error('[guardarEmpresa]', e);
-        alert('Error al guardar la empresa.');
+        console.error('[guardarEmpresa/editar]', e);
+        alert('Error al actualizar la empresa.');
     }
     window.hideLoading();
 };
