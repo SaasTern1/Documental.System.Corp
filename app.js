@@ -834,13 +834,13 @@ window.iniciarSesion = async () => {
 
     // PASO 1: Consultar el índice global para saber a qué empresa pertenece el usuario
     let idxSnap;
-    try { idxSnap = await getDoc(doc(db, 'plataforma', 'usuariosIndex', u)); } catch(e) { idxSnap = null; }
+    try { idxSnap = await getDoc(doc(db, 'plataforma', 'main', 'usuariosIndex', u)); } catch(e) { idxSnap = null; }
 
     if (idxSnap && idxSnap.exists()) {
       const idx = idxSnap.data();
       if (idx.isSuperAdmin) {
         // Super Admin: verificar contraseña en plataforma/superAdmins
-        const saSnap = await getDoc(doc(db, 'plataforma', 'superAdmins', u));
+        const saSnap = await getDoc(doc(db, 'plataforma', 'main', 'superAdmins', u));
         if (!saSnap.exists() || saSnap.data().pass !== p) { alert("Credenciales incorrectas."); window.hideLoading(); return; }
         appId = 'sgc-final-v6'; currentEmpresaId = '1'; isSuperAdmin = true;
         currentUser = { ...saSnap.data(), permisos: { admin: true } };
@@ -852,7 +852,7 @@ window.iniciarSesion = async () => {
       appId = idx.empresaAppId || 'sgc-final-v6';
       currentEmpresaId = idx.empresaId || '1';
       // Cargar config de empresa
-      try { const empSnap = await getDoc(doc(db, 'plataforma', 'empresas', currentEmpresaId)); if(empSnap.exists()) currentEmpresaConfig = empSnap.data(); } catch(e){}
+      try { const empSnap = await getDoc(doc(db, 'plataforma', 'main', 'empresas', currentEmpresaId)); if(empSnap.exists()) currentEmpresaConfig = empSnap.data(); } catch(e){}
     } else {
       // Fallback: si no existe el índice aún, usar empresa 1 por defecto (compatibilidad)
       console.warn("[Multiempresa] usuariosIndex no encontrado, usando empresa 1 por defecto.");
@@ -2869,9 +2869,9 @@ const inicializarApp = async () => {
         if (savedEmpresaId) currentEmpresaId = savedEmpresaId;
         try {
             // Verificar si es Super Admin
-            const idxSnap = await getDoc(doc(db, 'plataforma', 'usuariosIndex', su));
+            const idxSnap = await getDoc(doc(db, 'plataforma', 'main', 'usuariosIndex', su));
             if (idxSnap && idxSnap.exists() && idxSnap.data().isSuperAdmin) {
-                const saSnap = await getDoc(doc(db, 'plataforma', 'superAdmins', su));
+                const saSnap = await getDoc(doc(db, 'plataforma', 'main', 'superAdmins', su));
                 if (saSnap.exists()) {
                     isSuperAdmin = true; appId = savedAppId || 'sgc-final-v6'; currentEmpresaId = savedEmpresaId || '1';
                     currentUser = { ...saSnap.data(), permisos: { admin: true } };
@@ -2882,7 +2882,7 @@ const inicializarApp = async () => {
             const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", su)));
             if (!qs.empty) {
                 currentUser = qs.docs[0].data();
-                try { const empSnap = await getDoc(doc(db, 'plataforma', 'empresas', currentEmpresaId)); if(empSnap.exists()) currentEmpresaConfig = empSnap.data(); } catch(e){}
+                try { const empSnap = await getDoc(doc(db, 'plataforma', 'main', 'empresas', currentEmpresaId)); if(empSnap.exists()) currentEmpresaConfig = empSnap.data(); } catch(e){}
                 window.completarLoginUI();
             } else window.logout();
         } catch(e) { console.error('[inicializarApp]', e); window.logout(); } 
@@ -3904,7 +3904,7 @@ window.abrirModalCalendarioMensual = async () => {
 // Cargar todas las empresas registradas
 window.cargarTodasEmpresas = async () => {
     try {
-        const snap = await getDocs(collection(db, 'plataforma', 'empresas'));
+        const snap = await getDocs(collection(db, 'plataforma', 'main', 'empresas'));
         empresasDisponibles = [];
         snap.forEach(d => empresasDisponibles.push({ id: d.id, ...d.data() }));
         window.renderSelectorEmpresas();
@@ -4014,13 +4014,13 @@ window.guardarEmpresa = async () => {
     try {
         if (editId) {
             // Editar empresa existente
-            await setDoc(doc(db, 'plataforma', 'empresas', editId), { nombre, razonSocial, ruc, estado, logoUrl }, { merge: true });
+            await setDoc(doc(db, 'plataforma', 'main', 'empresas', editId), { nombre, razonSocial, ruc, estado, logoUrl }, { merge: true });
             alert(`✓ Empresa "${nombre}" actualizada.`);
         } else {
             // Crear nueva empresa
             const slug = nombre.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').substring(0, 20);
             const newAppId = `sgc-${slug}-${Date.now()}`;
-            const newEmpRef = await addDoc(collection(db, 'plataforma', 'empresas'), {
+            const newEmpRef = await addDoc(collection(db, 'plataforma', 'main', 'empresas'), {
                 nombre, razonSocial, ruc, estado, logoUrl,
                 appId: newAppId, esEmpresaPrincipal: false,
                 fechaCreacion: new Date().toISOString(), configuraciones: {}
@@ -4048,7 +4048,7 @@ window.toggleEstadoEmpresa = async (empresaId, estadoActual) => {
     if (!confirm(`¿${nuevoEstado === 'Inactivo' ? 'Desactivar' : 'Activar'} esta empresa?`)) return;
     window.showLoading();
     try {
-        await setDoc(doc(db, 'plataforma', 'empresas', empresaId), { estado: nuevoEstado }, { merge: true });
+        await setDoc(doc(db, 'plataforma', 'main', 'empresas', empresaId), { estado: nuevoEstado }, { merge: true });
         window.cargarTodasEmpresas();
     } catch(e) { alert('Error al cambiar estado.'); }
     window.hideLoading();
@@ -4063,7 +4063,7 @@ window.guardarUsuario = async () => {
     try {
         const u = getValSafe('u-usr').toLowerCase().trim();
         if (u) {
-            await setDoc(doc(db, 'plataforma', 'usuariosIndex', u), {
+            await setDoc(doc(db, 'plataforma', 'main', 'usuariosIndex', u), {
                 empresaAppId: appId,
                 empresaId: currentEmpresaId,
                 usuario: u,
@@ -4077,5 +4077,5 @@ const _eliminarUsuarioOriginal = window.eliminarUsuario;
 window.eliminarUsuario = async (uid) => {
     await _eliminarUsuarioOriginal(uid);
     // Limpiar índice global
-    try { await deleteDoc(doc(db, 'plataforma', 'usuariosIndex', uid)); } catch(e) {}
+    try { await deleteDoc(doc(db, 'plataforma', 'main', 'usuariosIndex', uid)); } catch(e) {}
 };

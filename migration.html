@@ -160,14 +160,14 @@ window.runDryRun = async () => {
     setStep(1, 'running');
     try {
         // Verificar empresa 1 existente
-        const emp1Snap = await getDoc(doc(db, 'plataforma', 'empresas', '1'));
+        const emp1Snap = await getDoc(doc(db, 'plataforma', 'main', 'empresas', '1'));
         if (emp1Snap.exists()) {
             log('⚠️ Ya existe el documento plataforma/empresas/1. Se sobreescribirá con setDoc (merge).', 'warn');
         } else {
             log('✓ plataforma/empresas/1 no existe aún — se creará.', 'ok');
         }
         
-        const saSnap = await getDoc(doc(db, 'plataforma', 'superAdmins', 'sysadm2006'));
+        const saSnap = await getDoc(doc(db, 'plataforma', 'main', 'superAdmins', 'sysadm2006'));
         if (saSnap.exists()) {
             log('⚠️ Ya existe SuperAdmin sysadm2006. Se sobreescribirá.', 'warn');
         } else {
@@ -224,7 +224,7 @@ window.runMigration = async () => {
     // PASO 1: Empresa 1
     setStep(1, 'running');
     try {
-        await setDoc(doc(db, 'plataforma', 'empresas', '1'), EMPRESA_1);
+        await setDoc(doc(db, 'plataforma', 'main', 'empresas', '1'), EMPRESA_1);
         log('✓ Creado: plataforma/empresas/1 (FCI Logistic)', 'ok');
         created++;
         setStep(1, 'done');
@@ -238,7 +238,7 @@ window.runMigration = async () => {
     // PASO 2: Super Admin
     setStep(2, 'running');
     try {
-        await setDoc(doc(db, 'plataforma', 'superAdmins', 'sysadm2006'), SUPER_ADMIN);
+        await setDoc(doc(db, 'plataforma', 'main', 'superAdmins', 'sysadm2006'), SUPER_ADMIN);
         log('✓ Creado: plataforma/superAdmins/sysadm2006', 'ok');
         created++;
         setStep(2, 'done');
@@ -254,7 +254,7 @@ window.runMigration = async () => {
     try {
         for (const u of existingUsers) {
             const uid = u.usuario || u.id;
-            await setDoc(doc(db, 'plataforma', 'usuariosIndex', uid), {
+            await setDoc(doc(db, 'plataforma', 'main', 'usuariosIndex', uid), {
                 empresaAppId: SGC_APP_ID,
                 empresaId: '1',
                 usuario: uid,
@@ -274,7 +274,7 @@ window.runMigration = async () => {
     // PASO 4: Indexar SuperAdmin también
     setStep(4, 'running');
     try {
-        await setDoc(doc(db, 'plataforma', 'usuariosIndex', 'sysadm2006'), {
+        await setDoc(doc(db, 'plataforma', 'main', 'usuariosIndex', 'sysadm2006'), {
             empresaAppId: SGC_APP_ID,
             empresaId: '1',
             usuario: 'sysadm2006',
