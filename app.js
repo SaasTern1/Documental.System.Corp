@@ -4027,13 +4027,23 @@ window.renderSelectorEmpresas = () => {
 window.renderTablaEmpresas = () => {
     const tbody = $('tbody-empresas');
     if (!tbody) return;
+    // Asegura que el thead tenga la columna N° Cuenta
+    const thead = document.querySelector('#tabla-empresas thead tr');
+    if (thead && !thead.querySelector('[data-col="ncuenta"]')) {
+        const th = document.createElement('th');
+        th.setAttribute('data-col', 'ncuenta');
+        th.textContent = 'N\u00b0 CUENTA';
+        th.style.cssText = 'color:#7c3aed; font-weight:800; font-size:11px; width:90px;';
+        thead.insertBefore(th, thead.firstChild);
+    }
     let h = '';
     empresasDisponibles.forEach(e => {
         const estadoBadge = e.estado === 'Activo' ? 'badge-success' : 'badge-dark';
         h += `<tr>
+            <td><strong style="font-size:18px; color:#7c3aed; letter-spacing:1px;">${e.id}</strong></td>
             <td><strong>${e.nombre}</strong>${e.esEmpresaPrincipal ? ' <span style="background:#1d4ed8;color:white;font-size:9px;padding:2px 6px;border-radius:99px;font-weight:700;">PRINCIPAL</span>' : ''}</td>
-            <td>${e.razonSocial || '—'}</td>
-            <td><code style="font-size:11px;">${e.ruc || '—'}</code></td>
+            <td>${e.razonSocial || '\u2014'}</td>
+            <td><code style="font-size:11px;">${e.ruc || '\u2014'}</code></td>
             <td><code style="font-size:10px; color:#64748b;">${e.appId}</code></td>
             <td><span class="badge ${estadoBadge}">${e.estado || 'Activo'}</span></td>
             <td>
@@ -4049,7 +4059,7 @@ window.renderTablaEmpresas = () => {
             </td>
         </tr>`;
     });
-    tbody.innerHTML = h || '<tr><td colspan="6" style="text-align:center; color:#94a3b8;">No hay empresas registradas.</td></tr>';
+    tbody.innerHTML = h || '<tr><td colspan="7" style="text-align:center; color:#94a3b8;">No hay empresas registradas.</td></tr>';
 };
 
 // Cambiar empresa activa (solo Super Admin)
@@ -4081,8 +4091,30 @@ window.cambiarEmpresaActiva = async (empresaId) => {
 window.abrirModalEmpresa = (empresaId = null) => {
     const modal = $('modal-empresa');
     if (!modal) return;
+
+    // ── INYECTAR campo N° Cuenta si no está en el DOM (compatibilidad con caché) ──
+    if (!$('emp-cuenta-row')) {
+        const formGrid = modal.querySelector('[style*="display:grid"]');
+        if (formGrid) {
+            const cuentaDiv = document.createElement('div');
+            cuentaDiv.id = 'emp-cuenta-row';
+            cuentaDiv.innerHTML = `
+                <label for="emp-cuenta-id" style="font-size:11px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.05em;">N&#176; de Cuenta / ID de Empresa *</label>
+                <div style="position:relative; margin-top:4px;">
+                    <span class="material-icons-round" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:18px; color:#7c3aed; pointer-events:none;">tag</span>
+                    <input aria-label="N\u00famero de cuenta" type="text" id="emp-cuenta-id" name="emp-cuenta-id" placeholder="Ej: 2, 3, 100..." maxlength="30" style="padding-left:42px; border:2px solid #e9d5ff; background:#faf5ff; font-weight:700; letter-spacing:1px; font-size:16px;">
+                </div>
+                <p style="font-size:10px; color:#7c3aed; margin-top:5px; padding:6px 10px; background:#f3e8ff; border-radius:6px;">
+                    <span class="material-icons-round" style="font-size:12px; vertical-align:middle;">info</span>
+                    Este n\u00famero es el que los usuarios ingresan en el login. El N\u00b0 1 est\u00e1 reservado para <strong>FCI Logistic</strong>.
+                </p>`;
+            formGrid.insertBefore(cuentaDiv, formGrid.firstChild);
+        }
+    }
+
+    const h2 = modal.querySelector('h2');
     if (empresaId) {
-        // MODO EDITAR: ocultar campo N° Cuenta (no se puede cambiar el ID)
+        // MODO EDITAR: ocultar campo N° Cuenta
         if ($('emp-cuenta-row')) $('emp-cuenta-row').style.display = 'none';
         if ($('emp-cuenta-id')) $('emp-cuenta-id').value = '';
         const emp = empresasDisponibles.find(e => e.id === empresaId);
@@ -4093,8 +4125,6 @@ window.abrirModalEmpresa = (empresaId = null) => {
         window.setVal('emp-estado', emp.estado || 'Activo');
         window.setVal('emp-logo-url', emp.logoUrl || '');
         if ($('btn-save-empresa')) $('btn-save-empresa').setAttribute('data-edit-id', empresaId);
-        // Actualizar título modal
-        const h2 = modal.querySelector('h2');
         if (h2) h2.innerHTML = '<span class="material-icons-round" style="color:#7c3aed;">edit</span> Editar Empresa: ' + emp.nombre;
     } else {
         // MODO CREAR: mostrar campo N° Cuenta
@@ -4103,17 +4133,15 @@ window.abrirModalEmpresa = (empresaId = null) => {
         ['emp-nombre','emp-razon','emp-ruc','emp-logo-url'].forEach(id => window.setVal(id, ''));
         window.setVal('emp-estado', 'Activo');
         if ($('btn-save-empresa')) $('btn-save-empresa').removeAttribute('data-edit-id');
-        // Actualizar título modal
-        const h2 = modal.querySelector('h2');
         if (h2) h2.innerHTML = '<span class="material-icons-round" style="color:#7c3aed;">add_business</span> Nueva Empresa';
     }
     modal.style.display = 'flex';
-    // Focus en el primer campo relevante
     setTimeout(() => {
-        const firstInput = $('emp-cuenta-id') && $('emp-cuenta-row') && $('emp-cuenta-row').style.display !== 'none' ? 'emp-cuenta-id' : 'emp-nombre';
+        const firstInput = (!empresaId && $('emp-cuenta-id')) ? 'emp-cuenta-id' : 'emp-nombre';
         if ($(firstInput)) $(firstInput).focus();
     }, 100);
 };
+
 
 window.editarEmpresa = (id) => window.abrirModalEmpresa(id);
 window.cerrarModalEmpresa = () => { if($('modal-empresa')) $('modal-empresa').style.display = 'none'; };

@@ -108,7 +108,7 @@
                 <span class="material-icons-round" style="color:#fff; font-size:22px;">verified_user</span>
             </div>
             <div>
-                <h2 style="font-weight: 800; font-size: 13px; line-height: 1.3; color: #f1f5f9; letter-spacing: 0.3px;">SGS - FCI Logistic</h2>
+                <h2 style="font-weight: 800; font-size: 13px; line-height: 1.3; color: #f1f5f9; letter-spacing: 0.3px;">Sistema de Gesti&#243;n</h2>
                 <p style="font-size:10px; color:#64748b; margin-top:2px; letter-spacing:0.5px;">Certificación OEA</p>
             </div>
         </div>
@@ -200,7 +200,7 @@
                     <span class="material-icons-round" style="color:#fff; font-size:18px;">verified_user</span>
                 </div>
                 <div>
-                    <h2 style="font-size: 14px; color: var(--text-main); margin:0; font-weight:800; line-height:1.2;">SGS - FCI Logistic</h2>
+                    <h2 style="font-size: 14px; color: var(--text-main); margin:0; font-weight:800; line-height:1.2;">Sistema de Gesti&#243;n</h2>
                     <p style="font-size:10px; color:var(--text-muted); margin:0;">Certificación OEA</p>
                 </div>
             </div>
@@ -1577,13 +1577,25 @@
                 <button onclick="window.cerrarModalEmpresa()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;">&#10005;</button>
             </div>
             <div style="display:grid; gap:14px;">
+                <!-- Campo N° Cuenta: solo visible al crear, oculto al editar -->
+                <div id="emp-cuenta-row">
+                    <label for="emp-cuenta-id" style="font-size:11px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.05em;">N&#176; de Cuenta / ID de Empresa *</label>
+                    <div style="position:relative; margin-top:4px;">
+                        <span class="material-icons-round" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:18px; color:#7c3aed; pointer-events:none;">tag</span>
+                        <input aria-label="N&#250;mero de cuenta de la empresa" type="text" id="emp-cuenta-id" name="emp-cuenta-id" placeholder="Ej: 2, 3, 100, ABC..." maxlength="30" style="padding-left:42px; border:2px solid #e9d5ff; background:#faf5ff; font-weight:700; letter-spacing:1px; font-size:16px;">
+                    </div>
+                    <p style="font-size:10px; color:#7c3aed; margin-top:5px; padding:6px 10px; background:#f3e8ff; border-radius:6px;">
+                        <span class="material-icons-round" style="font-size:12px; vertical-align:middle;">info</span>
+                        Este n&#250;mero es el que los usuarios ingresan en el login. El N&#176; 1 est&#225; reservado para <strong>FCI Logistic</strong>.
+                    </p>
+                </div>
                 <div>
                     <label for="emp-nombre" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Nombre Comercial *</label>
-                    <input aria-label="emp-nombre" type="text" id="emp-nombre" placeholder="Ej: FCI Logistic" style="margin-top:4px;">
+                    <input aria-label="emp-nombre" type="text" id="emp-nombre" placeholder="Ej: Grape Street S.A." style="margin-top:4px;">
                 </div>
                 <div>
                     <label for="emp-razon" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Razón Social</label>
-                    <input aria-label="emp-razon" type="text" id="emp-razon" placeholder="Ej: FCI Logistic S.A." style="margin-top:4px;">
+                    <input aria-label="emp-razon" type="text" id="emp-razon" placeholder="Ej: Grape Street S.A." style="margin-top:4px;">
                 </div>
                 <div>
                     <label for="emp-ruc" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">RUC / Identificación Fiscal *</label>
@@ -1604,6 +1616,7 @@
                     </div>
                 </div>
             </div>
+
             <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:24px; padding-top:16px; border-top:1px solid var(--border);">
                 <button class="btn" onclick="window.cerrarModalEmpresa()" style="background:var(--bg); border:1px solid var(--border);">Cancelar</button>
                 <button id="btn-save-empresa" class="btn btn-primary" onclick="window.guardarEmpresa()" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
