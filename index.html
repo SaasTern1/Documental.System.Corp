@@ -145,13 +145,31 @@
                         <button class="nav-link" onclick="window.setDisplay('sec-usuarios', 'flex')" style="padding-left:35px; font-size:12px; height:auto; padding-top:8px; padding-bottom:8px;">
                             <span class="material-icons-round" style="font-size:16px;">people</span> Usuarios y Permisos
                         </button>
-                        <button class="nav-link" onclick="window.setDisplay('sec-estructura', 'flex')" style="padding-left:35px; font-size:12px; height:auto; padding-top:8px; padding-bottom:8px;">
-                            <span class="material-icons-round" style="font-size:16px;">account_tree</span> Config. Sistema
-                        </button>
-                    </div>
+                        </div><!-- nav-admin-sub -->
+                    </div><!-- nav-accordion -->
+                </div><!-- nav-admin-group -->
+        </nav>
+
+            <!-- GRUPO SUPER ADMIN (oculto por defecto) -->
+            <div id="nav-superadmin-group" style="display:none;">
+                <p style="font-size:10px; color:#7c3aed; font-weight:800; margin-left:16px; margin-bottom:8px; margin-top:20px; text-transform:uppercase; letter-spacing:0.1em;">&#127760; Plataforma</p>
+                <button class="nav-link" id="nav-empresas" onclick="window.cambiarVista('sec-empresas', this)" style="color:#a78bfa;">
+                    <span class="material-icons-round">business</span> Gesti&#243;n de Empresas
+                </button>
+                <!-- Selector de empresa activa -->
+                <div style="padding: 8px 12px; margin-bottom:4px;">
+                    <p style="font-size:9px; color:#7c3aed; font-weight:800; margin-bottom:6px; text-transform:uppercase;">Empresa Activa</p>
+                    <select aria-label="empresa-selector" id="empresa-selector" onchange="window.cambiarEmpresaActiva(this.value)" style="width:100%; border-radius:8px; padding:6px 8px; font-size:11px; background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); color:#e2e8f0; cursor:pointer; font-weight:600;">
+                    </select>
                 </div>
             </div>
-        </nav>
+
+        <!-- Badge de empresa activa (visible para Super Admin) -->
+        <div id="empresa-badge" style="display:none; margin: 8px 12px 0 12px; background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); border-radius:8px; padding:7px 12px;">
+            <p style="font-size:9px; color:#a78bfa; font-weight:800; text-transform:uppercase; margin-bottom:2px;">&#127760; Viendo empresa</p>
+            <p id="empresa-badge-nombre" style="font-size:11px; color:#e2e8f0; font-weight:700;">FCI Logistic</p>
+        </div>
+
         <div style="background: rgba(255,255,255,0.04); padding: 16px; border-radius: 12px; margin-top:10px; border: 1px solid rgba(255,255,255,0.06);">
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
                 <div style="width:36px; height:36px; background:linear-gradient(135deg, #059669, #10b981); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
@@ -474,6 +492,35 @@
             </div>
             <div class="card" style="padding:0; overflow:hidden;">
                 <div class="table-responsive"><table id="tabla-auditorias" style="white-space:nowrap;"><thead><tr><th>N° Auditoría</th><th>Fecha / Hora</th><th>Requisitos OEA</th><th>Auditado(s)</th><th>Auditor(es)</th><th>Estado</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-auditorias"></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="sec-empresas" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #7c3aed, #a855f7);"><span class="material-icons-round">business</span></div>
+                    <div><h1>Gesti&#243;n de Empresas</h1><p>Administra las empresas registradas en la plataforma SaaS</p></div>
+                </div>
+                <div class="section-header-actions">
+                    <button class="btn btn-primary" onclick="window.abrirModalEmpresa()">
+                        <span class="material-icons-round" style="font-size:18px;">add_business</span> Nueva Empresa
+                    </button>
+                </div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; border-top:4px solid #7c3aed;">
+                <div class="table-responsive">
+                    <table id="tabla-empresas" style="white-space:nowrap;">
+                        <thead><tr>
+                            <th>Nombre Comercial</th>
+                            <th>Raz&#243;n Social</th>
+                            <th>RUC</th>
+                            <th>App ID</th>
+                            <th>Estado</th>
+                            <th class="no-export">Acciones</th>
+                        </tr></thead>
+                        <tbody id="tbody-empresas"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
@@ -1512,5 +1559,52 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL DE EMPRESA -->
+    <div id="modal-empresa" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10001; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:var(--card-bg); border-radius:20px; padding:30px; width:100%; max-width:560px; border:1px solid var(--border); box-shadow:0 25px 50px rgba(0,0,0,0.4);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+                <h2 style="font-size:18px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:10px;">
+                    <span class="material-icons-round" style="color:#7c3aed;">business</span> Empresa
+                </h2>
+                <button onclick="window.cerrarModalEmpresa()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;">&#10005;</button>
+            </div>
+            <div style="display:grid; gap:14px;">
+                <div>
+                    <label for="emp-nombre" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Nombre Comercial *</label>
+                    <input aria-label="emp-nombre" type="text" id="emp-nombre" placeholder="Ej: FCI Logistic" style="margin-top:4px;">
+                </div>
+                <div>
+                    <label for="emp-razon" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Razón Social</label>
+                    <input aria-label="emp-razon" type="text" id="emp-razon" placeholder="Ej: FCI Logistic S.A." style="margin-top:4px;">
+                </div>
+                <div>
+                    <label for="emp-ruc" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">RUC / Identificación Fiscal *</label>
+                    <input aria-label="emp-ruc" type="text" id="emp-ruc" placeholder="Ej: 40371-0093-279247 DV. 14" style="margin-top:4px;">
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <label for="emp-estado" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Estado</label>
+                        <select aria-label="emp-estado" id="emp-estado" style="margin-top:4px;">
+                            <option value="Activo">Activo</option>
+                            <option value="Inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="emp-logo-url" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">URL del Logo</label>
+                        <input aria-label="emp-logo-url" type="text" id="emp-logo-url" placeholder="https://..." style="margin-top:4px;">
+                        <p style="font-size:10px; color:#64748b; margin-top:2px;">Pega aquí la URL de tu logo (Cloudinary, Drive, etc.)</p>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:24px; padding-top:16px; border-top:1px solid var(--border);">
+                <button class="btn" onclick="window.cerrarModalEmpresa()" style="background:var(--bg); border:1px solid var(--border);">Cancelar</button>
+                <button id="btn-save-empresa" class="btn btn-primary" onclick="window.guardarEmpresa()" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
+                    <span class="material-icons-round" style="font-size:16px;">save</span> Guardar Empresa
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

@@ -14,7 +14,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig); 
 const auth = getAuth(app); 
 const db = getFirestore(app); 
-const appId = 'sgc-final-v6';
+let appId = 'sgc-final-v6';
+let currentEmpresaId = '1';
+let isSuperAdmin = false;
+let currentEmpresaConfig = null;
+let empresasDisponibles = [];
 
 const EMAIL_SERVICE_ID = "service" + "_vum" + "xptj", 
   EMAIL_TEMPLATE_ID = "template" + "_z27" + "y5yk", 
@@ -779,14 +783,23 @@ window.renderTablasSolicitudes = () => {
 
 window.completarLoginUI = () => {
   window.setDisplay('login-screen', 'none'); window.setDisplay('sidebar', 'flex'); window.setDisplay('main', 'block');
-  window.setTxt('curr-name', currentUser.nombre || 'Usuario'); window.setTxt('curr-ger', currentUser.gerencias ? currentUser.gerencias.join(', ') : (currentUser.gerencia || 'Sin Gerencia'));
+  window.setTxt('curr-name', currentUser.nombre || 'Usuario');
+  
+  // Mostrar empresa activa en sidebar
+  const empNombre = currentEmpresaConfig ? currentEmpresaConfig.nombre : (currentEmpresaId === '1' ? 'FCI Logistic' : 'Empresa');
+  window.setTxt('curr-ger', isSuperAdmin ? ('🌐 Super Admin · ' + empNombre) : (currentUser.gerencias ? currentUser.gerencias.join(', ') : (currentUser.gerencia || 'Sin Gerencia')));
+  if ($('empresa-badge-nombre')) $('empresa-badge-nombre').innerText = empNombre;
+  if ($('empresa-badge')) $('empresa-badge').style.display = isSuperAdmin ? 'block' : 'none';
 
-  const p = currentUser.permisos || {}; const isAdm = p.admin || false;
+  const p = currentUser.permisos || {}; const isAdm = p.admin || isSuperAdmin || false;
   const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
   window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-forms', (isAdm || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-drive', 'flex');
   window.setDisplay('nav-admin-group', (isAdm || p.p_users || p.p_struct) ? 'block' : 'none');
 
-  
+  // Grupo Super Admin (solo para isSuperAdmin)
+  window.setDisplay('nav-superadmin-group', isSuperAdmin ? 'block' : 'none');
+  if (isSuperAdmin) window.cargarTodasEmpresas();
+
   const canAud = p.p_audit_ver || p.p_audit_admin || p.p_audit_auditor || p.p_audit_dueno || isAdm; 
   window.setDisplay('nav-audit-group', canAud ? 'block' : 'none'); window.setDisplay('nav-norma', canAud ? 'flex' : 'none'); window.setDisplay('nav-audit', canAud ? 'flex' : 'none'); window.setDisplay('nav-noconf', (p.p_audit_admin || p.p_gest_sgc || p.p_audit_auditor || p.p_audit_dueno || isAdm) ? 'flex' : 'none');
   
@@ -802,22 +815,57 @@ window.completarLoginUI = () => {
   window.setDisplay('btn-config-plan', isAdAud ? 'inline-flex' : 'none'); window.setDisplay('btn-nueva-aud', isAdAud ? 'inline-flex' : 'none');
   
   window.cargarDatosCentrales();
-  if (p.p_gest_sgc || isAdm) window.cambiarVista('sec-all', $('nav-all')); else if (p.can_solicit) window.cambiarVista('sec-crear', $('nav-crear')); else if (p.p_ver_propias) window.cambiarVista('sec-hist', $('nav-hist')); else window.cambiarVista('sec-dash', $('nav-dash'));
+  if (isSuperAdmin || p.p_gest_sgc || isAdm) window.cambiarVista('sec-all', $('nav-all')); else if (p.can_solicit) window.cambiarVista('sec-crear', $('nav-crear')); else if (p.p_ver_propias) window.cambiarVista('sec-hist', $('nav-hist')); else window.cambiarVista('sec-dash', $('nav-dash'));
 };
 
-window.logout = () => { localStorage.removeItem('sgc_session_user'); currentUser = null; window.setDisplay('sidebar', 'none'); window.setDisplay('main', 'none'); window.setDisplay('login-screen', 'flex'); window.setVal('login-user', ''); window.setVal('login-pass', ''); };
+window.logout = () => {
+  localStorage.removeItem('sgc_session_user');
+  localStorage.removeItem('sgc_appId');
+  localStorage.removeItem('sgc_empresaId');
+  currentUser = null; isSuperAdmin = false; appId = 'sgc-final-v6'; currentEmpresaId = '1'; currentEmpresaConfig = null; empresasDisponibles = [];
+  window.setDisplay('sidebar', 'none'); window.setDisplay('main', 'none'); window.setDisplay('login-screen', 'flex'); window.setVal('login-user', ''); window.setVal('login-pass', '');
+};
 
 window.iniciarSesion = async () => {
   const u = $('login-user').value.toLowerCase().trim(); const p = $('login-pass').value.trim();
   if (!u || !p) return alert("Por favor, ingresa tu usuario y contraseña."); window.showLoading();
   try {
-    console.log("Iniciando sesión con usuario:", u);
+    console.log("[Multiempresa] Iniciando sesión:", u);
+
+    // PASO 1: Consultar el índice global para saber a qué empresa pertenece el usuario
+    let idxSnap;
+    try { idxSnap = await getDoc(doc(db, 'plataforma', 'usuariosIndex', u)); } catch(e) { idxSnap = null; }
+
+    if (idxSnap && idxSnap.exists()) {
+      const idx = idxSnap.data();
+      if (idx.isSuperAdmin) {
+        // Super Admin: verificar contraseña en plataforma/superAdmins
+        const saSnap = await getDoc(doc(db, 'plataforma', 'superAdmins', u));
+        if (!saSnap.exists() || saSnap.data().pass !== p) { alert("Credenciales incorrectas."); window.hideLoading(); return; }
+        appId = 'sgc-final-v6'; currentEmpresaId = '1'; isSuperAdmin = true;
+        currentUser = { ...saSnap.data(), permisos: { admin: true } };
+        localStorage.setItem('sgc_session_user', u); localStorage.setItem('sgc_appId', appId); localStorage.setItem('sgc_empresaId', '1');
+        console.log("[Multiempresa] Super Admin autenticado.");
+        window.completarLoginUI(); window.hideLoading(); return;
+      }
+      // Usuario normal: setear appId de su empresa
+      appId = idx.empresaAppId || 'sgc-final-v6';
+      currentEmpresaId = idx.empresaId || '1';
+      // Cargar config de empresa
+      try { const empSnap = await getDoc(doc(db, 'plataforma', 'empresas', currentEmpresaId)); if(empSnap.exists()) currentEmpresaConfig = empSnap.data(); } catch(e){}
+    } else {
+      // Fallback: si no existe el índice aún, usar empresa 1 por defecto (compatibilidad)
+      console.warn("[Multiempresa] usuariosIndex no encontrado, usando empresa 1 por defecto.");
+      appId = 'sgc-final-v6'; currentEmpresaId = '1';
+    }
+
+    // PASO 2: Verificar credenciales en la colección de la empresa
     const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", u), where("pass", "==", p)));
     if(!qs.empty) { 
-        console.log("Usuario encontrado. Autenticación exitosa.");
-        localStorage.setItem('sgc_session_user', u); currentUser = qs.docs[0].data(); window.completarLoginUI(); 
+        console.log("[Multiempresa] Usuario autenticado en empresa:", currentEmpresaId);
+        localStorage.setItem('sgc_session_user', u); localStorage.setItem('sgc_appId', appId); localStorage.setItem('sgc_empresaId', currentEmpresaId);
+        currentUser = qs.docs[0].data(); window.completarLoginUI(); 
     } else {
-        console.warn("Credenciales incorrectas.");
         alert("Credenciales incorrectas.");
     }
   } catch (error) { 
@@ -2814,10 +2862,30 @@ const inicializarApp = async () => {
     const su = localStorage.getItem('sgc_session_user');
     if (su) {
         window.showLoading();
-        try { 
+        // Restaurar empresa desde localStorage
+        const savedAppId = localStorage.getItem('sgc_appId');
+        const savedEmpresaId = localStorage.getItem('sgc_empresaId');
+        if (savedAppId) appId = savedAppId;
+        if (savedEmpresaId) currentEmpresaId = savedEmpresaId;
+        try {
+            // Verificar si es Super Admin
+            const idxSnap = await getDoc(doc(db, 'plataforma', 'usuariosIndex', su));
+            if (idxSnap && idxSnap.exists() && idxSnap.data().isSuperAdmin) {
+                const saSnap = await getDoc(doc(db, 'plataforma', 'superAdmins', su));
+                if (saSnap.exists()) {
+                    isSuperAdmin = true; appId = savedAppId || 'sgc-final-v6'; currentEmpresaId = savedEmpresaId || '1';
+                    currentUser = { ...saSnap.data(), permisos: { admin: true } };
+                    window.completarLoginUI(); window.hideLoading(); return;
+                }
+            }
+            // Usuario normal
             const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", su)));
-            if (!qs.empty) { currentUser = qs.docs[0].data(); window.completarLoginUI(); } else window.logout();
-        } catch(e) { window.logout(); } 
+            if (!qs.empty) {
+                currentUser = qs.docs[0].data();
+                try { const empSnap = await getDoc(doc(db, 'plataforma', 'empresas', currentEmpresaId)); if(empSnap.exists()) currentEmpresaConfig = empSnap.data(); } catch(e){}
+                window.completarLoginUI();
+            } else window.logout();
+        } catch(e) { console.error('[inicializarApp]', e); window.logout(); } 
         window.hideLoading();
     } else { window.setDisplay('login-screen', 'flex'); }
 };
@@ -3827,4 +3895,187 @@ window.abrirModalCalendarioMensual = async () => {
     
     grid.innerHTML = html;
     window.setDisplay('modal-calendario-anual', 'flex');
+};
+
+// ==========================================
+// MÓDULO MULTIEMPRESA — SUPER ADMIN
+// ==========================================
+
+// Cargar todas las empresas registradas
+window.cargarTodasEmpresas = async () => {
+    try {
+        const snap = await getDocs(collection(db, 'plataforma', 'empresas'));
+        empresasDisponibles = [];
+        snap.forEach(d => empresasDisponibles.push({ id: d.id, ...d.data() }));
+        window.renderSelectorEmpresas();
+        window.renderTablaEmpresas();
+    } catch(e) { console.error('[cargarTodasEmpresas]', e); }
+};
+
+// Renderizar selector de empresa en sidebar
+window.renderSelectorEmpresas = () => {
+    const sel = $('empresa-selector');
+    if (!sel) return;
+    sel.innerHTML = empresasDisponibles.map(e =>
+        `<option value="${e.id}" ${e.id === currentEmpresaId ? 'selected' : ''}>${e.nombre} ${e.estado === 'Inactivo' ? '(Inactivo)' : ''}</option>`
+    ).join('');
+};
+
+// Renderizar tabla de empresas en sec-empresas
+window.renderTablaEmpresas = () => {
+    const tbody = $('tbody-empresas');
+    if (!tbody) return;
+    let h = '';
+    empresasDisponibles.forEach(e => {
+        const estadoBadge = e.estado === 'Activo' ? 'badge-success' : 'badge-dark';
+        h += `<tr>
+            <td><strong>${e.nombre}</strong>${e.esEmpresaPrincipal ? ' <span style="background:#1d4ed8;color:white;font-size:9px;padding:2px 6px;border-radius:99px;font-weight:700;">PRINCIPAL</span>' : ''}</td>
+            <td>${e.razonSocial || '—'}</td>
+            <td><code style="font-size:11px;">${e.ruc || '—'}</code></td>
+            <td><code style="font-size:10px; color:#64748b;">${e.appId}</code></td>
+            <td><span class="badge ${estadoBadge}">${e.estado || 'Activo'}</span></td>
+            <td>
+                <button class="btn btn-info" style="padding:5px 10px;font-size:11px;" onclick="window.cambiarEmpresaActiva('${e.id}')">
+                    <span class="material-icons-round" style="font-size:14px;">swap_horiz</span> Entrar
+                </button>
+                <button class="btn btn-warning" style="padding:5px 10px;font-size:11px;" onclick="window.editarEmpresa('${e.id}')">
+                    <span class="material-icons-round" style="font-size:14px;">edit</span> Editar
+                </button>
+                ${!e.esEmpresaPrincipal ? `<button class="btn ${e.estado === 'Activo' ? 'btn-danger' : 'btn-success'}" style="padding:5px 10px;font-size:11px;" onclick="window.toggleEstadoEmpresa('${e.id}', '${e.estado}')">
+                    ${e.estado === 'Activo' ? 'Desactivar' : 'Activar'}
+                </button>` : ''}
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = h || '<tr><td colspan="6" style="text-align:center; color:#94a3b8;">No hay empresas registradas.</td></tr>';
+};
+
+// Cambiar empresa activa (solo Super Admin)
+window.cambiarEmpresaActiva = async (empresaId) => {
+    const emp = empresasDisponibles.find(e => e.id === empresaId);
+    if (!emp) return;
+    if (emp.estado === 'Inactivo' && !confirm('Esta empresa está inactiva. ¿Deseas entrar de todas formas?')) return;
+    
+    window.showLoading();
+    appId = emp.appId;
+    currentEmpresaId = empresaId;
+    currentEmpresaConfig = emp;
+    localStorage.setItem('sgc_appId', appId);
+    localStorage.setItem('sgc_empresaId', empresaId);
+    
+    // Actualizar badge de empresa en sidebar
+    if ($('empresa-badge-nombre')) $('empresa-badge-nombre').innerText = emp.nombre;
+    window.setTxt('curr-ger', '🌐 Super Admin · ' + emp.nombre);
+    window.renderSelectorEmpresas();
+    
+    // Recargar datos con el nuevo appId
+    try { await window.cargarDatosCentrales(); } catch(e) {}
+    window.hideLoading();
+    alert(`✓ Ahora estás viendo la empresa: ${emp.nombre}`);
+    window.cambiarVista('sec-all', $('nav-all'));
+};
+
+// Abrir modal de nueva empresa
+window.abrirModalEmpresa = (empresaId = null) => {
+    const modal = $('modal-empresa');
+    if (!modal) return;
+    if (empresaId) {
+        const emp = empresasDisponibles.find(e => e.id === empresaId);
+        if (!emp) return;
+        window.setVal('emp-nombre', emp.nombre || '');
+        window.setVal('emp-razon', emp.razonSocial || '');
+        window.setVal('emp-ruc', emp.ruc || '');
+        window.setVal('emp-estado', emp.estado || 'Activo');
+        window.setVal('emp-logo-url', emp.logoUrl || '');
+        if ($('btn-save-empresa')) $('btn-save-empresa').setAttribute('data-edit-id', empresaId);
+    } else {
+        ['emp-nombre','emp-razon','emp-ruc','emp-logo-url'].forEach(id => window.setVal(id, ''));
+        window.setVal('emp-estado', 'Activo');
+        if ($('btn-save-empresa')) $('btn-save-empresa').removeAttribute('data-edit-id');
+    }
+    modal.style.display = 'flex';
+};
+
+window.editarEmpresa = (id) => window.abrirModalEmpresa(id);
+window.cerrarModalEmpresa = () => { if($('modal-empresa')) $('modal-empresa').style.display = 'none'; };
+
+// Guardar empresa (nueva o editada)
+window.guardarEmpresa = async () => {
+    const nombre = getValSafe('emp-nombre').trim();
+    const razonSocial = getValSafe('emp-razon').trim();
+    const ruc = getValSafe('emp-ruc').trim();
+    const estado = getValSafe('emp-estado') || 'Activo';
+    const logoUrl = getValSafe('emp-logo-url').trim();
+    const editId = $('btn-save-empresa') ? $('btn-save-empresa').getAttribute('data-edit-id') : null;
+    
+    if (!nombre || !ruc) return alert('Nombre y RUC son obligatorios.');
+    window.showLoading();
+    
+    try {
+        if (editId) {
+            // Editar empresa existente
+            await setDoc(doc(db, 'plataforma', 'empresas', editId), { nombre, razonSocial, ruc, estado, logoUrl }, { merge: true });
+            alert(`✓ Empresa "${nombre}" actualizada.`);
+        } else {
+            // Crear nueva empresa
+            const slug = nombre.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').substring(0, 20);
+            const newAppId = `sgc-${slug}-${Date.now()}`;
+            const newEmpRef = await addDoc(collection(db, 'plataforma', 'empresas'), {
+                nombre, razonSocial, ruc, estado, logoUrl,
+                appId: newAppId, esEmpresaPrincipal: false,
+                fechaCreacion: new Date().toISOString(), configuraciones: {}
+            });
+            // Crear estructura inicial en Firestore para la nueva empresa
+            await setDoc(doc(db, 'artifacts', newAppId, 'public', 'data', 'Configuracion', 'Estructura'), {
+                gerencias: [], departamentos: [], cargos: []
+            });
+            await setDoc(doc(db, 'artifacts', newAppId, 'public', 'data', 'Configuracion', 'SLA'), { alta: 3, media: 7, baja: 15 });
+            await setDoc(doc(db, 'artifacts', newAppId, 'public', 'data', 'Contadores', 'solicitudes'), { count: 0 });
+            alert(`✓ Empresa "${nombre}" creada con ID: ${newEmpRef.id}`);
+        }
+        window.cerrarModalEmpresa();
+        window.cargarTodasEmpresas();
+    } catch(e) {
+        console.error('[guardarEmpresa]', e);
+        alert('Error al guardar la empresa.');
+    }
+    window.hideLoading();
+};
+
+// Activar / Desactivar empresa
+window.toggleEstadoEmpresa = async (empresaId, estadoActual) => {
+    const nuevoEstado = estadoActual === 'Activo' ? 'Inactivo' : 'Activo';
+    if (!confirm(`¿${nuevoEstado === 'Inactivo' ? 'Desactivar' : 'Activar'} esta empresa?`)) return;
+    window.showLoading();
+    try {
+        await setDoc(doc(db, 'plataforma', 'empresas', empresaId), { estado: nuevoEstado }, { merge: true });
+        window.cargarTodasEmpresas();
+    } catch(e) { alert('Error al cambiar estado.'); }
+    window.hideLoading();
+};
+
+// Agregar usuario a empresa nueva (también crea índice global)
+// NOTA: window.guardarUsuario ya existe, este parche actualiza el índice al guardar
+const _guardarUsuarioOriginal = window.guardarUsuario;
+window.guardarUsuario = async () => {
+    await _guardarUsuarioOriginal();
+    // Actualizar índice global después de guardar
+    try {
+        const u = getValSafe('u-usr').toLowerCase().trim();
+        if (u) {
+            await setDoc(doc(db, 'plataforma', 'usuariosIndex', u), {
+                empresaAppId: appId,
+                empresaId: currentEmpresaId,
+                usuario: u,
+                isSuperAdmin: false
+            });
+        }
+    } catch(e) { console.warn('[guardarUsuario] No se actualizó el índice:', e); }
+};
+
+const _eliminarUsuarioOriginal = window.eliminarUsuario;
+window.eliminarUsuario = async (uid) => {
+    await _eliminarUsuarioOriginal(uid);
+    // Limpiar índice global
+    try { await deleteDoc(doc(db, 'plataforma', 'usuariosIndex', uid)); } catch(e) {}
 };

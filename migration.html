@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGS — Migración Multiempresa</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f1f5f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: #1e293b; border-radius: 16px; padding: 40px; max-width: 720px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    h1 { font-size: 22px; font-weight: 800; color: #60a5fa; margin-bottom: 6px; }
+    .subtitle { color: #94a3b8; font-size: 13px; margin-bottom: 30px; }
+    .warning { background: #431407; border: 1px solid #ea580c; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; font-size: 13px; color: #fed7aa; }
+    .warning strong { color: #fb923c; }
+    .step { background: #0f172a; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; border: 1px solid #1e293b; display: flex; align-items: center; gap: 14px; }
+    .step-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .step-icon.pending { background: #334155; color: #94a3b8; }
+    .step-icon.running { background: #1d4ed8; color: white; animation: pulse 1s infinite; }
+    .step-icon.done { background: #166534; color: #86efac; }
+    .step-icon.error { background: #991b1b; color: #fca5a5; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .step-text h3 { font-size: 13px; font-weight: 700; color: #e2e8f0; }
+    .step-text p { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .log { background: #0f172a; border-radius: 10px; padding: 14px 18px; margin-top: 20px; font-family: monospace; font-size: 11px; color: #94a3b8; max-height: 250px; overflow-y: auto; border: 1px solid #1e293b; }
+    .log .info { color: #60a5fa; } .log .ok { color: #4ade80; } .log .warn { color: #fbbf24; } .log .err { color: #f87171; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-right: 10px; }
+    .btn-primary { background: #2563eb; color: white; } .btn-primary:hover { background: #1d4ed8; }
+    .btn-success { background: #16a34a; color: white; } .btn-success:hover { background: #15803d; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .actions { margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .badge-ok { background: #166534; color: #86efac; }
+    .badge-warn { background: #92400e; color: #fde68a; }
+    .badge-pending { background: #1e3a5f; color: #93c5fd; }
+    .result-box { background: #0f172a; border-radius: 10px; padding: 18px; margin-top: 16px; border: 1px solid #334155; display: none; }
+    .result-box h3 { color: #4ade80; font-size: 14px; margin-bottom: 12px; }
+    .result-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
+    .result-item:last-child { border: none; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>🏢 Migración Multiempresa — SGS</h1>
+    <p class="subtitle">Este proceso crea la estructura multiempresa en Firestore. Los datos de FCI Logistic no serán modificados.</p>
+    
+    <div class="warning">
+        <strong>⚠️ Ejecutar solo una vez.</strong> Este script crea la colección <code>plataforma/</code> en Firestore. 
+        No modifica, elimina ni duplica ningún dato existente en <code>artifacts/sgc-final-v6/</code>.
+    </div>
+
+    <div id="steps">
+        <div class="step" id="step-1">
+            <div class="step-icon pending" id="icon-1">1</div>
+            <div class="step-text">
+                <h3>Verificar conexión a Firebase</h3>
+                <p>Confirmar acceso a Firestore y colecciones existentes</p>
+            </div>
+            <span class="badge badge-pending" id="badge-1">Pendiente</span>
+        </div>
+        <div class="step" id="step-2">
+            <div class="step-icon pending" id="icon-2">2</div>
+            <div class="step-text">
+                <h3>Registrar FCI Logistic como Empresa 1</h3>
+                <p>Crear plataforma/empresas/1 con datos de FCI Logistic</p>
+            </div>
+            <span class="badge badge-pending" id="badge-2">Pendiente</span>
+        </div>
+        <div class="step" id="step-3">
+            <div class="step-icon pending" id="icon-3">3</div>
+            <div class="step-text">
+                <h3>Crear Super Administrador</h3>
+                <p>Crear plataforma/superAdmins/SysAdm2006</p>
+            </div>
+            <span class="badge badge-pending" id="badge-3">Pendiente</span>
+        </div>
+        <div class="step" id="step-4">
+            <div class="step-icon pending" id="icon-4">4</div>
+            <div class="step-text">
+                <h3>Indexar usuarios de Empresa 1</h3>
+                <p>Crear entradas en plataforma/usuariosIndex/ para cada usuario existente</p>
+            </div>
+            <span class="badge badge-pending" id="badge-4">Pendiente</span>
+        </div>
+    </div>
+
+    <div id="result-box" class="result-box">
+        <h3>✅ Migración completada exitosamente</h3>
+        <div id="result-items"></div>
+    </div>
+
+    <div class="log" id="log"><span class="info">Sistema listo. Presiona "Ejecutar Migración" para comenzar.</span></div>
+
+    <div class="actions">
+        <button class="btn btn-primary" id="btn-dry" onclick="runDryRun()">🔍 Vista Previa (Sin escribir)</button>
+        <button class="btn btn-success" id="btn-run" onclick="runMigration()" disabled>▶ Ejecutar Migración</button>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, setDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+const firebaseConfig = { 
+    apiKey: "AIzaSy" + "DdzCia" + "chuhbE" + "9jATz-" + "TesPI2" + "vUVIJr" + "HjM", 
+    authDomain: "sistemadegestion-7400d.firebaseapp.com", 
+    projectId: "sistemadegestion-7400d", 
+    storageBucket: "sistemadegestion-7400d.firebasestorage.app", 
+    messagingSenderId: "709030" + "283072", 
+    appId: "1:7090302" + "83072:web:599" + "7837b36a" + "448e9515ca5" 
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+const SGC_APP_ID = 'sgc-final-v6';
+
+const EMPRESA_1 = {
+    id: '1',
+    nombre: 'FCI Logistic',
+    razonSocial: 'FCI Logistic S.A.',
+    ruc: '40371-0093-279247 DV. 14',
+    appId: 'sgc-final-v6',
+    estado: 'Activo',
+    esEmpresaPrincipal: true,
+    fechaCreacion: new Date().toISOString(),
+    logoUrl: '',
+    configuraciones: {}
+};
+
+const SUPER_ADMIN = {
+    nombre: 'Super Administrador',
+    usuario: 'sysadm2006',
+    pass: '1130',
+    email: '',
+    isSuperAdmin: true,
+    fechaCreacion: new Date().toISOString()
+};
+
+let existingUsers = [];
+let dryRunDone = false;
+
+function log(msg, type = 'info') {
+    const el = document.getElementById('log');
+    el.innerHTML += `<br><span class="${type}">[${new Date().toLocaleTimeString()}] ${msg}</span>`;
+    el.scrollTop = el.scrollHeight;
+}
+
+function setStep(n, status) {
+    const icon = document.getElementById(`icon-${n}`);
+    const badge = document.getElementById(`badge-${n}`);
+    icon.className = `step-icon ${status}`;
+    if (status === 'running') { icon.textContent = '⟳'; badge.textContent = 'En proceso...'; badge.className = 'badge badge-warn'; }
+    else if (status === 'done') { icon.textContent = '✓'; badge.textContent = 'Completado'; badge.className = 'badge badge-ok'; }
+    else if (status === 'error') { icon.textContent = '✗'; badge.textContent = 'Error'; badge.className = 'badge badge-warn'; }
+}
+
+window.runDryRun = async () => {
+    document.getElementById('btn-dry').disabled = true;
+    log('Iniciando vista previa (DRY RUN — no se escribirá nada)...', 'info');
+    
+    setStep(1, 'running');
+    try {
+        // Verificar empresa 1 existente
+        const emp1Snap = await getDoc(doc(db, 'plataforma', 'empresas', '1'));
+        if (emp1Snap.exists()) {
+            log('⚠️ Ya existe el documento plataforma/empresas/1. Se sobreescribirá con setDoc (merge).', 'warn');
+        } else {
+            log('✓ plataforma/empresas/1 no existe aún — se creará.', 'ok');
+        }
+        
+        const saSnap = await getDoc(doc(db, 'plataforma', 'superAdmins', 'sysadm2006'));
+        if (saSnap.exists()) {
+            log('⚠️ Ya existe SuperAdmin sysadm2006. Se sobreescribirá.', 'warn');
+        } else {
+            log('✓ SuperAdmin sysadm2006 no existe — se creará.', 'ok');
+        }
+        
+        setStep(1, 'done');
+    } catch(e) {
+        log('✗ Error verificando Firebase: ' + e.message, 'err');
+        setStep(1, 'error');
+        document.getElementById('btn-dry').disabled = false;
+        return;
+    }
+    
+    setStep(2, 'running');
+    log('SE CREARÁ: plataforma/empresas/1 → ' + JSON.stringify({nombre: EMPRESA_1.nombre, ruc: EMPRESA_1.ruc, appId: EMPRESA_1.appId}), 'info');
+    setStep(2, 'done');
+    
+    setStep(3, 'running');
+    log('SE CREARÁ: plataforma/superAdmins/sysadm2006 → Super Administrador', 'info');
+    setStep(3, 'done');
+    
+    setStep(4, 'running');
+    try {
+        const usSnap = await getDocs(collection(db, 'artifacts', SGC_APP_ID, 'public', 'data', 'Usuarios'));
+        existingUsers = [];
+        usSnap.forEach(d => existingUsers.push({ id: d.id, ...d.data() }));
+        log(`Encontrados ${existingUsers.length} usuarios en Empresa 1:`, 'ok');
+        existingUsers.forEach(u => log(`  → SE INDEXARÁ: plataforma/usuariosIndex/${u.usuario || u.id}`, 'info'));
+        setStep(4, 'done');
+    } catch(e) {
+        log('✗ Error leyendo usuarios: ' + e.message, 'err');
+        setStep(4, 'error');
+        document.getElementById('btn-dry').disabled = false;
+        return;
+    }
+    
+    dryRunDone = true;
+    log(`\n✅ DRY RUN completado. Se crearán ${3 + existingUsers.length} documentos en la colección plataforma/.`, 'ok');
+    log('NO se modificará ningún dato en artifacts/sgc-final-v6/', 'ok');
+    document.getElementById('btn-run').disabled = false;
+    document.getElementById('btn-dry').disabled = false;
+};
+
+window.runMigration = async () => {
+    if (!dryRunDone) { alert('Primero ejecuta la Vista Previa.'); return; }
+    if (!confirm('¿Confirmas ejecutar la migración? Se crearán los documentos en plataforma/.')) return;
+    
+    document.getElementById('btn-run').disabled = true;
+    document.getElementById('btn-dry').disabled = true;
+    log('\n--- INICIANDO MIGRACIÓN REAL ---', 'warn');
+    let created = 0;
+    
+    // PASO 1: Empresa 1
+    setStep(1, 'running');
+    try {
+        await setDoc(doc(db, 'plataforma', 'empresas', '1'), EMPRESA_1);
+        log('✓ Creado: plataforma/empresas/1 (FCI Logistic)', 'ok');
+        created++;
+        setStep(1, 'done');
+    } catch(e) {
+        log('✗ Error creando empresa 1: ' + e.message, 'err');
+        setStep(1, 'error');
+        document.getElementById('btn-run').disabled = false;
+        return;
+    }
+    
+    // PASO 2: Super Admin
+    setStep(2, 'running');
+    try {
+        await setDoc(doc(db, 'plataforma', 'superAdmins', 'sysadm2006'), SUPER_ADMIN);
+        log('✓ Creado: plataforma/superAdmins/sysadm2006', 'ok');
+        created++;
+        setStep(2, 'done');
+    } catch(e) {
+        log('✗ Error creando SuperAdmin: ' + e.message, 'err');
+        setStep(2, 'error');
+        document.getElementById('btn-run').disabled = false;
+        return;
+    }
+    
+    // PASO 3: Indexar usuarios
+    setStep(3, 'running');
+    try {
+        for (const u of existingUsers) {
+            const uid = u.usuario || u.id;
+            await setDoc(doc(db, 'plataforma', 'usuariosIndex', uid), {
+                empresaAppId: SGC_APP_ID,
+                empresaId: '1',
+                usuario: uid,
+                isSuperAdmin: false
+            });
+            log(`✓ Indexado: ${uid} → Empresa 1 (sgc-final-v6)`, 'ok');
+            created++;
+        }
+        setStep(3, 'done');
+    } catch(e) {
+        log('✗ Error indexando usuarios: ' + e.message, 'err');
+        setStep(3, 'error');
+        document.getElementById('btn-run').disabled = false;
+        return;
+    }
+
+    // PASO 4: Indexar SuperAdmin también
+    setStep(4, 'running');
+    try {
+        await setDoc(doc(db, 'plataforma', 'usuariosIndex', 'sysadm2006'), {
+            empresaAppId: SGC_APP_ID,
+            empresaId: '1',
+            usuario: 'sysadm2006',
+            isSuperAdmin: true
+        });
+        log('✓ Indexado SuperAdmin: sysadm2006', 'ok');
+        created++;
+        setStep(4, 'done');
+    } catch(e) {
+        log('✗ Error indexando SuperAdmin: ' + e.message, 'err');
+        setStep(4, 'error');
+    }
+    
+    // Resultado
+    log(`\n🎉 MIGRACIÓN COMPLETADA. Documentos creados: ${created}`, 'ok');
+    log('Los datos en artifacts/sgc-final-v6/ no fueron modificados.', 'ok');
+    
+    const rb = document.getElementById('result-box');
+    rb.style.display = 'block';
+    document.getElementById('result-items').innerHTML = `
+        <div class="result-item"><span>Empresa registrada</span><span style="color:#4ade80">FCI Logistic (ID: 1)</span></div>
+        <div class="result-item"><span>Super Admin creado</span><span style="color:#4ade80">sysadm2006</span></div>
+        <div class="result-item"><span>Usuarios indexados</span><span style="color:#4ade80">${existingUsers.length} usuarios de Empresa 1</span></div>
+        <div class="result-item"><span>Colección plataforma/</span><span style="color:#4ade80">Creada exitosamente</span></div>
+        <div class="result-item"><span>Datos existentes</span><span style="color:#4ade80">Sin modificaciones ✓</span></div>
+    `;
+    
+    log('\n✅ Próximo paso: Actualiza app.js e index.html con los cambios del sistema multiempresa.', 'info');
+};
+</script>
+</body>
+</html>
