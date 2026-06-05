@@ -20,7 +20,7 @@ let isSuperAdmin = false;
 let currentEmpresaConfig = null;
 let empresasDisponibles = [];
 
-const EMAIL_SERVICE_ID = "service" + "_vus" + "xptj", 
+const EMAIL_SERVICE_ID = "service" + "_vum" + "xptj", 
   EMAIL_TEMPLATE_ID = "template" + "_z27" + "y5yk", 
   EMAIL_PUBLIC_KEY = "kWsovO" + "fdi7dB" + "qLMw2", 
   EMAIL_ADMIN_SGC = "sistemadegestion@fcipty.com"; 
@@ -74,6 +74,28 @@ window.toggleDarkMode = () => {
     const icon = $('dark-mode-icon'); const text = $('dark-mode-text');
     if (icon && text) { icon.innerText = isDark ? 'light_mode' : 'dark_mode'; text.innerText = isDark ? 'Claro' : 'Descanso'; }
 };
+
+// ── SIDEBAR COLAPSABLE ──
+window.toggleNavGroup = (bodyId) => {
+    const body = $(bodyId);
+    const btn = $(bodyId + '-btn');
+    if (!body) return;
+    const collapsed = body.classList.toggle('collapsed');
+    if (btn) btn.classList.toggle('open', !collapsed);
+};
+
+// Abrir un grupo automáticamente cuando se activa un nav-link dentro de él
+window._expandGroupOf = (navId) => {
+    const btn = $(navId);
+    if (!btn) return;
+    const groupBody = btn.closest('.nav-group-body');
+    if (groupBody && groupBody.classList.contains('collapsed')) {
+        groupBody.classList.remove('collapsed');
+        const headerBtn = groupBody.closest('.nav-group')?.querySelector('.nav-group-header');
+        if (headerBtn) headerBtn.classList.add('open');
+    }
+};
+
 
 window.abrirDocumento = async (url, nombreOriginal) => {
   if (!url || url === "#") return;
