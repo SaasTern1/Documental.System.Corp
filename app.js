@@ -80,19 +80,34 @@ window.toggleNavGroup = (bodyId) => {
     const body = $(bodyId);
     const btn = $(bodyId + '-btn');
     if (!body) return;
-    const collapsed = body.classList.toggle('collapsed');
-    if (btn) btn.classList.toggle('open', !collapsed);
+
+    // Si el body tenía display:none (legado), limpiarlo primero
+    if (body.style.display === 'none') body.style.display = '';
+
+    const isCollapsed = body.classList.contains('collapsed');
+    if (isCollapsed) {
+        // EXPANDIR
+        body.classList.remove('collapsed');
+        if (btn) btn.classList.add('open');
+    } else {
+        // COLAPSAR
+        body.classList.add('collapsed');
+        if (btn) btn.classList.remove('open');
+    }
 };
 
 // Abrir un grupo automáticamente cuando se activa un nav-link dentro de él
 window._expandGroupOf = (navId) => {
-    const btn = $(navId);
-    if (!btn) return;
-    const groupBody = btn.closest('.nav-group-body');
-    if (groupBody && groupBody.classList.contains('collapsed')) {
-        groupBody.classList.remove('collapsed');
-        const headerBtn = groupBody.closest('.nav-group')?.querySelector('.nav-group-header');
-        if (headerBtn) headerBtn.classList.add('open');
+    const el = $(navId);
+    if (!el) return;
+    const groupBody = el.closest('.nav-group-body');
+    if (groupBody) {
+        if (groupBody.style.display === 'none') groupBody.style.display = '';
+        if (groupBody.classList.contains('collapsed')) {
+            groupBody.classList.remove('collapsed');
+            const headerBtn = groupBody.closest('.nav-group')?.querySelector('.nav-group-header');
+            if (headerBtn) headerBtn.classList.add('open');
+        }
     }
 };
 
