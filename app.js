@@ -1020,6 +1020,60 @@ window.exportarExcelUsuarios = () => {
   if(allUsers.length === 0) return; let dE = allUsers.map(u => ({ "Nombre": u.nombre, "Usuario ID": u.usuario, "Email": u.email || '', "Rol": u.role || '', "Gerencias": u.gerencias ? u.gerencias.join(', ') : (u.gerencia || ''), "Admin": u.permisos.admin ? 'Sí' : 'No', "Gestor SGC": u.permisos.p_gest_sgc ? 'Sí' : 'No', "Auditor": u.permisos.p_audit_auditor ? 'Sí' : 'No' })); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dE), "Usuarios_Registrados"); XLSX.writeFile(wb, "Reporte_Usuarios_SGC.xlsx");
 };
 
+// ── APERTURA / CIERRE MODAL CONFIGURACIÓN SISTEMA ──
+window.abrirConfigSistema = () => {
+  const modal = $('sec-estructura');
+  if (!modal) return;
+  // Actualizar subtítulo con la empresa activa
+  const empNombre = currentEmpresaConfig ? currentEmpresaConfig.nombre : (currentEmpresaId === '1' ? 'FCI Logistic' : 'Empresa ' + currentEmpresaId);
+  if ($('config-empresa-subtitle')) {
+    $('config-empresa-subtitle').innerHTML = `Configuraci&#243;n de <strong style="color:var(--primary)">${empNombre}</strong> — Gerencias, departamentos, tipos de documento y SLA`;
+  }
+  // Cargar datos del appId activo
+  window.cargarDatosEstructura();
+  window.setDisplay('sec-estructura', 'flex');
+};
+
+window.cerrarConfigSistema = () => {
+  window.setDisplay('sec-estructura', 'none');
+};
+
+// Recargar la estructura desde Firestore usando el appId activo
+window.cargarDatosEstructura = async () => {
+  try {
+    const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'Configuracion', 'Estructura'));
+    if (snap.exists()) {
+      const d = snap.data();
+      const gers = d.gerencias || [];
+      const deps = d.departamentos || [];
+      // Render gerencias
+      let hGer = '';
+      gers.forEach((g, idx) => { hGer += `<div class="settings-item"><span>${g}</span><button type="button" class="btn-icon-danger" onclick="window.eliminarGerencia(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; });
+      if ($('list-ger')) $('list-ger').innerHTML = hGer || '<p style="color:#94a3b8;font-size:12px;padding:8px;">Sin gerencias registradas.</p>';
+      // Render departamentos
+      let hDep = '';
+      deps.forEach((d, idx) => { hDep += `<div class="settings-item"><span>${d.nombre} <small style="color:#94a3b8">(${d.gerencia})</small></span><button type="button" class="btn-icon-danger" onclick="window.eliminarDepartamento(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button></div>`; });
+      if ($('list-dep')) $('list-dep').innerHTML = hDep || '<p style="color:#94a3b8;font-size:12px;padding:8px;">Sin departamentos registrados.</p>';
+      // Actualizar selector de gerencias para departamentos
+      if ($('d-ger-sel')) {
+        $('d-ger-sel').innerHTML = '<option value="">-- Seleccione Gerencia --</option>' + gers.map(g => `<option value="${g}">${g}</option>`).join('');
+      }
+      // Config Drive
+      if ($('sys-drive-url') && d.driveUrl) $('sys-drive-url').value = d.driveUrl;
+    }
+    // SLA
+    const slaSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'Configuracion', 'SLA'));
+    if (slaSnap.exists()) {
+      const s = slaSnap.data();
+      if ($('sla-alta')) $('sla-alta').value = s.alta || 3;
+      if ($('sla-media')) $('sla-media').value = s.media || 7;
+      if ($('sla-baja')) $('sla-baja').value = s.baja || 15;
+    }
+  } catch(e) { console.error('[cargarDatosEstructura]', e); }
+};
+
+
+
 window.guardarConfigDrive = async () => {
     let val = document.getElementById('sys-drive-url').value.trim();
     window.showLoading();

@@ -145,10 +145,13 @@
                         <span class="material-icons-round" style="font-size:18px; margin-right:0;">expand_more</span>
                     </button>
                     <div id="nav-admin-sub" style="display:none; background:rgba(0,0,0,0.1); border-radius:8px; margin: 0 10px 10px 10px; padding:5px 0;">
-                        <button class="nav-link" onclick="window.setDisplay('sec-usuarios', 'flex')" style="padding-left:35px; font-size:12px; height:auto; padding-top:8px; padding-bottom:8px;">
+                        <button class="nav-link" id="nav-users" onclick="window.setDisplay('sec-usuarios', 'flex')" style="padding-left:35px; font-size:12px; height:auto; padding-top:8px; padding-bottom:8px;">
                             <span class="material-icons-round" style="font-size:16px;">people</span> Usuarios y Permisos
                         </button>
-                        </div><!-- nav-admin-sub -->
+                        <button class="nav-link" id="nav-struct" onclick="window.abrirConfigSistema()" style="padding-left:35px; font-size:12px; height:auto; padding-top:8px; padding-bottom:8px;">
+                            <span class="material-icons-round" style="font-size:16px;">account_tree</span> Config. Sistema
+                        </button>
+                    </div><!-- nav-admin-sub -->
                     </div><!-- nav-accordion -->
                 </div><!-- nav-admin-group -->
         </nav>
@@ -615,21 +618,22 @@
             </div>
         </div></div>
 
+
         <!-- MODAL CONFIGURACION SISTEMA -->
         <div id="sec-estructura" class="modal-overlay" style="display:none; z-index:2000;">
             <div class="modal-content" style="max-width:1200px; max-height: 90vh; overflow-y: auto; position:relative; display:block; padding:30px; height:auto;">
-                <button type="button" class="btn-icon-danger" onclick="window.setDisplay('sec-estructura', 'none')" style="position:absolute; top:15px; right:15px; z-index:10;"><span class="material-icons-round">close</span></button>
+                <button type="button" class="btn-icon-danger" onclick="window.cerrarConfigSistema()" style="position:absolute; top:15px; right:15px; z-index:10;"><span class="material-icons-round">close</span></button>
             <div class="section-header">
                 <div class="section-header-info">
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #475569, #64748b);"><span class="material-icons-round">account_tree</span></div>
-                    <div><h1>Configuración Estructural</h1><p>Gerencias, departamentos, tipos de documento y configuración dinámica del sistema</p></div>
+                    <div><h1>Configuraci&#243;n Estructural</h1><p id="config-empresa-subtitle">Gerencias, departamentos, tipos de documento y configuraci&#243;n din&#225;mica del sistema</p></div>
                 </div>
             </div>
             <div class="resp-grid">
-                <div class="card" style="border-top: 4px solid var(--accent);"><h3>Gerencias</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input aria-label="g-nom" type="text" id="g-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarGerencia()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-ger" class="settings-list"></div></div>
-                <div class="card" style="border-top: 4px solid var(--info);"><h3>Departamentos</h3><div style="display:flex; gap:0; margin-bottom:15px;"><select aria-label="d-ger-sel" id="d-ger-sel" style="margin:0; width:40%; border-radius: 10px 0 0 10px;"></select><input aria-label="d-nom" type="text" id="d-nom" style="margin:0; border-radius: 0; width:60%;"><button class="btn btn-success" onclick="window.agregarDepartamento()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-dep" class="settings-list"></div></div>
+                <div class="card" style="border-top: 4px solid var(--accent);"><h3>Gerencias</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input aria-label="g-nom" type="text" id="g-nom" placeholder="Ej: Gerencia de Log&#237;stica" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarGerencia()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-ger" class="settings-list"></div></div>
+                <div class="card" style="border-top: 4px solid var(--info);"><h3>Departamentos</h3><div style="display:flex; gap:0; margin-bottom:15px;"><select aria-label="d-ger-sel" id="d-ger-sel" style="margin:0; width:40%; border-radius: 10px 0 0 10px;"></select><input aria-label="d-nom" type="text" id="d-nom" placeholder="Nombre departamento" style="margin:0; border-radius: 0; width:60%;"><button class="btn btn-success" onclick="window.agregarDepartamento()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-dep" class="settings-list"></div></div>
             </div>
-            <h3 style="margin:35px 0 20px; color:var(--primary); border-bottom:2px solid var(--border); padding-bottom:10px; font-size:20px;">Configuración Dinámica de Documentos</h3>
+            <h3 style="margin:35px 0 20px; color:var(--primary); border-bottom:2px solid var(--border); padding-bottom:10px; font-size:20px;">Configuraci&#243;n Din&#225;mica de Documentos</h3>
             <div class="resp-grid">
                 <div class="card" style="border-top: 4px solid var(--success);"><h3>Tipos de Documento</h3><div style="display:flex; gap:0; margin-bottom:15px;"><input aria-label="doc-tipo-nom" type="text" id="doc-tipo-nom" style="margin:0; border-radius: 10px 0 0 10px;"><button class="btn btn-success" onclick="window.agregarTipoDoc()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-tipos-doc" class="settings-list"></div></div>
                 <div class="card" style="border-top: 4px solid #8b5cf6;"><h3>Columnas Listado Maestro</h3><div style="display:flex; gap:0; margin-bottom:15px; flex-wrap:wrap;"><input aria-label="col-nom" type="text" id="col-nom" style="margin:0; border-radius: 10px 0 0 10px; flex:1;"><select aria-label="col-tipo" id="col-tipo" style="margin:0; width:110px; border-radius:0;"><option value="text">Texto</option><option value="date">Fecha</option><option value="number">Número</option><option value="url">Enlace</option></select><button class="btn btn-success" onclick="window.agregarColumna()" style="border-radius: 0 10px 10px 0; padding:12px 15px;"><span class="material-icons-round">add</span></button></div><div id="list-columnas" class="settings-list"></div></div>
