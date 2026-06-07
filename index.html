@@ -169,6 +169,81 @@
                 </div>
             </div>
 
+            <!-- ── SEGURIDAD FÍSICA (colapsable, oculto hasta permisos) ── -->
+            <div class="nav-group" id="nav-segfisica-group" style="display:none;">
+                <button class="nav-group-header" onclick="window.toggleNavGroup('ng-segfisica')" id="ng-segfisica-btn">
+                    <div style="display:flex;align-items:center;gap:7px;">
+                        <span class="material-icons-round" style="font-size:15px;color:#facc15;">security</span>
+                        <span>Seguridad F&#237;sica</span>
+                    </div>
+                    <span class="material-icons-round ng-arrow" style="font-size:16px;transition:0.2s;">expand_more</span>
+                </button>
+                <div class="nav-group-body" id="ng-segfisica">
+                    <button class="nav-link nav-sub" id="nav-visitantes" onclick="window.cambiarVista('sec-visitantes', this)"><span class="material-icons-round">badge</span> Visitantes y Contratistas</button>
+                    <button class="nav-link nav-sub" id="nav-mantenimiento" onclick="window.cambiarVista('sec-mantenimiento', this)"><span class="material-icons-round">build</span> Mantenimiento CCTV</button>
+                    <button class="nav-link nav-sub" id="nav-rondas" onclick="window.cambiarVista('sec-rondas', this)"><span class="material-icons-round">directions_walk</span> Rondas de Seguridad</button>
+                </div>
+            </div>
+
+            <!-- ── CADENA DE SUMINISTRO (colapsable, oculto hasta permisos) ── -->
+            <div class="nav-group" id="nav-logistica-group" style="display:none;">
+                <button class="nav-group-header" onclick="window.toggleNavGroup('ng-logistica')" id="ng-logistica-btn">
+                    <div style="display:flex;align-items:center;gap:7px;">
+                        <span class="material-icons-round" style="font-size:15px;color:#60a5fa;">local_shipping</span>
+                        <span>Cadena de Suministro</span>
+                    </div>
+                    <span class="material-icons-round ng-arrow" style="font-size:16px;transition:0.2s;">expand_more</span>
+                </button>
+                <div class="nav-group-body" id="ng-logistica">
+                    <button class="nav-link nav-sub" id="nav-contenedores" onclick="window.cambiarVista('sec-contenedores', this)"><span class="material-icons-round">inventory_2</span> Inspecci&#243;n Contenedores</button>
+                    <button class="nav-link nav-sub" id="nav-sellos" onclick="window.cambiarVista('sec-sellos', this)"><span class="material-icons-round">lock</span> Trazabilidad de Sellos</button>
+                </div>
+            </div>
+
+            <!-- ── HSEQ (colapsable, oculto hasta permisos) ── -->
+            <div class="nav-group" id="nav-hseq-group" style="display:none;">
+                <button class="nav-group-header" onclick="window.toggleNavGroup('ng-hseq')" id="ng-hseq-btn">
+                    <div style="display:flex;align-items:center;gap:7px;">
+                        <span class="material-icons-round" style="font-size:15px;color:#34d399;">eco</span>
+                        <span>HSEQ</span>
+                    </div>
+                    <span class="material-icons-round ng-arrow" style="font-size:16px;transition:0.2s;">expand_more</span>
+                </button>
+                <div class="nav-group-body" id="ng-hseq">
+                    <button class="nav-link nav-sub" id="nav-incidentes" onclick="window.cambiarVista('sec-incidentes', this)"><span class="material-icons-round">report_problem</span> Gesti&#243;n de Incidentes</button>
+                    <button class="nav-link nav-sub" id="nav-ambiental" onclick="window.cambiarVista('sec-ambiental', this)"><span class="material-icons-round">recycling</span> Gesti&#243;n Ambiental</button>
+                    <button class="nav-link nav-sub" id="nav-simulacros" onclick="window.cambiarVista('sec-simulacros', this)"><span class="material-icons-round">health_and_safety</span> Simulacros y BCP</button>
+                </div>
+            </div>
+
+            <!-- ── RECURSOS HUMANOS (colapsable, oculto hasta permisos) ── -->
+            <div class="nav-group" id="nav-rrhh-group" style="display:none;">
+                <button class="nav-group-header" onclick="window.toggleNavGroup('ng-rrhh')" id="ng-rrhh-btn">
+                    <div style="display:flex;align-items:center;gap:7px;">
+                        <span class="material-icons-round" style="font-size:15px;color:#a78bfa;">groups</span>
+                        <span>Recursos Humanos</span>
+                    </div>
+                    <span class="material-icons-round ng-arrow" style="font-size:16px;transition:0.2s;">expand_more</span>
+                </button>
+                <div class="nav-group-body" id="ng-rrhh">
+                    <button class="nav-link nav-sub" id="nav-rrhh-confiabilidad" onclick="window.cambiarVista('sec-rrhh-confiabilidad', this)"><span class="material-icons-round">verified_user</span> Confiabilidad y RRHH</button>
+                </div>
+            </div>
+
+            <!-- ── SEGURIDAD IT (colapsable, oculto hasta permisos) ── -->
+            <div class="nav-group" id="nav-it-group" style="display:none;">
+                <button class="nav-group-header" onclick="window.toggleNavGroup('ng-it')" id="ng-it-btn">
+                    <div style="display:flex;align-items:center;gap:7px;">
+                        <span class="material-icons-round" style="font-size:15px;color:#38bdf8;">computer</span>
+                        <span>Seguridad IT</span>
+                    </div>
+                    <span class="material-icons-round ng-arrow" style="font-size:16px;transition:0.2s;">expand_more</span>
+                </button>
+                <div class="nav-group-body" id="ng-it">
+                    <button class="nav-link nav-sub" id="nav-it-controles" onclick="window.cambiarVista('sec-it-controles', this)"><span class="material-icons-round">cloud_sync</span> Controles IT</button>
+                </div>
+            </div>
+
             <!-- ── SISTEMA / ADMIN (colapsable, oculto hasta permisos) ── -->
             <div class="nav-group" id="nav-admin-group" style="display:none;">
                 <button class="nav-group-header" onclick="window.toggleNavGroup('ng-sistema')" id="ng-sistema-btn">
@@ -465,6 +540,116 @@
                 <div class="section-header-actions"><button class="btn btn-primary" id="btn-nuevo-maestro" onclick="window.abrirModalListadoMaestro()" style="display:none;"><span class="material-icons-round" style="font-size:18px;">add</span> Nuevo Registro</button><button class="btn btn-success" onclick="window.exportarExcelListado()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar</button></div>
             </div>
             <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
+               <div class="table-responsive">
+                    <table id="tabla-forms">
+                        <thead style="background:var(--table-header);">
+                            <tr><th>Nombre del Formulario</th><th>Descripción</th><th>Campos</th><th>Fecha de Creación</th><th>Estado</th><th style="text-align:center;">Acciones</th></tr>
+                        </thead>
+                        <tbody id="tbody-forms">
+                            <tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">Cargando formularios...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="sec-crear" class="section">
+            <div class="card" style="max-width:1200px; margin: auto;">
+                <div class="section-header" style="border-bottom: none; padding-bottom: 10px;">
+                    <div class="section-header-info">
+                        <div class="section-header-icon" style="background: linear-gradient(135deg, #059669, #10b981);"><span class="material-icons-round">add_box</span></div>
+                        <div><h1>Registrar Solicitud FCI-SOL</h1><p>Crear nueva solicitud de creación, modificación o inactivación documental</p></div>
+                    </div>
+                </div>
+                <form id="form-crear-solicitud" onsubmit="event.preventDefault(); window.crearSolicitud();">
+                    <div class="resp-grid">
+                        <div><label for="sol-accion">Acción Requerida</label><select aria-label="sol-accion" id="sol-accion" onchange="window.toggleModPanel(this.value)"><option value="Creación">Creación</option><option value="Modificación">Modificación</option><option value="Inactivación">Inactivación</option></select></div>
+                        <div><label for="sol-tipo-doc">Tipo Documento</label><select aria-label="sol-tipo-doc" id="sol-tipo-doc" required></select></div>
+                        <div><label for="sol-prioridad">Prioridad de Solicitud</label><select aria-label="sol-prioridad" id="sol-prioridad"><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta (Urgente)</option></select></div>
+                    </div>
+                    <div id="panel-mod" class="resp-grid" style="display:none; background:#f8fafc; padding:20px; border-radius:12px; margin-bottom:20px; border:1px dashed var(--info);">
+                        <div><label for="sol-cod-prev">Código Actual</label><input aria-label="sol-cod-prev" type="text" id="sol-cod-prev" style="margin-bottom:0;"></div><div><label for="sol-ver-prev">Versión</label><input aria-label="sol-ver-prev" type="text" id="sol-ver-prev" style="margin-bottom:0;"></div><div><label for="sol-fecha-prev">Fecha Ult. Ver.</label><input aria-label="sol-fecha-prev" type="date" id="sol-fecha-prev" style="margin-bottom:0;"></div>
+                    </div>
+                    <label for="sol-tit">Título del Documento</label><input aria-label="sol-tit" type="text" id="sol-tit" required>
+                    <div class="resp-grid">
+                        <div><label for="sol-ger">Gerencia</label><select aria-label="sol-ger" id="sol-ger" onchange="window.actualizarGerenteSelect(this.value)" required></select></div>
+                        <div><label for="sol-dep">Departamento</label><select aria-label="sol-dep" id="sol-dep" required><option value="">-- Seleccione Gerencia Primero --</option></select></div>
+                    </div>
+                    <div class="resp-grid" style="background:#f0fdf4; padding:15px 20px; border-radius:12px; margin-bottom:20px; border:1px solid #bbf7d0;">
+                        <div><div class="custom-label" style="color:#166534; margin-bottom:2px;">Gerente(s) Responsable(s)</div><input aria-label="sol-gerente-display" type="text" id="sol-gerente-display" disabled style="background:transparent; border:none; font-weight:bold; color:#15803d; padding:0; margin:0; font-size:15px;"></div>
+                        <div><div class="custom-label" style="color:#166534; margin-bottom:2px;">Email Notificación</div><input aria-label="sol-email-gerente" type="text" id="sol-email-gerente" disabled style="background:transparent; border:none; font-weight:bold; color:#15803d; padding:0; margin:0; font-size:15px;"></div>
+                    </div>
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px;">
+                        <label for="sol-involucrado-sel">Añadir Involucrados (Revisores extras)</label>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;"><select aria-label="sol-involucrado-sel" id="sol-involucrado-sel" style="margin:0; flex:1; background:white;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn btn-info" onclick="window.addInvolucradoList()">Añadir</button></div>
+                        <div id="lista-involucrados-tags" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+                    </div>
+                    <label for="sol-motivo">Justificación / Motivo</label><textarea aria-label="sol-motivo" id="sol-motivo" rows="4" required></textarea>
+                    <div style="background: #eff6ff; padding: 20px; border-radius: 12px; border: 1px dashed var(--accent); margin-bottom: 25px;">
+                        <label for="sol-file" style="color:var(--primary)">Adjuntar Archivo Inicial (Word, PDF, Excel)</label><input aria-label="sol-file" type="file" id="sol-file" style="margin-bottom:0; background:white;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btnSendSol" style="width:100%; padding: 16px; font-size:15px;">ENVIAR A REVISIÓN</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="sec-hist" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"><span class="material-icons-round">history</span></div>
+                    <div><h1>Mis Solicitudes</h1><p>Historial completo de todas las solicitudes que ha generado</p></div>
+                </div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar por ID o Título..." type="text" id="search-hist" class="search-bar" style="margin:0;" placeholder="🔍 Buscar por ID o Título..." onkeyup="window.filtrarTabla('search-hist', 'tbody-historial')">
+                    <button class="btn btn-success" onclick="window.descargarExcelFiltrado('hist')"><span class="material-icons-round">download</span> Exportar</button>
+                </div>
+                <div class="table-responsive"><table id="tabla-mis-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-historial"></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="sec-all" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #0ea5e9, #06b6d4);"><span class="material-icons-round">all_inbox</span></div>
+                    <div><h1>Todas las Solicitudes</h1><p>Vista global de todas las solicitudes del sistema con filtros avanzados</p></div>
+                </div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-all" class="search-bar" style="margin:0;" placeholder="🔍 Buscar..." onkeyup="window.filtrarTabla('search-all', 'tbody-all')">
+                    <button class="btn btn-success" onclick="window.descargarExcelFiltrado('all')"><span class="material-icons-round">download</span> Exportar Completo</button>
+                </div>
+                <div class="table-responsive"><table id="tabla-todas-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-all"></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="sec-gest" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #d97706, #f59e0b);"><span class="material-icons-round">fact_check</span></div>
+                    <div><h1>Bandeja de Gestión</h1><p>Firmas y revisiones pendientes de su atención</p></div>
+                </div>
+            </div>
+            <div class="card" style="padding:0; border-radius: 16px; overflow:hidden; border-top: 4px solid var(--warning);">
+                <div style="background: #f8fafc; padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:250px;"><input aria-label="Buscar en tabla..." type="text" id="search-gest" class="search-bar" style="max-width:100%; margin-bottom:0;" placeholder="🔍 Buscar en tabla..." onkeyup="window.filtrarTabla('search-gest', 'tbody-gestionar')"></div>
+                </div>
+                <div class="table-responsive"><table id="tabla-gestion-solicitudes"><thead><tr><th style="width: 120px;">ID Sistema</th><th>Origen</th><th>Documento</th><th>Etapa Actual</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Gestión</th></tr></thead><tbody id="tbody-gestionar"></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="sec-listado" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #1e40af, #6366f1);"><span class="material-icons-round">library_books</span></div>
+                    <div><h1>Listado Maestro</h1><p>Registro centralizado de documentos controlados del SGC</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" id="btn-nuevo-maestro" onclick="window.abrirModalListadoMaestro()" style="display:none;"><span class="material-icons-round" style="font-size:18px;">add</span> Nuevo Registro</button><button class="btn btn-success" onclick="window.exportarExcelListado()"><span class="material-icons-round" style="font-size:18px;">download</span> Exportar</button></div>
+            </div>
+            <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
                 <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input aria-label="Buscar en el listado maestro..." type="text" id="search-maestro" class="search-bar" placeholder="🔍 Buscar en el listado maestro..." onkeyup="window.filtrarTabla('search-maestro', 'tbody-listado-maestro')" style="margin:0; max-width:400px;"></div>
                 <div class="table-responsive"><table id="tabla-listado-maestro" style="white-space:nowrap;"><thead id="thead-listado-maestro"></thead><tbody id="tbody-listado-maestro"></tbody></table></div>
             </div>
@@ -474,27 +659,30 @@
             <div class="section-header">
                 <div class="section-header-info">
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #0ea5e9, #3b82f6);"><span class="material-icons-round">menu_book</span></div>
-                    <div><h1>Manual y Norma OEA</h1><p>Documento oficial del manual de seguridad y puntos de control normativos</p></div>
+                    <div><h1>Manuales y Normas</h1><p>Repositorio de manuales normativos (OEA, BASC, ISO) y puntos de control</p></div>
                 </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalManualOEA()"><span class="material-icons-round">add</span> Nuevo Manual</button></div>
             </div>
             <div class="grid-2">
                 <div class="card" style="border-top: 4px solid var(--info);">
-                    <h3 style="color:var(--primary); margin-bottom:15px; font-size:16px;">Documento Oficial del Manual</h3>
-                    <div id="oea-manual-link" style="margin-bottom:20px; padding:20px; background:#f8fafc; border-radius:12px; border:1px solid var(--border); text-align:center;"></div>
-                    <div id="oea-manual-upload-box" style="display:none; background:#eff6ff; padding:20px; border-radius:12px; border:1px dashed var(--primary);">
-                        <label for="oea-file" style="color:var(--primary);">Subir Nueva Versión (PDF/Word)</label>
-                        <div style="display:flex; gap:10px; align-items:center;"><input aria-label="oea-file" type="file" id="oea-file" accept=".pdf,.doc,.docx" style="margin:0; flex:1; background:white;"><button class="btn btn-primary" onclick="window.subirManualOEA()">Subir Archivo</button></div>
+                    <h3 style="color:var(--primary); margin-bottom:15px; font-size:16px;">Documentos Oficiales / Manuales</h3>
+                    <div class="table-responsive" style="margin-bottom:15px;">
+                        <table id="tabla-manuales">
+                            <thead style="background:#f1f5f9;"><tr><th>Nombre del Manual</th><th>Versión/Fecha</th><th style="text-align:center;">Archivo</th><th style="text-align:center;">Acción</th></tr></thead>
+                            <tbody id="tbody-manuales"></tbody>
+                        </table>
                     </div>
                 </div>
                 <div class="card" style="border-top: 4px solid var(--warning);">
-                    <h3 style="color:var(--primary); margin-bottom:15px; font-size:16px;">Requisitos / Puntos de Control</h3>
-                    <div id="oea-req-upload-box" style="display:none; flex-direction:column; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px; border:1px solid var(--border);">
+                    <h3 style="color:var(--primary); margin-bottom:15px; font-size:16px;">Requisitos / Puntos de Control Globales</h3>
+                    <div id="oea-req-upload-box" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px; border:1px solid var(--border);">
+                        <select aria-label="Norma Asociada" id="oea-req-norma" style="margin:0;"><option value="OEA">OEA</option><option value="BASC">BASC</option><option value="ISO 9001">ISO 9001</option><option value="ISO 28000">ISO 28000</option><option value="Otra">Otra</option></select>
                         <input aria-label="Nombre del Punto (Ej: 1.1 Seguridad)" type="text" id="oea-req-input" placeholder="Nombre del Punto (Ej: 1.1 Seguridad)" style="margin:0;">
                         <textarea aria-label="Descripción detallada o guía para el auditor..." id="oea-req-desc" placeholder="Descripción detallada o guía para el auditor..." rows="3" style="margin:0;"></textarea>
-                        <input aria-label="Página del manual (Ej: 15) o enlace URL externo" type="text" id="oea-req-link" placeholder="Página del manual (Ej: 15) o enlace URL externo" style="margin:0;">
+                        <input aria-label="Referencia (Ej: Manual OEA pág 15)" type="text" id="oea-req-link" placeholder="Referencia (Ej: Manual OEA pág 15)" style="margin:0;">
                         <button class="btn btn-success" onclick="window.agregarRequisitoOEA()" style="width:100%;"><span class="material-icons-round" style="font-size:16px;">add</span> Guardar Punto de Control</button>
                     </div>
-                    <div id="oea-req-list-container" class="settings-list" style="max-height:350px;"></div>
+                    <div id="oea-req-list-container" class="settings-list" style="max-height:350px; overflow-y:auto;"></div>
                 </div>
             </div>
         </section>
@@ -709,6 +897,171 @@
                 </div>
             </div>
         </div></div>
+        <!-- SEGURIDAD FÍSICA -->
+        <section id="sec-visitantes" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #eab308, #ca8a04);"><span class="material-icons-round">badge</span></div>
+                    <div><h1>Visitantes y Contratistas</h1><p>Registro y control de accesos a las instalaciones</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalVisitante()"><span class="material-icons-round">add</span> Nuevo Registro</button></div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-visitantes" class="search-bar" style="margin:0;" placeholder="🔍 Buscar visitante..." onkeyup="window.filtrarTabla('search-visitantes', 'tbody-visitantes')">
+                </div>
+                <div class="table-responsive"><table id="tabla-visitantes"><thead><tr><th>Nombre</th><th>Empresa</th><th>Motivo</th><th>Gafete</th><th>Entrada</th><th>Salida</th><th>Estado</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-visitantes"></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="sec-mantenimiento" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><span class="material-icons-round">build</span></div>
+                    <div><h1>Mantenimiento CCTV / Alarmas</h1><p>Bitácora de mantenimientos de equipos de seguridad física</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalMantenimiento()"><span class="material-icons-round">add</span> Registrar Mantenimiento</button></div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-mantenimiento" class="search-bar" style="margin:0;" placeholder="🔍 Buscar..." onkeyup="window.filtrarTabla('search-mantenimiento', 'tbody-mantenimiento')">
+                </div>
+                <div class="table-responsive"><table id="tabla-mantenimiento"><thead><tr><th>Equipo/Sistema</th><th>Fecha</th><th>Tipo</th><th>Proveedor</th><th>Observaciones</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-mantenimiento"></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="sec-rondas" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #84cc16, #65a30d);"><span class="material-icons-round">directions_walk</span></div>
+                    <div><h1>Rondas de Seguridad</h1><p>Patrullajes y recorridos de vigilancia</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalRonda()"><span class="material-icons-round">add</span> Registrar Ronda</button></div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-rondas" class="search-bar" style="margin:0;" placeholder="🔍 Buscar ronda..." onkeyup="window.filtrarTabla('search-rondas', 'tbody-rondas')">
+                </div>
+                <div class="table-responsive"><table id="tabla-rondas"><thead><tr><th>Guardia / Responsable</th><th>Fecha y Hora</th><th>Incidencias</th><th>Observaciones</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-rondas"></tbody></table></div>
+            </div>
+        </section>
+
+        <!-- CADENA DE SUMINISTRO -->
+        <section id="sec-contenedores" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"><span class="material-icons-round">inventory_2</span></div>
+                    <div><h1>Inspección de Contenedores (17 Puntos)</h1><p>Checklist de seguridad OEA para unidades de transporte</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalContenedor()"><span class="material-icons-round">add</span> Nueva Inspección</button></div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-contenedores" class="search-bar" style="margin:0;" placeholder="🔍 Buscar contenedor..." onkeyup="window.filtrarTabla('search-contenedores', 'tbody-contenedores')">
+                </div>
+                <div class="table-responsive"><table id="tabla-contenedores"><thead><tr><th>No. Contenedor</th><th>Placa/Transporte</th><th>Transportista</th><th>Fecha</th><th>Estado</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-contenedores"></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="sec-sellos" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);"><span class="material-icons-round">lock</span></div>
+                    <div><h1>Trazabilidad de Sellos</h1><p>Control de inventario y asignación de marchamos (ISO 17712)</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalSello()"><span class="material-icons-round">add</span> Asignar Sello</button></div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-sellos" class="search-bar" style="margin:0;" placeholder="🔍 Buscar sello..." onkeyup="window.filtrarTabla('search-sellos', 'tbody-sellos')">
+                </div>
+                <div class="table-responsive"><table id="tabla-sellos"><thead><tr><th>Número de Sello</th><th>Contenedor Asignado</th><th>Fecha Asignación</th><th>Estado</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-sellos"></tbody></table></div>
+            </div>
+        </section>
+
+        <!-- HSEQ -->
+        <section id="sec-incidentes" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);"><span class="material-icons-round">report_problem</span></div>
+                    <div><h1>Gestión de Incidentes</h1><p>Reporte de brechas, accidentes o novedades y su investigación (Causa Raíz)</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalIncidente()"><span class="material-icons-round">add</span> Reportar Incidente</button></div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-incidentes" class="search-bar" style="margin:0;" placeholder="🔍 Buscar incidente..." onkeyup="window.filtrarTabla('search-incidentes', 'tbody-incidentes')">
+                </div>
+                <div class="table-responsive"><table id="tabla-incidentes"><thead><tr><th>ID / Título</th><th>Fecha</th><th>Tipo</th><th>Nivel Gravedad</th><th>Causa Raíz (CAPA)</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-incidentes"></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="sec-ambiental" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #10b981, #059669);"><span class="material-icons-round">recycling</span></div>
+                    <div><h1>Gestión Ambiental</h1><p>Control de residuos y monitoreo de consumo de recursos</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalAmbiental()"><span class="material-icons-round">add</span> Registrar Dato</button></div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-ambiental" class="search-bar" style="margin:0;" placeholder="🔍 Buscar registro..." onkeyup="window.filtrarTabla('search-ambiental', 'tbody-ambiental')">
+                </div>
+                <div class="table-responsive"><table id="tabla-ambiental"><thead><tr><th>Fecha</th><th>Tipo de Registro</th><th>Cantidad</th><th>Unidad</th><th>Observaciones</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-ambiental"></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="sec-simulacros" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #f43f5e, #e11d48);"><span class="material-icons-round">health_and_safety</span></div>
+                    <div><h1>Simulacros y BCP</h1><p>Pruebas de continuidad de negocio y simulacros de emergencia</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalSimulacro()"><span class="material-icons-round">add</span> Registrar Simulacro</button></div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-simulacros" class="search-bar" style="margin:0;" placeholder="🔍 Buscar simulacro..." onkeyup="window.filtrarTabla('search-simulacros', 'tbody-simulacros')">
+                </div>
+                <div class="table-responsive"><table id="tabla-simulacros"><thead><tr><th>Fecha</th><th>Tipo de Simulacro</th><th>Duración</th><th>Participantes</th><th>Observaciones/Mejoras</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-simulacros"></tbody></table></div>
+            </div>
+        </section>
+
+        <!-- RECURSOS HUMANOS -->
+        <section id="sec-rrhh-confiabilidad" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);"><span class="material-icons-round">verified_user</span></div>
+                    <div><h1>Confiabilidad y RRHH</h1><p>Matriz de capacitaciones y controles de antecedentes del personal crítico</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalRRHH()"><span class="material-icons-round">add</span> Registrar Control</button></div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-rrhh" class="search-bar" style="margin:0;" placeholder="🔍 Buscar control..." onkeyup="window.filtrarTabla('search-rrhh', 'tbody-rrhh')">
+                </div>
+                <div class="table-responsive"><table id="tabla-rrhh"><thead><tr><th>Empleado</th><th>Tipo de Capacitación/Control</th><th>Vigencia (Hasta)</th><th>Pruebas Confiabilidad</th><th>Estado</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-rrhh"></tbody></table></div>
+            </div>
+        </section>
+
+        <!-- SEGURIDAD IT -->
+        <section id="sec-it-controles" class="section">
+            <div class="section-header">
+                <div class="section-header-info">
+                    <div class="section-header-icon" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);"><span class="material-icons-round">cloud_sync</span></div>
+                    <div><h1>Controles de Seguridad IT</h1><p>Registro de backups, altas/bajas de accesos a sistemas</p></div>
+                </div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalIT()"><span class="material-icons-round">add</span> Registrar Control IT</button></div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
+                    <input aria-label="Buscar..." type="text" id="search-it" class="search-bar" style="margin:0;" placeholder="🔍 Buscar control..." onkeyup="window.filtrarTabla('search-it', 'tbody-it')">
+                </div>
+                <div class="table-responsive"><table id="tabla-it"><thead><tr><th>Fecha / Período</th><th>Tipo de Control (Backup, Acceso)</th><th>Sistema Afectado</th><th>Estado</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-it"></tbody></table></div>
+            </div>
+        </section>
+
     </main>
 
     <div class="modal-overlay" id="modal-dash-details">

@@ -1156,15 +1156,15 @@ window.eliminarEstatus = async (idx) => { if(!confirm("¿Eliminar?")) return; es
 
 window.renderNormaOEA = () => {
   const p = currentUser ? currentUser.permisos || {} : {}; let isAdm = p.admin || p.p_audit_admin || p.p_gest_sgc;
-  if($('oea-manual-link')) $('oea-manual-link').innerHTML = manualOEA.url ? `<a href="#" onclick="window.abrirDocumento('${manualOEA.url}', '${manualOEA.nombre}'); return false;" class="btn btn-info" style="font-size:14px; text-decoration:none;"><span class="material-icons-round" style="font-size:16px; margin-right:5px;">visibility</span> Ver ${manualOEA.nombre}</a>` : "No hay manual subido.";
-  window.setDisplay('oea-manual-upload-box', isAdm ? 'flex' : 'none'); window.setDisplay('oea-req-upload-box', isAdm ? 'flex' : 'none');
+  window.setDisplay('oea-req-upload-box', isAdm ? 'flex' : 'none');
   
   if($('oea-req-list-container')) {
       $('oea-req-list-container').innerHTML = requisitosOEA.map((r, idx) => {
           let nom = typeof r === 'string' ? r : r.nombre; let desc = typeof r === 'string' ? '' : (r.descripcion || '');
+          let norma = r.norma || 'OEA';
           return `<div class="settings-item" style="flex-direction:column; align-items:flex-start; cursor:pointer;" onclick="window.abrirPuntoOEA(${idx})">
               <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-                  <span style="font-weight:700; color:var(--primary);"><span class="material-icons-round" style="font-size:14px; vertical-align:middle; margin-right:5px;">touch_app</span> ${nom}</span>
+                  <span style="font-weight:700; color:var(--primary);"><span class="badge badge-info" style="margin-right:5px; font-size:10px;">${norma}</span> ${nom}</span>
                   ${isAdm ? `<button type="button" class="btn-icon-danger" onclick="event.stopPropagation(); window.eliminarRequisitoOEA(${idx})"><span class="material-icons-round" style="font-size:16px;">delete</span></button>` : ''}
               </div>
               ${desc ? `<div style="font-size:11px; color:var(--text-muted); margin-top:5px;">${desc.substring(0, 60)}...</div>` : ''}
@@ -1179,12 +1179,26 @@ window.abrirPuntoOEA = (idx) => {
   const req = requisitosOEA[idx]; if(!req) return;
   let nom = typeof req === 'string' ? req : req.nombre; let desc = typeof req === 'string' ? '' : req.descripcion; let link = typeof req === 'string' ? '' : req.link;
   let msg = `PUNTO: ${nom}\n\n`; if(desc) msg += `DESCRIPCIÓN:\n${desc}\n\n`;
-  if(link && manualOEA.url) { if(confirm(msg + `¿Abrir el manual de referencia (Ref: ${link})?`)) { let url = manualOEA.url; if(!isNaN(link)) url += `#page=${link}`; else if(link.startsWith('http')) url = link; window.open(url, '_blank'); }
-  } else { alert(msg + "(No hay enlace directo configurado para este punto)."); }
+  if(link) {
+      if(link.startsWith('http')) {
+          if(confirm(msg + `¿Abrir referencia (${link})?`)) window.open(link, '_blank');
+      } else {
+          alert(msg + `Referencia: ${link}`);
+      }
+  } else { alert(msg + "(No hay referencia configurada para este punto)."); }
 };
 
-window.subirManualOEA = async () => { const f = $('oea-file').files[0]; if(!f) return alert("Selecciona el documento."); window.showLoading(); let url = await window.uploadToCloudinary(f); if(!url) { window.hideLoading(); return alert("Error al subir."); } await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "NormaOEA"), { manual_url: url, manual_nombre: f.name }, {merge: true}); window.setVal('oea-file', ''); window.hideLoading(); alert("Manual Oficial actualizado."); };
-window.agregarRequisitoOEA = async () => { const n = $('oea-req-input').value.trim(); const d = $('oea-req-desc').value.trim(); const l = $('oea-req-link').value.trim(); if(!n) return alert("El nombre del punto es obligatorio."); if(requisitosOEA.some(r => (typeof r === 'string' ? r : r.nombre) === n)) return alert("Ese requisito ya está en la lista."); requisitosOEA.push({ nombre: n, descripcion: d, link: l }); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "NormaOEA"), { requisitos: requisitosOEA }, {merge: true}); window.setVal('oea-req-input', ''); window.setVal('oea-req-desc', ''); window.setVal('oea-req-link', ''); };
+window.agregarRequisitoOEA = async () => { 
+    const n = $('oea-req-input').value.trim(); 
+    const d = $('oea-req-desc').value.trim(); 
+    const l = $('oea-req-link').value.trim(); 
+    const norma = getValSafe('oea-req-norma') || 'OEA';
+    if(!n) return alert("El nombre del punto es obligatorio."); 
+    if(requisitosOEA.some(r => (typeof r === 'string' ? r : r.nombre) === n)) return alert("Ese requisito ya está en la lista."); 
+    requisitosOEA.push({ nombre: n, descripcion: d, link: l, norma: norma }); 
+    await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "NormaOEA"), { requisitos: requisitosOEA }, {merge: true}); 
+    window.setVal('oea-req-input', ''); window.setVal('oea-req-desc', ''); window.setVal('oea-req-link', ''); 
+};
 window.eliminarRequisitoOEA = async (idx) => { if(!confirm("¿Eliminar este requisito?")) return; requisitosOEA.splice(idx, 1); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "NormaOEA"), { requisitos: requisitosOEA }, {merge: true}); };
 
 window.renderTablaMaestro = () => {
@@ -4283,6 +4297,157 @@ window.guardarUsuario = async () => {
 const _eliminarUsuarioOriginal = window.eliminarUsuario;
 window.eliminarUsuario = async (uid) => {
     await _eliminarUsuarioOriginal(uid);
-    // Limpiar índice global
     try { await deleteDoc(doc(db, 'plataforma', 'main', 'usuariosIndex', uid)); } catch(e) {}
 };
+
+// =========================================================================
+// NUEVOS MÓDULOS OEA Y SAAS INTEGRAL
+// =========================================================================
+let globalManuales = [];
+let modulosSuscripcionActiva = null;
+
+const initModulosOEA = () => {
+    if(!appId || !db) return;
+    
+    // Escuchar Manuales Múltiples
+    onSnapshot(collection(db, "artifacts", appId, "public", "data", "ManualesNormas"), snap => {
+        globalManuales = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        window.renderTablaManuales();
+    });
+};
+
+const originalCheckRole = window.checkRoleYPermisos;
+window.checkRoleYPermisos = () => {
+    if(originalCheckRole) originalCheckRole();
+    initModulosOEA();
+};
+
+window.renderTablaManuales = () => {
+    if(!$('tbody-manuales')) return;
+    let html = '';
+    globalManuales.forEach(m => {
+        html += `<tr>
+            <td><span class="material-icons-round" style="vertical-align:middle; font-size:16px; color:var(--primary);">library_books</span> ${m.nombre}</td>
+            <td>${m.version || '1.0'} / ${m.fecha || 'N/A'}</td>
+            <td style="text-align:center;"><a href="#" onclick="window.abrirDocumento('${m.url}', '${m.nombre}'); return false;" class="btn btn-info" style="font-size:11px; padding:6px 12px; border-radius:6px; text-decoration:none;"><span class="material-icons-round" style="font-size:14px; margin-right:4px;">visibility</span>Ver Doc</a></td>
+            <td style="text-align:center;">
+                ${(currentUser?.permisos?.admin || currentUser?.permisos?.p_gest_sgc) ? `<button class="btn btn-danger" style="font-size:10px; padding:6px 10px; border-radius:6px;" onclick="window.eliminarManualOEA('${m.id}')"><span class="material-icons-round" style="font-size:14px;">delete</span></button>` : 'N/A'}
+            </td>
+        </tr>`;
+    });
+    window.setHtml('tbody-manuales', html || '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No hay manuales cargados.</td></tr>');
+};
+
+window.abrirModalManualOEA = () => {
+    let html = `
+        <div style="padding:30px;">
+            <h3 style="color:var(--primary); margin-top:0; border-bottom:1px solid var(--border); padding-bottom:10px;"><span class="material-icons-round" style="vertical-align:middle;">add_circle</span> Subir Nuevo Manual</h3>
+            <label style="font-weight:bold; margin-top:15px; display:block;">Nombre del Documento / Manual</label>
+            <input aria-label="Nombre del manual" type="text" id="nuevo-manual-nombre" placeholder="Ej. Manual OEA, Política BASC..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <div><label style="font-weight:bold; display:block;">Versión</label><input aria-label="Versión" type="text" id="nuevo-manual-ver" placeholder="Ej. 2.0" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);"></div>
+                <div><label style="font-weight:bold; display:block;">Fecha de Emisión</label><input aria-label="Fecha" type="date" id="nuevo-manual-fecha" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);"></div>
+            </div>
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Archivo (PDF/Word)</label>
+            <input aria-label="Archivo" type="file" id="nuevo-manual-file" accept=".pdf,.doc,.docx" style="width:100%; padding:10px; border-radius:8px; border:1px dashed var(--primary); background:#f8fafc; margin-bottom:20px;">
+            <button class="btn btn-primary" onclick="window.guardarNuevoManualOEA()" style="width:100%; padding:15px; font-size:16px; border-radius:8px;"><span class="material-icons-round" style="vertical-align:middle;">cloud_upload</span> SUBIR Y GUARDAR MANUAL</button>
+            <button class="btn btn-dark" onclick="window.setDisplay('modal-nuevo-manual', 'none')" style="width:100%; padding:10px; border-radius:8px; margin-top:10px; background:#64748b; color:white;">Cancelar</button>
+        </div>
+    `;
+    let m = document.getElementById('modal-nuevo-manual');
+    if(!m) {
+        m = document.createElement('div');
+        m.id = 'modal-nuevo-manual';
+        m.className = 'modal-overlay';
+        m.innerHTML = `<div class="modal-content" style="max-width:500px; display:block; padding:0; border-radius:12px; overflow:hidden;"></div>`;
+        document.body.appendChild(m);
+    }
+    m.querySelector('.modal-content').innerHTML = html;
+    window.setDisplay('modal-nuevo-manual', 'flex');
+};
+
+window.guardarNuevoManualOEA = async () => {
+    const nom = getValSafe('nuevo-manual-nombre').trim();
+    const ver = getValSafe('nuevo-manual-ver').trim();
+    const fDate = getValSafe('nuevo-manual-fecha');
+    const fileEl = document.getElementById('nuevo-manual-file');
+    if(!fileEl) return;
+    const file = fileEl.files[0];
+    if(!nom || !file) return alert("Nombre y Archivo son obligatorios.");
+    
+    window.showLoading();
+    try {
+        let url = await window.uploadToCloudinary(file);
+        if(!url) throw new Error("Fallo la subida a Cloudinary");
+        await addDoc(collection(db, "artifacts", appId, "public", "data", "ManualesNormas"), {
+            nombre: nom, version: ver, fecha: fDate, url: url, fecha_subida: new Date().toISOString()
+        });
+        window.hideLoading();
+        window.setDisplay('modal-nuevo-manual', 'none');
+        alert("Manual Oficial subido correctamente.");
+    } catch(e) {
+        window.hideLoading();
+        console.error(e);
+        alert("Error al subir el manual.");
+    }
+};
+
+window.eliminarManualOEA = async (id) => {
+    if(!confirm("¿Está seguro de eliminar este manual definitivamente?")) return;
+    try {
+        await deleteDoc(doc(db, "artifacts", appId, "public", "data", "ManualesNormas", id));
+    } catch(e) {
+        alert("Error al eliminar.");
+    }
+};
+
+// Generador de Formularios de Inspección 17 Puntos
+window.abrirModalContenedor = async () => {
+    if(confirm("¿Desea crear la Plantilla 'Inspección de Contenedores 17 Puntos' en el Constructor de Formularios?\n\nAl generarla, podrá editarla libremente desde el Constructor.")) {
+        window.showLoading();
+        const campos = [
+            {id: "placa", label: "Placa / Matrícula del Transporte", tipo: "texto_corto", requerido: true},
+            {id: "transportista", label: "Empresa Transportista", tipo: "texto_corto", requerido: true},
+            {id: "num_contenedor", label: "Número de Contenedor", tipo: "texto_corto", requerido: true},
+            {id: "p1", label: "1. Parte exterior/inferior (Tren de aterrizaje)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+            {id: "p2", label: "2. Puertas (Interior/Exterior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+            {id: "p3", label: "3. Lado derecho", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+            {id: "p4", label: "4. Lado izquierdo", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+            {id: "p5", label: "5. Pared Frontal", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+            {id: "p6", label: "6. Techo (Interior/Exterior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+            {id: "p7", label: "7. Piso (Interior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+            {id: "p8", label: "8. Chasis principal / Vigas", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+            {id: "p9", label: "9. Mecanismo de cierre de puertas", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+            {id: "obs", label: "Observaciones Generales", tipo: "texto_largo", requerido: false},
+            {id: "foto", label: "Evidencia Fotográfica", tipo: "archivo", requerido: false}
+        ];
+        try {
+            await addDoc(collection(db, "artifacts", appId, "public", "data", "FormulariosConfig"), {
+                titulo: "Inspección de Contenedores (17 Puntos OEA)",
+                descripcion: "Checklist de seguridad normativa para unidades de transporte.",
+                campos: campos,
+                is_eval: false, is_dynamic: false, dynamic_options: [],
+                perm_llenar_users: [], perm_ver_users: [], perm_editar_users: [],
+                estado: 'Activo',
+                creado_por: currentUser.nombre || 'Sistema',
+                fecha_creacion: new Date().toISOString()
+            });
+            window.hideLoading();
+            alert("¡Plantilla generada exitosamente!\n\nDirígete a 'Constructor de Formularios' para verla y a 'Bandeja de Formularios' para llenarla.");
+            window.cambiarVista('sec-forms');
+        } catch(e) {
+            window.hideLoading();
+            alert("Error al generar plantilla.");
+        }
+    }
+};
+
+window.abrirModalVisitante = () => alert("Use el Constructor de Formularios para crear la 'Bitácora de Visitantes'.");
+window.abrirModalMantenimiento = () => alert("Use el Constructor de Formularios para la 'Bitácora de Mantenimientos'.");
+window.abrirModalRonda = () => alert("Use el Constructor de Formularios para las 'Rondas de Seguridad'.");
+window.abrirModalSello = () => alert("Use el Constructor de Formularios para la 'Trazabilidad de Sellos'.");
+window.abrirModalIncidente = () => alert("Use el Constructor de Formularios para la 'Gestión de Incidentes'.");
+window.abrirModalAmbiental = () => alert("Use el Constructor de Formularios para los 'Registros Ambientales'.");
+window.abrirModalSimulacro = () => alert("Use el Constructor de Formularios para 'Simulacros y BCP'.");
+window.abrirModalRRHH = () => alert("Use el Constructor de Formularios para 'Capacitaciones y Confiabilidad'.");
+window.abrirModalIT = () => alert("Use el Constructor de Formularios para 'Controles de Seguridad IT'.");
