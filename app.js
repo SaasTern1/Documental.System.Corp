@@ -4490,13 +4490,15 @@ window.abrirModalRonda = () => window.generarPlantillaFormulario("Reporte de Ron
 ]);
 
 window.abrirModalSello = () => window.generarPlantillaFormulario("Trazabilidad y Control de Sellos", "Inventario, entrega y registro de sellos de alta seguridad.", [
-    {id: "num_sello", label: "Número de Sello", tipo: "text", requerido: true},
-    {id: "contenedor", label: "Contenedor Asignado", tipo: "text", requerido: true},
-    {id: "estado", label: "Estado", tipo: "select", requerido: true, opciones: ["Intacto", "Roto / Alterado", "Desechado"]},
-    {id: "inspeccion", label: "Prueba de 7 Puntos (VVTTT)", tipo: "select", requerido: true, opciones: ["Aprobado", "Rechazado"]},
-    {id: "colocador", label: "Persona que colocó el sello", tipo: "text", requerido: true},
+    {id: "tipo_operacion", label: "Tipo de Operación", tipo: "select", requerido: true, opciones: ["Nueva Compra", "Entrega de Sellos", "Recibir Sellos", "Asignar Sellos", "Colocar Sellos", "Devolver"]},
+    {id: "num_sello", label: "Número de Sello (o Rango)", tipo: "text", requerido: true},
+    {id: "contenedor", label: "Contenedor Asignado (si aplica)", tipo: "text", requerido: false},
+    {id: "estado", label: "Estado", tipo: "select", requerido: true, opciones: ["Intacto", "Roto / Alterado", "Desechado", "En Inventario"]},
+    {id: "inspeccion", label: "Prueba de 7 Puntos (VVTTT)", tipo: "select", requerido: false, opciones: ["Aprobado", "Rechazado", "N/A"]},
+    {id: "responsable", label: "Persona Responsable", tipo: "text", requerido: true},
     {id: "observaciones", label: "Observaciones", tipo: "textarea", requerido: false},
-    {id: "foto", label: "Evidencia Fotográfica del Sello Instalado", tipo: "archivo", requerido: true}
+    {id: "foto", label: "Evidencia Fotográfica", tipo: "archivo", requerido: true},
+    {id: "firma", label: "Firma (Adjunte Imagen o Documento)", tipo: "archivo", requerido: true}
 ]);
 
 window.abrirModalIncidente = () => window.generarPlantillaFormulario("Reporte de Incidentes de Seguridad", "Registro de vulnerabilidades, brechas de seguridad o eventos adversos.", [
