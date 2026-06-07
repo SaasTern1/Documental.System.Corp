@@ -4428,7 +4428,7 @@ window.abrirModalContenedor = async () => {
             {id: "foto", label: "Evidencia Fotográfica", tipo: "archivo", requerido: false}
         ];
         try {
-            await addDoc(collection(db, "artifacts", appId, "public", "data", "FormulariosConfig"), {
+            await addDoc(collection(db, "artifacts", appId, "public", "data", "Formularios"), {
                 titulo: "Inspección de Contenedores (17 Puntos OEA)",
                 descripcion: "Checklist de seguridad normativa para unidades de transporte.",
                 campos: campos,
@@ -4452,7 +4452,7 @@ window.generarPlantillaFormulario = async (titulo, desc, campos) => {
     if(!confirm(`¿Desea crear la plantilla autogenerada para '${titulo}'?\n\nPodrá editarla luego desde el Constructor de Formularios.`)) return;
     window.showLoading();
     try {
-        await addDoc(collection(db, "artifacts", appId, "public", "data", "FormulariosConfig"), {
+        await addDoc(collection(db, "artifacts", appId, "public", "data", "Formularios"), {
             titulo: titulo,
             descripcion: desc,
             campos: campos,
