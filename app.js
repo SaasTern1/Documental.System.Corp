@@ -4440,6 +4440,15 @@ window.generarPlantillaFormulario = async (titulo, desc, campos) => {
     }
 };
 
+window.editarPlantillaFormulario = (titulo) => {
+    let f = globalForms.find(x => x.titulo === titulo);
+    if(f) {
+        window.abrirModalNuevoFormulario(f.id);
+    } else {
+        alert("Primero presiona el botón principal (ej. 'Nuevo Registro') para inicializar el formulario por primera vez. Luego podrás editarlo.");
+    }
+};
+
 window.abrirModalContenedor = () => window.generarPlantillaFormulario("Inspección de Contenedores (17 Puntos OEA)", "Checklist de seguridad normativa para unidades de transporte.", [
     {id: "placa", label: "Placa / Matrícula del Transporte", tipo: "text", requerido: true},
     {id: "transportista", label: "Empresa Transportista", tipo: "text", requerido: true},
