@@ -4408,29 +4408,17 @@ window.eliminarManualOEA = async (id) => {
 };
 
 // Generador de Formularios de Inspección 17 Puntos
-window.abrirModalContenedor = async () => {
-    if(confirm("¿Desea crear la Plantilla 'Inspección de Contenedores 17 Puntos' en el Constructor de Formularios?\n\nAl generarla, podrá editarla libremente desde el Constructor.")) {
+window.generarPlantillaFormulario = async (titulo, desc, campos) => {
+    let f = globalForms.find(x => x.titulo === titulo);
+    if(f) {
+        window.abrirLlenarFormulario(f.id);
+    } else {
+        if(!confirm(`La plantilla para '${titulo}' no ha sido creada aún.\n\n¿Desea autogenerarla ahora para empezar a registrar datos?`)) return;
         window.showLoading();
-        const campos = [
-            {id: "placa", label: "Placa / Matrícula del Transporte", tipo: "texto_corto", requerido: true},
-            {id: "transportista", label: "Empresa Transportista", tipo: "texto_corto", requerido: true},
-            {id: "num_contenedor", label: "Número de Contenedor", tipo: "texto_corto", requerido: true},
-            {id: "p1", label: "1. Parte exterior/inferior (Tren de aterrizaje)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-            {id: "p2", label: "2. Puertas (Interior/Exterior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-            {id: "p3", label: "3. Lado derecho", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-            {id: "p4", label: "4. Lado izquierdo", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-            {id: "p5", label: "5. Pared Frontal", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-            {id: "p6", label: "6. Techo (Interior/Exterior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-            {id: "p7", label: "7. Piso (Interior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-            {id: "p8", label: "8. Chasis principal / Vigas", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-            {id: "p9", label: "9. Mecanismo de cierre de puertas", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-            {id: "obs", label: "Observaciones Generales", tipo: "texto_largo", requerido: false},
-            {id: "foto", label: "Evidencia Fotográfica", tipo: "archivo", requerido: false}
-        ];
         try {
-            await addDoc(collection(db, "artifacts", appId, "public", "data", "Formularios"), {
-                titulo: "Inspección de Contenedores (17 Puntos OEA)",
-                descripcion: "Checklist de seguridad normativa para unidades de transporte.",
+            const docRef = await addDoc(collection(db, "artifacts", appId, "public", "data", "Formularios"), {
+                titulo: titulo,
+                descripcion: desc,
                 campos: campos,
                 is_eval: false, is_dynamic: false, dynamic_options: [],
                 perm_llenar_users: [], perm_ver_users: [], perm_editar_users: [],
@@ -4439,8 +4427,11 @@ window.abrirModalContenedor = async () => {
                 fecha_creacion: new Date().toISOString()
             });
             window.hideLoading();
-            alert("¡Plantilla generada exitosamente!\n\nDirígete a 'Constructor de Formularios' para verla y a 'Bandeja de Formularios' para llenarla.");
-            window.cambiarVista('sec-forms');
+            
+            let nuevoForm = { id: docRef.id, titulo: titulo, descripcion: desc, campos: campos, estado: 'Activo' };
+            globalForms.push(nuevoForm);
+            
+            window.abrirLlenarFormulario(docRef.id);
         } catch(e) {
             window.hideLoading();
             alert("Error al generar plantilla.");
@@ -4448,28 +4439,22 @@ window.abrirModalContenedor = async () => {
     }
 };
 
-window.generarPlantillaFormulario = async (titulo, desc, campos) => {
-    if(!confirm(`¿Desea crear la plantilla autogenerada para '${titulo}'?\n\nPodrá editarla luego desde el Constructor de Formularios.`)) return;
-    window.showLoading();
-    try {
-        await addDoc(collection(db, "artifacts", appId, "public", "data", "Formularios"), {
-            titulo: titulo,
-            descripcion: desc,
-            campos: campos,
-            is_eval: false, is_dynamic: false, dynamic_options: [],
-            perm_llenar_users: [], perm_ver_users: [], perm_editar_users: [],
-            estado: 'Activo',
-            creado_por: currentUser.nombre || 'Sistema',
-            fecha_creacion: new Date().toISOString()
-        });
-        window.hideLoading();
-        alert(`¡Plantilla '${titulo}' generada exitosamente!\n\nDirígete al 'Constructor de Formularios' para personalizarla.`);
-        window.cambiarVista('sec-forms');
-    } catch(e) {
-        window.hideLoading();
-        alert("Error al generar plantilla.");
-    }
-};
+window.abrirModalContenedor = () => window.generarPlantillaFormulario("Inspección de Contenedores (17 Puntos OEA)", "Checklist de seguridad normativa para unidades de transporte.", [
+    {id: "placa", label: "Placa / Matrícula del Transporte", tipo: "texto_corto", requerido: true},
+    {id: "transportista", label: "Empresa Transportista", tipo: "texto_corto", requerido: true},
+    {id: "num_contenedor", label: "Número de Contenedor", tipo: "texto_corto", requerido: true},
+    {id: "p1", label: "1. Parte exterior/inferior (Tren de aterrizaje)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p2", label: "2. Puertas (Interior/Exterior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p3", label: "3. Lado derecho", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p4", label: "4. Lado izquierdo", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p5", label: "5. Pared Frontal", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p6", label: "6. Techo (Interior/Exterior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p7", label: "7. Piso (Interior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p8", label: "8. Chasis principal / Vigas", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p9", label: "9. Mecanismo de cierre de puertas", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "obs", label: "Observaciones Generales", tipo: "texto_largo", requerido: false},
+    {id: "foto", label: "Evidencia Fotográfica", tipo: "archivo", requerido: false}
+]);
 
 window.abrirModalVisitante = () => window.generarPlantillaFormulario("Bitácora de Visitantes y Contratistas", "Registro de entrada y salida de personal externo a las instalaciones.", [
     {id: "nombre", label: "Nombre Completo", tipo: "texto_corto", requerido: true},
