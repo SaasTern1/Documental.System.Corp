@@ -3493,6 +3493,7 @@ window.abrirLlenarFormulario = (id) => {
             else if(c.tipo === 'textarea') h += `<textarea aria-label="ans_${c.id}" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
             else if(c.tipo === 'number') h += `<input aria-label="ans_${c.id}" type="number" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
             else if(c.tipo === 'date') h += `<input aria-label="ans_${c.id}" type="date" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'time') h += `<input aria-label="ans_${c.id}" type="time" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
             else if(c.tipo === 'checkbox') h += `<label style="display:flex; align-items:center; gap:5px;" for="ans_chk_${c.id}"><input aria-label="ans_chk_${c.id}" type="checkbox" id="ans_chk_${c.id}" name="ans_${c.id}" style="width:auto; margin:0;"> Marcar</label>`;
             else if(c.tipo === 'select') {
                 h += `<select aria-label="ans_${c.id}" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;"><option value="">-- Seleccione --</option>`;
@@ -4440,106 +4441,106 @@ window.generarPlantillaFormulario = async (titulo, desc, campos) => {
 };
 
 window.abrirModalContenedor = () => window.generarPlantillaFormulario("Inspección de Contenedores (17 Puntos OEA)", "Checklist de seguridad normativa para unidades de transporte.", [
-    {id: "placa", label: "Placa / Matrícula del Transporte", tipo: "texto_corto", requerido: true},
-    {id: "transportista", label: "Empresa Transportista", tipo: "texto_corto", requerido: true},
-    {id: "num_contenedor", label: "Número de Contenedor", tipo: "texto_corto", requerido: true},
-    {id: "p1", label: "1. Parte exterior/inferior (Tren de aterrizaje)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-    {id: "p2", label: "2. Puertas (Interior/Exterior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-    {id: "p3", label: "3. Lado derecho", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-    {id: "p4", label: "4. Lado izquierdo", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-    {id: "p5", label: "5. Pared Frontal", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-    {id: "p6", label: "6. Techo (Interior/Exterior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-    {id: "p7", label: "7. Piso (Interior)", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-    {id: "p8", label: "8. Chasis principal / Vigas", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-    {id: "p9", label: "9. Mecanismo de cierre de puertas", tipo: "seleccion", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
-    {id: "obs", label: "Observaciones Generales", tipo: "texto_largo", requerido: false},
+    {id: "placa", label: "Placa / Matrícula del Transporte", tipo: "text", requerido: true},
+    {id: "transportista", label: "Empresa Transportista", tipo: "text", requerido: true},
+    {id: "num_contenedor", label: "Número de Contenedor", tipo: "text", requerido: true},
+    {id: "p1", label: "1. Parte exterior/inferior (Tren de aterrizaje)", tipo: "select", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p2", label: "2. Puertas (Interior/Exterior)", tipo: "select", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p3", label: "3. Lado derecho", tipo: "select", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p4", label: "4. Lado izquierdo", tipo: "select", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p5", label: "5. Pared Frontal", tipo: "select", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p6", label: "6. Techo (Interior/Exterior)", tipo: "select", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p7", label: "7. Piso (Interior)", tipo: "select", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p8", label: "8. Chasis principal / Vigas", tipo: "select", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "p9", label: "9. Mecanismo de cierre de puertas", tipo: "select", requerido: true, opciones: ["OK", "Anomalía", "N/A"]},
+    {id: "obs", label: "Observaciones Generales", tipo: "textarea", requerido: false},
     {id: "foto", label: "Evidencia Fotográfica", tipo: "archivo", requerido: false}
 ]);
 
 window.abrirModalVisitante = () => window.generarPlantillaFormulario("Bitácora de Visitantes y Contratistas", "Registro de entrada y salida de personal externo a las instalaciones.", [
-    {id: "nombre", label: "Nombre Completo", tipo: "texto_corto", requerido: true},
-    {id: "cedula", label: "Cédula / Pasaporte", tipo: "texto_corto", requerido: true},
-    {id: "empresa", label: "Empresa de procedencia", tipo: "texto_corto", requerido: true},
-    {id: "motivo", label: "Motivo de la visita", tipo: "texto_corto", requerido: true},
-    {id: "area", label: "Área a visitar / Persona contacto", tipo: "texto_corto", requerido: true},
-    {id: "gafete", label: "Número de Gafete Asignado", tipo: "texto_corto", requerido: true},
-    {id: "hora_in", label: "Hora de Entrada", tipo: "hora", requerido: true},
-    {id: "hora_out", label: "Hora de Salida", tipo: "hora", requerido: false},
-    {id: "firma", label: "Firma del Visitante", tipo: "firma", requerido: true}
+    {id: "nombre", label: "Nombre Completo", tipo: "text", requerido: true},
+    {id: "cedula", label: "Cédula / Pasaporte", tipo: "text", requerido: true},
+    {id: "empresa", label: "Empresa de procedencia", tipo: "text", requerido: true},
+    {id: "motivo", label: "Motivo de la visita", tipo: "text", requerido: true},
+    {id: "area", label: "Área a visitar / Persona contacto", tipo: "text", requerido: true},
+    {id: "gafete", label: "Número de Gafete Asignado", tipo: "text", requerido: true},
+    {id: "hora_in", label: "Hora de Entrada", tipo: "time", requerido: true},
+    {id: "hora_out", label: "Hora de Salida", tipo: "time", requerido: false},
+    {id: "firma", label: "Firma del Visitante (Escriba su Nombre)", tipo: "text", requerido: true}
 ]);
 
 window.abrirModalMantenimiento = () => window.generarPlantillaFormulario("Mantenimiento de CCTV y Alarmas", "Registro de mantenimientos preventivos y correctivos de equipos de seguridad.", [
-    {id: "equipo", label: "Equipo / Sistema", tipo: "seleccion", requerido: true, opciones: ["CCTV", "Alarma Contra Intrusión", "Alarma Contra Incendio", "Control de Acceso", "Otro"]},
-    {id: "ubicacion", label: "Ubicación", tipo: "texto_corto", requerido: true},
-    {id: "tipo_mant", label: "Tipo de Mantenimiento", tipo: "seleccion", requerido: true, opciones: ["Preventivo", "Correctivo"]},
-    {id: "falla", label: "Descripción de Falla / Trabajo Realizado", tipo: "texto_largo", requerido: true},
-    {id: "tecnico", label: "Técnico Responsable", tipo: "texto_corto", requerido: true},
-    {id: "estado", label: "Estado Final", tipo: "seleccion", requerido: true, opciones: ["Operativo", "En reparación", "Dado de baja"]},
+    {id: "equipo", label: "Equipo / Sistema", tipo: "select", requerido: true, opciones: ["CCTV", "Alarma Contra Intrusión", "Alarma Contra Incendio", "Control de Acceso", "Otro"]},
+    {id: "ubicacion", label: "Ubicación", tipo: "text", requerido: true},
+    {id: "tipo_mant", label: "Tipo de Mantenimiento", tipo: "select", requerido: true, opciones: ["Preventivo", "Correctivo"]},
+    {id: "falla", label: "Descripción de Falla / Trabajo Realizado", tipo: "textarea", requerido: true},
+    {id: "tecnico", label: "Técnico Responsable", tipo: "text", requerido: true},
+    {id: "estado", label: "Estado Final", tipo: "select", requerido: true, opciones: ["Operativo", "En reparación", "Dado de baja"]},
     {id: "foto", label: "Evidencia Fotográfica", tipo: "archivo", requerido: false}
 ]);
 
 window.abrirModalRonda = () => window.generarPlantillaFormulario("Reporte de Rondas de Seguridad", "Registro de inspección perimetral e interna de las instalaciones.", [
-    {id: "turno", label: "Turno", tipo: "seleccion", requerido: true, opciones: ["Diurno", "Nocturno"]},
-    {id: "zona", label: "Zona Inspeccionada", tipo: "texto_corto", requerido: true},
-    {id: "cercas", label: "Estado de Cercas Perimetrales", tipo: "seleccion", requerido: true, opciones: ["Sin Novedad", "Anomalía Encontrada"]},
-    {id: "iluminacion", label: "Iluminación Exterior", tipo: "seleccion", requerido: true, opciones: ["Óptima", "Deficiente"]},
-    {id: "puertas", label: "Puertas y Accesos Asegurados", tipo: "seleccion", requerido: true, opciones: ["Sí", "No"]},
-    {id: "novedades", label: "Novedades Encontradas", tipo: "texto_largo", requerido: false},
+    {id: "turno", label: "Turno", tipo: "select", requerido: true, opciones: ["Diurno", "Nocturno"]},
+    {id: "zona", label: "Zona Inspeccionada", tipo: "text", requerido: true},
+    {id: "cercas", label: "Estado de Cercas Perimetrales", tipo: "select", requerido: true, opciones: ["Sin Novedad", "Anomalía Encontrada"]},
+    {id: "iluminacion", label: "Iluminación Exterior", tipo: "select", requerido: true, opciones: ["Óptima", "Deficiente"]},
+    {id: "puertas", label: "Puertas y Accesos Asegurados", tipo: "select", requerido: true, opciones: ["Sí", "No"]},
+    {id: "novedades", label: "Novedades Encontradas", tipo: "textarea", requerido: false},
     {id: "foto", label: "Fotos de Hallazgos", tipo: "archivo", requerido: false}
 ]);
 
 window.abrirModalSello = () => window.generarPlantillaFormulario("Trazabilidad y Control de Sellos", "Inventario, entrega y registro de sellos de alta seguridad.", [
-    {id: "num_sello", label: "Número de Sello", tipo: "texto_corto", requerido: true},
-    {id: "contenedor", label: "Contenedor Asignado", tipo: "texto_corto", requerido: true},
-    {id: "estado", label: "Estado", tipo: "seleccion", requerido: true, opciones: ["Intacto", "Roto / Alterado", "Desechado"]},
-    {id: "inspeccion", label: "Prueba de 7 Puntos (VVTTT)", tipo: "seleccion", requerido: true, opciones: ["Aprobado", "Rechazado"]},
-    {id: "colocador", label: "Persona que colocó el sello", tipo: "texto_corto", requerido: true},
-    {id: "observaciones", label: "Observaciones", tipo: "texto_largo", requerido: false},
+    {id: "num_sello", label: "Número de Sello", tipo: "text", requerido: true},
+    {id: "contenedor", label: "Contenedor Asignado", tipo: "text", requerido: true},
+    {id: "estado", label: "Estado", tipo: "select", requerido: true, opciones: ["Intacto", "Roto / Alterado", "Desechado"]},
+    {id: "inspeccion", label: "Prueba de 7 Puntos (VVTTT)", tipo: "select", requerido: true, opciones: ["Aprobado", "Rechazado"]},
+    {id: "colocador", label: "Persona que colocó el sello", tipo: "text", requerido: true},
+    {id: "observaciones", label: "Observaciones", tipo: "textarea", requerido: false},
     {id: "foto", label: "Evidencia Fotográfica del Sello Instalado", tipo: "archivo", requerido: true}
 ]);
 
 window.abrirModalIncidente = () => window.generarPlantillaFormulario("Reporte de Incidentes de Seguridad", "Registro de vulnerabilidades, brechas de seguridad o eventos adversos.", [
-    {id: "fecha_inc", label: "Fecha y Hora del Incidente", tipo: "fecha", requerido: true},
-    {id: "lugar", label: "Lugar del Evento", tipo: "texto_corto", requerido: true},
-    {id: "tipo", label: "Tipo de Incidente", tipo: "seleccion", requerido: true, opciones: ["Robo / Hurto", "Intrusión", "Contaminación de Carga", "Accidente Laboral", "Violación IT", "Otro"]},
-    {id: "descripcion", label: "Descripción Detallada", tipo: "texto_largo", requerido: true},
-    {id: "involucrados", label: "Personas Involucradas", tipo: "texto_corto", requerido: false},
-    {id: "acciones_inmediatas", label: "Acciones Inmediatas Tomadas", tipo: "texto_largo", requerido: true},
+    {id: "fecha_inc", label: "Fecha y Hora del Incidente", tipo: "date", requerido: true},
+    {id: "lugar", label: "Lugar del Evento", tipo: "text", requerido: true},
+    {id: "tipo", label: "Tipo de Incidente", tipo: "select", requerido: true, opciones: ["Robo / Hurto", "Intrusión", "Contaminación de Carga", "Accidente Laboral", "Violación IT", "Otro"]},
+    {id: "descripcion", label: "Descripción Detallada", tipo: "textarea", requerido: true},
+    {id: "involucrados", label: "Personas Involucradas", tipo: "text", requerido: false},
+    {id: "acciones_inmediatas", label: "Acciones Inmediatas Tomadas", tipo: "textarea", requerido: true},
     {id: "foto", label: "Evidencias", tipo: "archivo", requerido: false}
 ]);
 
 window.abrirModalAmbiental = () => window.generarPlantillaFormulario("Gestión Ambiental", "Registro de manejo de residuos, consumo de recursos y control de emisiones.", [
-    {id: "tipo_reg", label: "Tipo de Registro", tipo: "seleccion", requerido: true, opciones: ["Consumo de Agua", "Consumo de Energía", "Generación de Residuos", "Derrame / Contaminación"]},
-    {id: "cantidad", label: "Cantidad / Medición (Ej. Litros, KWh, Kg)", tipo: "texto_corto", requerido: true},
-    {id: "disposicion", label: "Método de Disposición", tipo: "texto_corto", requerido: false},
-    {id: "empresa_recolectora", label: "Empresa Recolectora", tipo: "texto_corto", requerido: false},
-    {id: "observaciones", label: "Observaciones / Plan de Acción", tipo: "texto_largo", requerido: false}
+    {id: "tipo_reg", label: "Tipo de Registro", tipo: "select", requerido: true, opciones: ["Consumo de Agua", "Consumo de Energía", "Generación de Residuos", "Derrame / Contaminación"]},
+    {id: "cantidad", label: "Cantidad / Medición (Ej. Litros, KWh, Kg)", tipo: "text", requerido: true},
+    {id: "disposicion", label: "Método de Disposición", tipo: "text", requerido: false},
+    {id: "empresa_recolectora", label: "Empresa Recolectora", tipo: "text", requerido: false},
+    {id: "observaciones", label: "Observaciones / Plan de Acción", tipo: "textarea", requerido: false}
 ]);
 
 window.abrirModalSimulacro = () => window.generarPlantillaFormulario("Simulacros y BCP", "Planificación y evaluación de simulacros y pruebas del Plan de Continuidad de Negocio.", [
-    {id: "tipo_simulacro", label: "Tipo de Simulacro", tipo: "seleccion", requerido: true, opciones: ["Incendio", "Evacuación", "Contaminación de Carga", "Ciberataque", "Terremoto"]},
-    {id: "fecha", label: "Fecha de Ejecución", tipo: "fecha", requerido: true},
-    {id: "participantes", label: "Número de Participantes", tipo: "numero", requerido: true},
-    {id: "tiempo_respuesta", label: "Tiempo de Respuesta (Minutos)", tipo: "numero", requerido: true},
-    {id: "hallazgos", label: "Hallazgos / Oportunidades de Mejora", tipo: "texto_largo", requerido: true},
+    {id: "tipo_simulacro", label: "Tipo de Simulacro", tipo: "select", requerido: true, opciones: ["Incendio", "Evacuación", "Contaminación de Carga", "Ciberataque", "Terremoto"]},
+    {id: "fecha", label: "Fecha de Ejecución", tipo: "date", requerido: true},
+    {id: "participantes", label: "Número de Participantes", tipo: "number", requerido: true},
+    {id: "tiempo_respuesta", label: "Tiempo de Respuesta (Minutos)", tipo: "number", requerido: true},
+    {id: "hallazgos", label: "Hallazgos / Oportunidades de Mejora", tipo: "textarea", requerido: true},
     {id: "foto", label: "Lista de Asistencia / Evidencias", tipo: "archivo", requerido: true}
 ]);
 
 window.abrirModalRRHH = () => window.generarPlantillaFormulario("Control de Confiabilidad RRHH", "Verificación de antecedentes, polígrafo y capacitaciones del personal.", [
-    {id: "empleado", label: "Nombre del Colaborador", tipo: "texto_corto", requerido: true},
-    {id: "cargo", label: "Cargo", tipo: "texto_corto", requerido: true},
-    {id: "tipo_control", label: "Tipo de Evaluación", tipo: "seleccion", requerido: true, opciones: ["Visita Domiciliaria", "Prueba de Polígrafo", "Antecedentes Penales", "Prueba Antidoping", "Capacitación OEA/BASC"]},
-    {id: "resultado", label: "Resultado de Evaluación", tipo: "seleccion", requerido: true, opciones: ["Aprobado", "No Aprobado", "Pendiente de Revisión"]},
-    {id: "prox_fecha", label: "Próxima Fecha de Renovación", tipo: "fecha", requerido: false},
-    {id: "observaciones", label: "Observaciones Confidenciales", tipo: "texto_largo", requerido: false},
+    {id: "empleado", label: "Nombre del Colaborador", tipo: "text", requerido: true},
+    {id: "cargo", label: "Cargo", tipo: "text", requerido: true},
+    {id: "tipo_control", label: "Tipo de Evaluación", tipo: "select", requerido: true, opciones: ["Visita Domiciliaria", "Prueba de Polígrafo", "Antecedentes Penales", "Prueba Antidoping", "Capacitación OEA/BASC"]},
+    {id: "resultado", label: "Resultado de Evaluación", tipo: "select", requerido: true, opciones: ["Aprobado", "No Aprobado", "Pendiente de Revisión"]},
+    {id: "prox_fecha", label: "Próxima Fecha de Renovación", tipo: "date", requerido: false},
+    {id: "observaciones", label: "Observaciones Confidenciales", tipo: "textarea", requerido: false},
     {id: "archivo", label: "Adjuntar Certificado / Resultados", tipo: "archivo", requerido: false}
 ]);
 
 window.abrirModalIT = () => window.generarPlantillaFormulario("Controles de Seguridad IT", "Revisión de backups, accesos, actualizaciones y vulnerabilidades.", [
-    {id: "sistema", label: "Sistema o Servidor", tipo: "texto_corto", requerido: true},
-    {id: "tipo_control", label: "Control Realizado", tipo: "seleccion", requerido: true, opciones: ["Revisión de Backups", "Cambio de Contraseñas", "Actualización de Antivirus", "Baja de Usuarios"]},
-    {id: "resultado", label: "Estado del Control", tipo: "seleccion", requerido: true, opciones: ["Exitoso", "Con Errores", "Fallido"]},
-    {id: "hallazgos", label: "Detalles Técnicos / Hallazgos", tipo: "texto_largo", requerido: true},
-    {id: "fecha", label: "Fecha de Ejecución", tipo: "fecha", requerido: true},
-    {id: "responsable", label: "Responsable de IT", tipo: "texto_corto", requerido: true}
+    {id: "sistema", label: "Sistema o Servidor", tipo: "text", requerido: true},
+    {id: "tipo_control", label: "Control Realizado", tipo: "select", requerido: true, opciones: ["Revisión de Backups", "Cambio de Contraseñas", "Actualización de Antivirus", "Baja de Usuarios"]},
+    {id: "resultado", label: "Estado del Control", tipo: "select", requerido: true, opciones: ["Exitoso", "Con Errores", "Fallido"]},
+    {id: "hallazgos", label: "Detalles Técnicos / Hallazgos", tipo: "textarea", requerido: true},
+    {id: "fecha", label: "Fecha de Ejecución", tipo: "date", requerido: true},
+    {id: "responsable", label: "Responsable de IT", tipo: "text", requerido: true}
 ]);
