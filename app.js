@@ -844,6 +844,12 @@ window.completarLoginUI = () => {
   window.setDisplay('nav-oea-group', canOea ? 'block' : 'none');
   window.setDisplay('nav-proveedores', (p.p_proveedores || isAdm || p.p_gest_sgc) ? 'flex' : 'none');
   window.setDisplay('nav-riesgos', (p.p_riesgos || isAdm || p.p_gest_sgc) ? 'flex' : 'none');
+  
+  window.setDisplay('nav-segfisica-group', canOea ? 'block' : 'none');
+  window.setDisplay('nav-logistica-group', canOea ? 'block' : 'none');
+  window.setDisplay('nav-hseq-group', canOea ? 'block' : 'none');
+  window.setDisplay('nav-rrhh-group', canOea ? 'block' : 'none');
+  window.setDisplay('nav-it-group', canOea ? 'block' : 'none');
 
   const canRoot = p.p_users || p.p_struct || isAdm; 
   window.setDisplay('admin-only', canRoot ? 'block' : 'none'); window.setDisplay('nav-users', (p.p_users || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-struct', (p.p_struct || isAdm) ? 'flex' : 'none');
