@@ -3489,39 +3489,27 @@ window.abrirLlenarFormulario = (id) => {
             h += `<div class="dynamic-field-container" data-category="${c.categoria||''}" style="margin-bottom:25px; background:white; padding:20px; border-radius:10px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
                     <label for="ans_${c.id}" style="font-size:15px; font-weight:600; color:#1e293b; display:block; margin-bottom:12px;">${c.label} ${reqHTML}</label>`;
             
-            let tipo = c.tipo || c.type || 'text';
-            
-            if(tipo === 'text') h += `<input aria-label="ans_${c.id}" type="text" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%; border:1px solid #cbd5e1; padding:10px; border-radius:6px;">`;
-            else if(tipo === 'textarea') h += `<textarea aria-label="ans_${c.id}" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
-            else if(tipo === 'number') h += `<input aria-label="ans_${c.id}" type="number" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
-            else if(tipo === 'date') h += `<input aria-label="ans_${c.id}" type="date" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
-            else if(tipo === 'time') h += `<input aria-label="ans_${c.id}" type="time" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
-            else if(tipo === 'checkbox') h += `<label style="display:flex; align-items:center; gap:5px;" for="ans_chk_${c.id}"><input aria-label="ans_chk_${c.id}" type="checkbox" id="ans_chk_${c.id}" name="ans_${c.id}" style="width:auto; margin:0;"> Marcar</label>`;
-            else if(tipo === 'select') {
+            if(c.tipo === 'text') h += `<input aria-label="ans_${c.id}" type="text" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%; border:1px solid #cbd5e1; padding:10px; border-radius:6px;">`;
+            else if(c.tipo === 'textarea') h += `<textarea aria-label="ans_${c.id}" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
+            else if(c.tipo === 'number') h += `<input aria-label="ans_${c.id}" type="number" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'date') h += `<input aria-label="ans_${c.id}" type="date" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'time') h += `<input aria-label="ans_${c.id}" type="time" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'checkbox') h += `<label style="display:flex; align-items:center; gap:5px;" for="ans_chk_${c.id}"><input aria-label="ans_chk_${c.id}" type="checkbox" id="ans_chk_${c.id}" name="ans_${c.id}" style="width:auto; margin:0;"> Marcar</label>`;
+            else if(c.tipo === 'select') {
                 h += `<select aria-label="ans_${c.id}" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;"><option value="">-- Seleccione --</option>`;
-                if(c.opciones) c.opciones.forEach(op => h += `<option value="${op}">${op}</option>`);
+                c.opciones.forEach(op => h += `<option value="${op}">${op}</option>`);
                 h += `</select>`;
             }
-            else if(tipo === 'si_no') {
+            else if(c.tipo === 'si_no') {
                 h += `<div style="display:flex; gap:15px; margin-top:5px;">
                         <label style="display:flex; align-items:center; gap:5px;" for="ans_${c.id}_si"><input aria-label="ans_${c.id}_si" type="radio" id="ans_${c.id}_si" name="ans_${c.id}" value="Sí" ${reqAttr} style="width:auto; margin:0;"> Sí</label>
                         <label style="display:flex; align-items:center; gap:5px;" for="ans_${c.id}_no"><input aria-label="ans_${c.id}_no" type="radio" id="ans_${c.id}_no" name="ans_${c.id}" value="No" ${reqAttr} style="width:auto; margin:0;"> No</label>
                       </div>`;
             }
-            else if(tipo === 'archivo') {
+            else if(c.tipo === 'archivo') {
                 h += `<input aria-label="ans_${c.id}" type="file" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
             }
-            else if(tipo === 'foto') {
-                h += `<input type="file" id="ans_${c.id}" name="ans_${c.id}" accept="image/*" capture="environment" ${reqAttr} style="width:100%; background:#f8fafc; padding:8px; border:1px dashed var(--border);">`;
-            }
-            else if(tipo === 'firma') {
-                h += `<canvas id="ans_firma_${c.id}" width="300" height="150" style="border:1px dashed #cbd5e1; background:#f8fafc; border-radius:6px; touch-action:none;"></canvas>
-                      <button type="button" onclick="window.limpiarFirma('${c.id}')" style="display:block; margin-top:5px; font-size:11px; padding:4px 8px; border-radius:4px; background:#e2e8f0; border:none; cursor:pointer;">Limpiar Firma</button>`;
-            }
-            else if(tipo === 'notificar') {
-                h += `<input type="email" id="ans_${c.id}" name="ans_${c.id}" placeholder="Email para notificar..." ${reqAttr} class="search-bar" style="width:100%;">`;
-            }
-            else if(tipo === 'semaforo') {
+            else if(c.tipo === 'semaforo') {
                 h += `<div style="border:1px solid var(--border); border-radius:8px; overflow-x:auto;">
                         <table style="width:100%; text-align:left; border-collapse:collapse; min-width:400px;">
                             <thead style="background:#e2e8f0; font-size:12px;"><tr>
@@ -3550,17 +3538,6 @@ window.abrirLlenarFormulario = (id) => {
             h += `</div>`;
         });
         container.innerHTML = h;
-
-        f.campos.forEach(c => {
-            let t = c.tipo || c.type || 'text';
-            if(t === 'firma') {
-                let canvas = document.getElementById('ans_firma_' + c.id);
-                if(canvas) {
-                    if(!window.firmasPad) window.firmasPad = {};
-                    window.initSignaturePad(canvas, c.id);
-                }
-            }
-        });
     }
     window.setDisplay('modal-fill-form', 'flex');
 };
@@ -3614,16 +3591,13 @@ window.guardarFormularioLleno = async () => {
         }
 
         let val = null;
-        let tipo = c.tipo || c.type || 'text';
-
-        if(tipo === 'checkbox') {
-            let el = document.getElementById(`ans_chk_${c.id}`);
-            if(el) val = el.checked;
-        } else if(tipo === 'si_no') {
+        if(c.tipo === 'checkbox') {
+            val = $(`ans_${c.id}`).checked;
+        } else if(c.tipo === 'si_no') {
             let selected = document.querySelector(`input[name="ans_${c.id}"]:checked`);
             if (selected) val = selected.value;
             if (c.requerido && !val) isValid = false;
-        } else if(tipo === 'semaforo') {
+        } else if(c.tipo === 'semaforo') {
             val = [];
             if(c.matriz_filas) {
                 c.matriz_filas.forEach((fila, filaIdx) => {
@@ -3635,9 +3609,9 @@ window.guardarFormularioLleno = async () => {
                 });
                 if(c.requerido && val.length < c.matriz_filas.length) isValid = false;
             }
-        } else if(tipo === 'archivo' || tipo === 'foto') {
+        } else if(c.tipo === 'archivo') {
             let fileInput = $(`ans_${c.id}`);
-            if (fileInput && fileInput.files.length > 0) {
+            if (fileInput.files.length > 0) {
                 let fileUrl = await window.uploadToCloudinary(fileInput.files[0]);
                 if(fileUrl) {
                     val = fileUrl;
@@ -3648,24 +3622,8 @@ window.guardarFormularioLleno = async () => {
             } else if (c.requerido) {
                 isValid = false;
             }
-        } else if(tipo === 'firma') {
-            let canvas = window.firmasPad ? window.firmasPad[c.id] : null;
-            if(canvas) {
-                let blank = document.createElement('canvas');
-                blank.width = canvas.width;
-                blank.height = canvas.height;
-                if(canvas.toDataURL() !== blank.toDataURL()) {
-                    val = canvas.toDataURL(); // Guardar como Base64
-                }
-            }
-            if(c.requerido && !val) isValid = false;
         } else {
             val = getValSafe(`ans_${c.id}`);
-            if(tipo === 'notificar' && val && typeof emailjs !== 'undefined') {
-                try {
-                    console.log("Notificando por EmailJS a: " + val);
-                } catch(e) {}
-            }
             if (c.requerido && !val) isValid = false;
         }
         
@@ -4597,91 +4555,3 @@ window.abrirModalIT = () => window.generarPlantillaFormulario("Controles de Segu
     {id: "fecha", label: "Fecha de Ejecución", tipo: "date", requerido: true},
     {id: "responsable", label: "Responsable de IT", tipo: "text", requerido: true}
 ]);
-
-// ==========================================
-// ESCANER Y GENERADOR QR
-// ==========================================
-let scannerQR = null;
-
-window.iniciarEscanerQR = () => {
-    window.setDisplay('modal-escaner-qr', 'flex');
-    if(scannerQR) scannerQR.clear();
-    scannerQR = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
-    scannerQR.render((decodedText, decodedResult) => {
-        scannerQR.clear();
-        window.cerrarEscanerQR();
-        let formId = null;
-        let ubicacion = null;
-        try {
-            let partes = decodedText.split('|');
-            partes.forEach(p => {
-                let [key, val] = p.split(':');
-                if(key && val) {
-                    if(key.trim() === 'formId') formId = val.trim();
-                    if(key.trim() === 'ubicacion') ubicacion = val.trim();
-                }
-            });
-        } catch(e) {}
-        
-        if(formId) {
-            let f = globalForms.find(x => x.id === formId);
-            if(f) {
-                window.abrirLlenarFormulario(formId);
-                if(ubicacion) {
-                    setTimeout(() => {
-                        let inputUbicacion = Array.from(document.querySelectorAll('#fill-form-container input')).find(i => i.placeholder.toLowerCase().includes('ubicaci') || (i.name && i.name.toLowerCase().includes('ubicaci')));
-                        if(inputUbicacion) inputUbicacion.value = ubicacion;
-                    }, 500);
-                }
-            } else { alert("Formulario no encontrado o no tienes permiso."); }
-        } else { alert("QR inválido o no reconocido: " + decodedText); }
-    }, (error) => {});
-};
-
-window.cerrarEscanerQR = () => { if(scannerQR) { scannerQR.clear(); scannerQR = null; } window.setDisplay('modal-escaner-qr', 'none'); };
-
-window.abrirModalGeneradorQR = () => {
-    let select = document.getElementById('qr-gen-form');
-    let opts = '<option value="">-- Seleccione un Formulario --</option>';
-    globalForms.forEach(f => { opts += `<option value="${f.id}">${f.titulo}</option>`; });
-    if(select) select.innerHTML = opts;
-    document.getElementById('qr-gen-ubicacion').value = '';
-    document.getElementById('qr-result-container').style.display = 'none';
-    window.setDisplay('modal-generador-qr', 'flex');
-};
-
-let lastQR = null;
-window.generarCodigoQR = () => {
-    let formId = getValSafe('qr-gen-form');
-    let ubic = getValSafe('qr-gen-ubicacion').trim();
-    if(!formId) return alert("Seleccione un formulario.");
-    
-    let texto = `formId:${formId}`;
-    if(ubic) texto += `|ubicacion:${ubic}`;
-    
-    let qrc = document.getElementById('qr-code-element');
-    qrc.innerHTML = '';
-    window.lastQR = new QRCode(qrc, { text: texto, width: 200, height: 200, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
-    document.getElementById('qr-result-text').innerText = texto;
-    document.getElementById('qr-result-container').style.display = 'block';
-};
-
-window.imprimirQR = () => {
-    let c = document.getElementById('qr-code-element').innerHTML;
-    let sel = document.getElementById('qr-gen-form');
-    let titulo = sel.options[sel.selectedIndex].text;
-    let ubic = getValSafe('qr-gen-ubicacion');
-    
-    let win = window.open('', '_blank');
-    win.document.write(`
-        <html><head><title>Imprimir QR</title>
-        <style>body{text-align:center; font-family:sans-serif; margin-top:50px;} h2{margin:5px 0;} p{margin:0; font-size:14px;}</style>
-        </head><body>
-        <h2>${titulo}</h2>
-        ${ubic ? `<p>Ubicación: <b>${ubic}</b></p>` : ''}
-        <div style="margin: 20px auto; display: inline-block;">${c}</div>
-        <br><p style="font-size:11px; color:#666;">Escanea este código desde la App para llenar el registro</p>
-        <script>window.onload = () => { window.print(); window.close(); }</script>
-        </body></html>
-    `);
-};
