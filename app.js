@@ -4685,3 +4685,28 @@ window.imprimirQR = () => {
         </body></html>
     `);
 };
+
+window.initSignaturePad = (canvas, id) => {
+    let ctx = canvas.getContext('2d');
+    let drawing = false;
+    let getPos = (e) => {
+        let rect = canvas.getBoundingClientRect();
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    };
+    let start = (e) => { drawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); e.preventDefault(); };
+    let draw = (e) => { if(!drawing) return; let pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); e.preventDefault(); };
+    let end = () => { drawing = false; };
+    
+    canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', end); canvas.addEventListener('mouseout', end);
+    canvas.addEventListener('touchstart', start, {passive: false}); canvas.addEventListener('touchmove', draw, {passive: false}); canvas.addEventListener('touchend', end);
+    
+    if(!window.firmasPad) window.firmasPad = {};
+    window.firmasPad[id] = canvas;
+};
+
+window.limpiarFirma = (id) => {
+    let canvas = window.firmasPad[id];
+    if(canvas) { let ctx = canvas.getContext('2d'); ctx.clearRect(0,0, canvas.width, canvas.height); }
+};
