@@ -8,13 +8,15 @@
     <link rel="apple-touch-icon" href="icon.svg">
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <title>Sistema de Gestión de Seguridad OEA</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: wss: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: wss: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -135,6 +137,21 @@
                     <button class="nav-link nav-sub" id="nav-forms" onclick="window.cambiarVista('sec-forms', this)"><span class="material-icons-round">dynamic_form</span> Formularios</button>
                     <button class="nav-link nav-sub" id="nav-dash" onclick="window.cambiarVista('sec-dash', this)"><span class="material-icons-round">dashboard</span> Panel Anal&#237;tico</button>
                     <button class="nav-link nav-sub" id="nav-drive" onclick="window.cambiarVista('sec-drive', this)"><span class="material-icons-round">cloud_circle</span> Repositorio</button>
+                </div>
+            </div>
+
+            <!-- ── HERRAMIENTAS QR ── -->
+            <div class="nav-group">
+                <button class="nav-group-header" onclick="window.toggleNavGroup('ng-qr')" id="ng-qr-btn">
+                    <div style="display:flex;align-items:center;gap:7px;">
+                        <span class="material-icons-round" style="font-size:15px;color:#a855f7;">qr_code_scanner</span>
+                        <span>Herramientas QR</span>
+                    </div>
+                    <span class="material-icons-round ng-arrow" style="font-size:16px;transition:0.2s;">expand_more</span>
+                </button>
+                <div class="nav-group-body" id="ng-qr">
+                    <button class="nav-link nav-sub" onclick="window.iniciarEscanerQR()"><span class="material-icons-round">qr_code_scanner</span> Escanear QR</button>
+                    <button class="nav-link nav-sub" onclick="window.abrirModalGeneradorQR()"><span class="material-icons-round">qr_code_2</span> Generador de QR</button>
                 </div>
             </div>
 
@@ -1826,6 +1843,9 @@
                         <option value="si_no">Sí / No</option>
                         <option value="semaforo">Tabla de Evaluación (Semáforo Dinámico)</option>
                         <option value="archivo">Archivo Adjunto</option>
+                        <option value="firma">Firma Digital</option>
+                        <option value="foto">Cámara / Fotografía</option>
+                        <option value="notificar">Notificar a (Email)</option>
                     </select>
                     <label for="fb-label-campo">Etiqueta (Pregunta)</label>
                     <input aria-label="Ej: ¿Cuál es su nombre?" type="text" id="fb-label-campo" name="fb-label-campo" placeholder="Ej: ¿Cuál es su nombre?">
@@ -1912,6 +1932,42 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ESCÁNER QR -->
+    <div class="modal-overlay" id="modal-escaner-qr" style="display:none; z-index:3000;">
+        <div class="modal-content" style="max-width:500px; width:95%; padding:30px; display:flex; flex-direction:column; background:var(--card-bg);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px;">
+                <h2 style="margin:0; font-size:18px; display:flex; align-items:center; gap:10px;"><span class="material-icons-round" style="color:var(--primary);">qr_code_scanner</span> Escáner QR</h2>
+                <button class="btn btn-dark" onclick="window.cerrarEscanerQR()" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
+            </div>
+            <div id="qr-reader" style="width:100%;"></div>
+            <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:15px;">Apunta la cámara al código QR para auto-completar el registro.</p>
+        </div>
+    </div>
+
+    <!-- MODAL GENERADOR QR -->
+    <div class="modal-overlay" id="modal-generador-qr" style="display:none; z-index:3000;">
+        <div class="modal-content" style="max-width:450px; width:95%; padding:30px; display:flex; flex-direction:column; background:var(--card-bg);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px;">
+                <h2 style="margin:0; font-size:18px; display:flex; align-items:center; gap:10px;"><span class="material-icons-round" style="color:var(--primary);">qr_code_2</span> Generador de Códigos QR</h2>
+                <button class="btn btn-dark" onclick="window.setDisplay('modal-generador-qr', 'none')" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
+            </div>
+            
+            <label style="font-size:12px;">Seleccionar Formulario para el QR</label>
+            <select id="qr-gen-form" class="search-bar" style="width:100%; margin-bottom:15px;"></select>
+            
+            <label style="font-size:12px;">Ubicación / Identificador Específico</label>
+            <input aria-label="qr-gen-ubicacion" type="text" id="qr-gen-ubicacion" class="search-bar" placeholder="Ej: Puerta Principal, CCTV-05" style="width:100%; margin-bottom:20px;">
+            
+            <button class="btn btn-primary" onclick="window.generarCodigoQR()" style="width:100%; margin-bottom:20px;"><span class="material-icons-round">qr_code</span> Generar QR</button>
+            
+            <div id="qr-result-container" style="display:none; text-align:center; border:1px dashed var(--border); padding:20px; border-radius:8px; background:#f8fafc;">
+                <div id="qr-code-element" style="display:flex; justify-content:center; margin-bottom:15px;"></div>
+                <p id="qr-result-text" style="font-size:11px; color:var(--text-muted); margin-bottom:15px; word-break:break-all;"></p>
+                <button class="btn btn-info" onclick="window.imprimirQR()"><span class="material-icons-round">print</span> Imprimir QR</button>
             </div>
         </div>
     </div>
