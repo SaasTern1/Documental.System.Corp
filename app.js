@@ -207,7 +207,7 @@ window.filtrarTabla = (inputId, tbodyId) => {
     });
 };
 
-window.uploadToCloudinary = async (f) => { const fd = new FormData(); fd.append("file", f); fd.append("upload_preset", UPLOAD_PRESET); try { const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, { method: "POST", body: fd }); const d = await r.json(); return d.secure_url; } catch(e){return null;} };
+window.uploadToCloudinary = async (f) => { const fd = new FormData(); fd.append("file", f); fd.append("upload_preset", UPLOAD_PRESET); try { const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: fd }); const d = await r.json(); return d.secure_url; } catch(e){return null;} };
 
 // RESTAURADO EL CÓDIGO A "FCI-SOL-"
 window.getNextFCI = async () => { const r = doc(db, "artifacts", appId, "public", "data", "Contadores", "solicitudes"); let id = ""; await runTransaction(db, async (t) => { const sn = await t.get(r); let c = 1; if(sn.exists()) c = sn.data().count + 1; t.set(r, {count:c}); id = `FCI-SOL-${String(c).padStart(4, '0')}`; }); return id; };
@@ -830,7 +830,7 @@ window.completarLoginUI = () => {
 
   const p = currentUser.permisos || {}; const isAdm = p.admin || isSuperAdmin || false;
   const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
-  window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-forms', (isAdm || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-drive', 'flex');
+  window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-forms', (isAdm || p.p_gest_sgc || p.p_ver_formularios) ? 'flex' : 'none'); window.setDisplay('nav-qr-group', (isAdm || p.p_ver_qr) ? 'block' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-drive', 'flex');
   window.setDisplay('nav-admin-group', (isAdm || p.p_users || p.p_struct) ? 'block' : 'none');
 
   // Grupo Super Admin (solo para isSuperAdmin)
@@ -838,7 +838,7 @@ window.completarLoginUI = () => {
   if (isSuperAdmin) window.cargarTodasEmpresas();
 
   const canAud = p.p_audit_ver || p.p_audit_admin || p.p_audit_auditor || p.p_audit_dueno || isAdm; 
-  window.setDisplay('nav-audit-group', canAud ? 'block' : 'none'); window.setDisplay('nav-norma', canAud ? 'flex' : 'none'); window.setDisplay('nav-audit', canAud ? 'flex' : 'none'); window.setDisplay('nav-noconf', (p.p_audit_admin || p.p_gest_sgc || p.p_audit_auditor || p.p_audit_dueno || isAdm) ? 'flex' : 'none');
+  window.setDisplay('nav-audit-group', (canAud || p.p_ver_manuales) ? 'block' : 'none'); window.setDisplay('nav-norma', (canAud || p.p_ver_manuales || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-audit', canAud ? 'flex' : 'none'); window.setDisplay('nav-noconf', (p.p_audit_admin || p.p_gest_sgc || p.p_audit_auditor || p.p_audit_dueno || isAdm) ? 'flex' : 'none');
   
   const canOea = p.p_proveedores || p.p_riesgos || isAdm || p.p_gest_sgc || p.p_audit_admin;
   window.setDisplay('nav-oea-group', canOea ? 'block' : 'none');
@@ -971,7 +971,7 @@ window.cargarUsuarioParaEditar = (id) => {
   window.setVal('u-nom', u.nombre || ''); window.setVal('u-usr', u.usuario || ''); if($('u-usr')) $('u-usr').disabled = true; window.setVal('u-pas', u.pass || ''); window.setVal('u-rol', u.role || ''); window.setVal('u-email', u.email || '');
   let gs = u.gerencias || []; if(!u.gerencias && u.gerencia) gs = [u.gerencia]; $$('#u-ger-list input[type="checkbox"]').forEach(cb => { cb.checked = gs.includes(cb.value); });
   const p = u.permisos || {};
-  ['p-eval-sol','p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-proveedores','p-riesgos'].forEach(i => { let k = i.replace(/-/g,'_'); if(k==='p_solicitar')k='can_solicit'; if(k==='p_eval_sol')k='p_eval_solicitud'; if($(i)) $(i).checked = p[k]||false; });
+  ['p-eval-sol','p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-proveedores','p-riesgos','p-ver-formularios','p-ver-qr','p-ver-manuales'].forEach(i => { let k = i.replace(/-/g,'_'); if(k==='p_solicitar')k='can_solicit'; if(k==='p_eval_sol')k='p_eval_solicitud'; if($(i)) $(i).checked = p[k]||false; });
   if($('p-admin')) $('p-admin').checked = p.admin||false; window.setTxt('btnSaveUser', "ACTUALIZAR USUARIO"); window.setDisplay('modal-usuario', 'flex');
 };
 
@@ -991,7 +991,7 @@ window.resetUserForm = () => {
 window.guardarUsuario = async () => {
   const n = getValSafe('u-nom').trim(); const u = getValSafe('u-usr').toLowerCase().trim(); const p = getValSafe('u-pas','123').trim(); const r = getValSafe('u-rol').trim(); const e = getValSafe('u-email').toLowerCase().trim(); const gs = []; $$('#u-ger-list input:checked').forEach(cb => { gs.push(cb.value); });
   if(!n || !u || !p || gs.length === 0) return alert("Nombre, Usuario, Contraseña y al menos 1 Gerencia son obligatorios.");
-  const pm = { p_eval_solicitud: getCheckedSafe('p-eval-sol'), can_solicit: getCheckedSafe('p-solicitar'), p_ver_propias: getCheckedSafe('p-ver-propias'), p_ver_ger: getCheckedSafe('p-ver-ger'), p_ver_todas: getCheckedSafe('p-ver-todas'), p_paso1: getCheckedSafe('p-paso1'), p_paso2: getCheckedSafe('p-paso2'), p_paso4: getCheckedSafe('p-paso4'), p_gest_sgc: getCheckedSafe('p-gest-sgc'), p_ger_apr: getCheckedSafe('p-ger-apr'), p_users: getCheckedSafe('p-users'), p_struct: getCheckedSafe('p-struct'), p_ver_listado: getCheckedSafe('p-ver-listado'), p_audit_ver: getCheckedSafe('p-audit-ver'), p_audit_admin: getCheckedSafe('p-audit-admin'), p_audit_auditor: getCheckedSafe('p-audit-auditor'), p_audit_dueno: getCheckedSafe('p-audit-dueno'), p_proveedores: getCheckedSafe('p-proveedores'), p_riesgos: getCheckedSafe('p-riesgos'), admin: getCheckedSafe('p-admin') };
+  const pm = { p_eval_solicitud: getCheckedSafe('p-eval-sol'), can_solicit: getCheckedSafe('p-solicitar'), p_ver_propias: getCheckedSafe('p-ver-propias'), p_ver_ger: getCheckedSafe('p-ver-ger'), p_ver_todas: getCheckedSafe('p-ver-todas'), p_paso1: getCheckedSafe('p-paso1'), p_paso2: getCheckedSafe('p-paso2'), p_paso4: getCheckedSafe('p-paso4'), p_gest_sgc: getCheckedSafe('p-gest-sgc'), p_ger_apr: getCheckedSafe('p-ger-apr'), p_users: getCheckedSafe('p-users'), p_struct: getCheckedSafe('p-struct'), p_ver_listado: getCheckedSafe('p-ver-listado'), p_audit_ver: getCheckedSafe('p-audit-ver'), p_audit_admin: getCheckedSafe('p-audit-admin'), p_audit_auditor: getCheckedSafe('p-audit-auditor'), p_audit_dueno: getCheckedSafe('p-audit-dueno'), p_proveedores: getCheckedSafe('p-proveedores'), p_riesgos: getCheckedSafe('p-riesgos'), p_ver_formularios: getCheckedSafe('p-ver-formularios'), p_ver_qr: getCheckedSafe('p-ver-qr'), p_ver_manuales: getCheckedSafe('p-ver-manuales'), admin: getCheckedSafe('p-admin') };
   window.showLoading(); 
   try {
       const docRef = doc(db, "artifacts", appId, "public", "data", "Usuarios", u); 

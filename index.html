@@ -141,7 +141,7 @@
             </div>
 
             <!-- ── HERRAMIENTAS QR ── -->
-            <div class="nav-group">
+            <div class="nav-group" id="nav-qr-group" style="display:none;">
                 <button class="nav-group-header" onclick="window.toggleNavGroup('ng-qr')" id="ng-qr-btn">
                     <div style="display:flex;align-items:center;gap:7px;">
                         <span class="material-icons-round" style="font-size:15px;color:#a855f7;">qr_code_scanner</span>
@@ -1419,6 +1419,9 @@
                            <b style="font-size:11px; color:#64748b; text-transform:uppercase;">Permisos de Visualización (Ver)</b>
                            <div style="margin-top:5px; display:flex; flex-direction:column; gap:4px;">
                                <label><input aria-label="p-ver-listado" type="checkbox" id="p-ver-listado"> Ver Listado Maestro</label>
+                               <label><input aria-label="p-ver-formularios" type="checkbox" id="p-ver-formularios"> Módulo Formularios Dinámicos</label>
+                               <label><input aria-label="p-ver-qr" type="checkbox" id="p-ver-qr"> Módulo Herramientas QR</label>
+                               <label><input aria-label="p-ver-manuales" type="checkbox" id="p-ver-manuales"> Ver / Subir Manuales OEA</label>
                            </div>
                        </div>
                        <div>
