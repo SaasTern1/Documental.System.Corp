@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    SISTEMA DE GESTIÓN DE SEGURIDAD OEA — FCI LOGISTIC
    Professional Enterprise Dashboard — Redesigned CSS
    ========================================================================== */
@@ -528,7 +528,7 @@ body {
 
 .grid-4 {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
 }
 
@@ -574,6 +574,14 @@ textarea {
     outline: none;
     transition: var(--transition);
     line-height: 1.5;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: auto;
+    padding: 0;
+    margin: 0 8px 0 0;
+    vertical-align: middle;
 }
 
 input:focus,
@@ -1469,14 +1477,34 @@ body.dark-theme div[style*="background:#bfdbfe"] {
     }
 
     .modal-overlay {
-        padding: 10px;
+        padding: 0;
     }
 
     .modal-content {
-        display: flex;
+        display: flex !important;
         flex-direction: column;
-        height: 95vh;
-        border-radius: var(--radius-md);
+        height: 100vh !important;
+        max-height: 100vh !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 15px !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+    
+    /* Fix for buttons and flex containers overflowing in mobile modals */
+    .modal-content div[style*="display:flex"],
+    .modal-content div[style*="display: flex"] {
+        flex-wrap: wrap !important;
+    }
+    
+    /* Responsive buttons inside modals */
+    .modal-content .btn {
+        flex: 1 1 auto;
+        text-align: center;
+        justify-content: center;
     }
 
     .modal-main {
@@ -1503,7 +1531,10 @@ body.dark-theme div[style*="background:#bfdbfe"] {
     }
 
     .section-header-actions .btn {
-        flex: 1;
+        flex: 1 1 calc(50% - 10px);
+        min-width: 120px;
+        text-align: center;
+        justify-content: center;
     }
 
     .section-header-icon {
@@ -1734,3 +1765,9 @@ textarea,
     font-size: 16px !important;
     min-width: 18px;
 }
+
+
+
+
+
+

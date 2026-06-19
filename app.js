@@ -43,7 +43,7 @@ const getCheckedSafe = (id) => $(id) ? $(id).checked : false;
 
 let currentUser = null, selectedId = null, selectedDocData = null, tempAction = "";
 let allUsers = [], allDepartamentos = [], tiposDocumento = [], columnasMaestro = [], estatusMaestro = [], dataMaestro = [], editandoMaestroId = null;
-let globalSolicitudes = [], globalAuditPlan = null, globalAllAuditorias = [], globalAuditorias = [], selectedAuditId = null, selectedAuditData = null, editandoAuditoriaId = null;
+let globalSolicitudes = [], globalAuditPlan = null, globalAllAuditorías = [], globalAuditorías = [], selectedAuditId = null, selectedAuditData = null, editandoAuditoriaId = null;
 let currentAuditF020 = [], globalAllSacs = [], currentEditingSacId = null, currentEditingF020Ref = null;
 let requisitosOEA = []; let manualOEA = { url: "", nombre: "" };
 
@@ -55,7 +55,7 @@ let chartSacsInstance = null; let chartProvInstance = null;
 window.showLoading = () => window.setDisplay('loading-overlay', 'flex'); 
 window.hideLoading = () => window.setDisplay('loading-overlay', 'none');
 window.closeModal = () => window.setDisplay('modal', 'none'); 
-window.cerrarModalAuditoria = () => window.setDisplay('modal-auditoria', 'none');
+window.cerrarModalAuditoría = () => window.setDisplay('modal-auditoria', 'none');
 window.cerrarModalUsuario = () => window.setDisplay('modal-usuario', 'none');
 window.abrirModalUsuario = () => { window.resetUserForm(); window.setDisplay('modal-usuario', 'flex'); };
 window.toggleModPanel = v => window.setDisplay('panel-mod', v === 'Creación' ? 'none' : 'grid');
@@ -207,7 +207,28 @@ window.filtrarTabla = (inputId, tbodyId) => {
     });
 };
 
-window.uploadToCloudinary = async (f) => { const fd = new FormData(); fd.append("file", f); fd.append("upload_preset", UPLOAD_PRESET); try { const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: fd }); const d = await r.json(); return d.secure_url; } catch(e){return null;} };
+window.uploadToCloudinary = async (f) => {
+    if (f.size > 10485760) {
+        alert("El archivo (" + (f.size / 1024 / 1024).toFixed(2) + " MB) supera el límite máximo de 10 MB permitido por Cloudinary. Por favor, comprima su documento antes de subirlo.");
+        return null;
+    }
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("upload_preset", UPLOAD_PRESET);
+    try {
+        const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: fd });
+        const d = await r.json();
+        if (!r.ok) {
+            alert("Error de Servidor (Cloudinary): " + (d.error ? d.error.message : "400 Bad Request"));
+            console.error("Detalle Error Cloudinary:", d);
+            return null;
+        }
+        return d.secure_url;
+    } catch(e) {
+        console.error("Fetch Error:", e);
+        return null;
+    }
+};
 
 // RESTAURADO EL CÓDIGO A "FCI-SOL-"
 window.getNextFCI = async () => { const r = doc(db, "artifacts", appId, "public", "data", "Contadores", "solicitudes"); let id = ""; await runTransaction(db, async (t) => { const sn = await t.get(r); let c = 1; if(sn.exists()) c = sn.data().count + 1; t.set(r, {count:c}); id = `FCI-SOL-${String(c).padStart(4, '0')}`; }); return id; };
@@ -221,7 +242,7 @@ window.checkDailyAlerts = async () => {
   }
 };
 
-window.verificarAlertasAuditoria = (arr) => {
+window.verificarAlertasAuditoría = (arr) => {
   if(!globalAuditPlan || !globalAuditPlan.correos || globalAuditPlan.correos.length === 0) return;
   const today = new Date(); today.setHours(0,0,0,0);
   arr.forEach(a => {
@@ -394,10 +415,10 @@ window.renderDashboardCharts = () => {
         }
 
         // 5. Poblar Tablas Secundarias en Dashboard
-        if ($('dash-tbody-audits') && globalAllAuditorias) {
+        if ($('dash-tbody-audits') && globalAllAuditorías) {
             let audHtml = '';
             // Solo futuras y del año
-            let sortedAudits = [...globalAllAuditorias].sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).slice(0, 5);
+            let sortedAudits = [...globalAllAuditorías].sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).slice(0, 5);
             sortedAudits.forEach(a => {
                 let statusColor = a.estado === 'Finalizada' ? 'var(--success)' : (a.estado === 'Cancelada' ? 'var(--danger)' : 'var(--warning)');
                 audHtml += `<tr><td>${a.lugar || 'N/A'}</td><td>${window.formatearFechaAbreviada(a.fecha)}</td><td>${a.auditor_nombre || a.auditor || 'N/A'}</td><td><span style="color:${statusColor}; font-weight:600;">${a.estado}</span></td></tr>`;
@@ -614,10 +635,10 @@ window.cargarDatosCentrales = () => {
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "ListadoMaestro"), (sn) => { dataMaestro = []; sn.forEach(d => { let obj = d.data(); obj.docId = d.id; dataMaestro.push(obj); }); window.renderTablaMaestro(); });
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), (sn) => { globalSolicitudes = []; sn.forEach(d => { let obj = d.data(); obj.docId = d.id; globalSolicitudes.push(obj); }); window.renderTablasSolicitudes(); window.checkDailyAlerts(); });
   
-  onSnapshot(collection(db, "artifacts", appId, "public", "data", "Auditorias"), (sn) => {
-    globalAllAuditorias = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalAllAuditorias.push(obj); });
+    onSnapshot(collection(db, "artifacts", appId, "public", "data", "Auditorias"), (sn) => {
+        globalAllAuditorías = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalAllAuditorías.push(obj); });
     let cy = new Date().getFullYear().toString(); let ys = $('aud-year-select'); if(ys && ys.options.length === 0) ys.innerHTML = `<option value="${cy}">${cy}</option><option value="nuevo">+ Añadir Año</option>`;
-    window.loadAuditPlan(ys ? ys.value : cy); window.renderTablaAuditorias(ys ? ys.value : cy);
+        window.loadAuditPlan(ys ? ys.value : cy); window.renderTablaAuditorías(ys ? ys.value : cy);
   });
   
   // Listeners que actualizan el Dashboard Analítico
@@ -723,7 +744,7 @@ window.renderTablasDinamicasDash = () => {
         });
     }
     else if(window.currentDashTab === 'auditorias') {
-        let data = [...(globalAllAuditorias || [])];
+        let data = [...(globalAllAuditorías || [])];
         if(fDesde) data = data.filter(x => x.fecha && new Date(x.fecha) >= fDesde);
         if(fHasta) data = data.filter(x => x.fecha && new Date(x.fecha) <= fHasta);
         if(dEstado) data = data.filter(x => String(x.estado||'Programada').toLowerCase().includes(dEstado));
@@ -830,7 +851,7 @@ window.completarLoginUI = () => {
 
   const p = currentUser.permisos || {}; const isAdm = p.admin || isSuperAdmin || false;
   const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
-  window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-forms', (isAdm || p.p_gest_sgc || p.p_ver_formularios) ? 'flex' : 'none'); window.setDisplay('nav-qr-group', (isAdm || p.p_ver_qr) ? 'block' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-drive', 'flex');
+  window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-forms', (isAdm || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-drive', 'flex');
   window.setDisplay('nav-admin-group', (isAdm || p.p_users || p.p_struct) ? 'block' : 'none');
 
   // Grupo Super Admin (solo para isSuperAdmin)
@@ -838,7 +859,7 @@ window.completarLoginUI = () => {
   if (isSuperAdmin) window.cargarTodasEmpresas();
 
   const canAud = p.p_audit_ver || p.p_audit_admin || p.p_audit_auditor || p.p_audit_dueno || isAdm; 
-  window.setDisplay('nav-audit-group', (canAud || p.p_ver_manuales) ? 'block' : 'none'); window.setDisplay('nav-norma', (canAud || p.p_ver_manuales || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-audit', canAud ? 'flex' : 'none'); window.setDisplay('nav-noconf', (p.p_audit_admin || p.p_gest_sgc || p.p_audit_auditor || p.p_audit_dueno || isAdm) ? 'flex' : 'none');
+  window.setDisplay('nav-audit-group', canAud ? 'block' : 'none'); window.setDisplay('nav-norma', canAud ? 'flex' : 'none'); window.setDisplay('nav-audit', canAud ? 'flex' : 'none'); window.setDisplay('nav-noconf', (p.p_audit_admin || p.p_gest_sgc || p.p_audit_auditor || p.p_audit_dueno || isAdm) ? 'flex' : 'none');
   
   const canOea = p.p_proveedores || p.p_riesgos || isAdm || p.p_gest_sgc || p.p_audit_admin;
   window.setDisplay('nav-oea-group', canOea ? 'block' : 'none');
@@ -971,7 +992,7 @@ window.cargarUsuarioParaEditar = (id) => {
   window.setVal('u-nom', u.nombre || ''); window.setVal('u-usr', u.usuario || ''); if($('u-usr')) $('u-usr').disabled = true; window.setVal('u-pas', u.pass || ''); window.setVal('u-rol', u.role || ''); window.setVal('u-email', u.email || '');
   let gs = u.gerencias || []; if(!u.gerencias && u.gerencia) gs = [u.gerencia]; $$('#u-ger-list input[type="checkbox"]').forEach(cb => { cb.checked = gs.includes(cb.value); });
   const p = u.permisos || {};
-  ['p-eval-sol','p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-proveedores','p-riesgos','p-ver-formularios','p-ver-qr','p-ver-manuales'].forEach(i => { let k = i.replace(/-/g,'_'); if(k==='p_solicitar')k='can_solicit'; if(k==='p_eval_sol')k='p_eval_solicitud'; if($(i)) $(i).checked = p[k]||false; });
+  ['p-eval-sol','p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-audit-ver-preguntas','p-noconf-admin','p-seg-fisica','p-logistica','p-hseq','p-rrhh','p-it','p-ver-formularios','p-ver-qr','p-ver-manuales','p-proveedores','p-riesgos'].forEach(i => { let k = i.replace(/-/g,'_'); if(k==='p_solicitar')k='can_solicit'; if(k==='p_eval_sol')k='p_eval_solicitud'; if($(i)) $(i).checked = p[k]||false; });
   if($('p-admin')) $('p-admin').checked = p.admin||false; window.setTxt('btnSaveUser', "ACTUALIZAR USUARIO"); window.setDisplay('modal-usuario', 'flex');
 };
 
@@ -984,14 +1005,14 @@ window.resetUserForm = () => {
   window.setHtml('user-form-title', `<span class="material-icons-round">person_add</span> Registrar / Editar Usuario`);
   window.setVal('u-nom', ''); window.setVal('u-usr', ''); if($('u-usr')) $('u-usr').disabled = false; window.setVal('u-pas', '123'); window.setVal('u-rol', ''); window.setVal('u-email', '');
   $$('#u-ger-list input[type="checkbox"]').forEach(cb => cb.checked = false);
-  ['p-eval-sol','p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-proveedores','p-riesgos','p-admin'].forEach(i => { if($(i)) $(i).checked=false; });
+  ['p-eval-sol','p-solicitar','p-ver-propias','p-ver-ger','p-ver-todas','p-paso1','p-paso2','p-paso4','p-gest-sgc','p-ger-apr','p-users','p-struct','p-ver-listado','p-audit-ver','p-audit-admin','p-audit-auditor','p-audit-dueno','p-audit-ver-preguntas','p-noconf-admin','p-seg-fisica','p-logistica','p-hseq','p-rrhh','p-it','p-ver-formularios','p-ver-qr','p-ver-manuales','p-proveedores','p-riesgos','p-admin'].forEach(i => { if($(i)) $(i).checked=false; });
   if($('btnSaveUser')) $('btnSaveUser').innerText = "GUARDAR USUARIO"; 
 };
 
 window.guardarUsuario = async () => {
   const n = getValSafe('u-nom').trim(); const u = getValSafe('u-usr').toLowerCase().trim(); const p = getValSafe('u-pas','123').trim(); const r = getValSafe('u-rol').trim(); const e = getValSafe('u-email').toLowerCase().trim(); const gs = []; $$('#u-ger-list input:checked').forEach(cb => { gs.push(cb.value); });
   if(!n || !u || !p || gs.length === 0) return alert("Nombre, Usuario, Contraseña y al menos 1 Gerencia son obligatorios.");
-  const pm = { p_eval_solicitud: getCheckedSafe('p-eval-sol'), can_solicit: getCheckedSafe('p-solicitar'), p_ver_propias: getCheckedSafe('p-ver-propias'), p_ver_ger: getCheckedSafe('p-ver-ger'), p_ver_todas: getCheckedSafe('p-ver-todas'), p_paso1: getCheckedSafe('p-paso1'), p_paso2: getCheckedSafe('p-paso2'), p_paso4: getCheckedSafe('p-paso4'), p_gest_sgc: getCheckedSafe('p-gest-sgc'), p_ger_apr: getCheckedSafe('p-ger-apr'), p_users: getCheckedSafe('p-users'), p_struct: getCheckedSafe('p-struct'), p_ver_listado: getCheckedSafe('p-ver-listado'), p_audit_ver: getCheckedSafe('p-audit-ver'), p_audit_admin: getCheckedSafe('p-audit-admin'), p_audit_auditor: getCheckedSafe('p-audit-auditor'), p_audit_dueno: getCheckedSafe('p-audit-dueno'), p_proveedores: getCheckedSafe('p-proveedores'), p_riesgos: getCheckedSafe('p-riesgos'), p_ver_formularios: getCheckedSafe('p-ver-formularios'), p_ver_qr: getCheckedSafe('p-ver-qr'), p_ver_manuales: getCheckedSafe('p-ver-manuales'), admin: getCheckedSafe('p-admin') };
+  const pm = { p_eval_solicitud: getCheckedSafe('p-eval-sol'), can_solicit: getCheckedSafe('p-solicitar'), p_ver_propias: getCheckedSafe('p-ver-propias'), p_ver_ger: getCheckedSafe('p-ver-ger'), p_ver_todas: getCheckedSafe('p-ver-todas'), p_paso1: getCheckedSafe('p-paso1'), p_paso2: getCheckedSafe('p-paso2'), p_paso4: getCheckedSafe('p-paso4'), p_gest_sgc: getCheckedSafe('p-gest-sgc'), p_ger_apr: getCheckedSafe('p-ger-apr'), p_users: getCheckedSafe('p-users'), p_struct: getCheckedSafe('p-struct'), p_ver_listado: getCheckedSafe('p-ver-listado'), p_audit_ver: getCheckedSafe('p-audit-ver'), p_audit_admin: getCheckedSafe('p-audit-admin'), p_audit_auditor: getCheckedSafe('p-audit-auditor'), p_audit_dueno: getCheckedSafe('p-audit-dueno'), p_audit_ver_preguntas: getCheckedSafe('p-audit-ver-preguntas'), p_noconf_admin: getCheckedSafe('p-noconf-admin'), p_seg_fisica: getCheckedSafe('p-seg-fisica'), p_logistica: getCheckedSafe('p-logistica'), p_hseq: getCheckedSafe('p-hseq'), p_rrhh: getCheckedSafe('p-rrhh'), p_it: getCheckedSafe('p-it'), p_ver_formularios: getCheckedSafe('p-ver-formularios'), p_ver_qr: getCheckedSafe('p-ver-qr'), p_ver_manuales: getCheckedSafe('p-ver-manuales'), p_proveedores: getCheckedSafe('p-proveedores'), p_riesgos: getCheckedSafe('p-riesgos'), admin: getCheckedSafe('p-admin') };
   window.showLoading(); 
   try {
       const docRef = doc(db, "artifacts", appId, "public", "data", "Usuarios", u); 
@@ -1070,7 +1091,7 @@ window.abrirConfigSistema = () => {
   // Actualizar subtítulo con la empresa activa
   const empNombre = currentEmpresaConfig ? currentEmpresaConfig.nombre : (currentEmpresaId === '1' ? 'FCI Logistic' : 'Empresa ' + currentEmpresaId);
   if ($('config-empresa-subtitle')) {
-    $('config-empresa-subtitle').innerHTML = `Configuraci&#243;n de <strong style="color:var(--primary)">${empNombre}</strong> — Gerencias, departamentos, tipos de documento y SLA`;
+    $('config-empresa-subtitle').innerHTML = `Configuración de <strong style="color:var(--primary)">${empNombre}</strong> — Gerencias, departamentos, tipos de documento y SLA`;
   }
   // Cargar datos del appId activo
   window.cargarDatosEstructura();
@@ -1329,6 +1350,40 @@ window.crearSolicitud = async () => {
     window.sendNotification(destinatarios, `Nueva Solicitud Creada: ${fci} - ${s.titulo}`, msgMail);
     window.hideLoading(); alert("Solicitud Creada: " + fci); window.cambiarVista('sec-hist', $('nav-hist'));
 };
+
+window.fechasSLAAgregadas = [];
+window.agregarFechaSLA = () => {
+    let dateInput = document.getElementById('eval-sla-date-picker');
+    if (!dateInput || !dateInput.value) return alert("Seleccione una fecha válida.");
+    let dateStr = dateInput.value;
+    if (!window.fechasSLAAgregadas.includes(dateStr)) {
+        window.fechasSLAAgregadas.push(dateStr);
+        window.fechasSLAAgregadas.sort();
+        if(window.renderFechasSLA) window.renderFechasSLA();
+    }
+    dateInput.value = '';
+};
+
+window.eliminarFechaSLA = (idx) => {
+    window.fechasSLAAgregadas.splice(idx, 1);
+    if(window.renderFechasSLA) window.renderFechasSLA();
+};
+
+window.renderFechasSLA = () => {
+    let container = document.getElementById('eval-sla-dates-list');
+    if (!container) return;
+    if (window.fechasSLAAgregadas.length === 0) {
+        container.innerHTML = '<span style="color:#94a3b8; font-style:italic; font-size:12px;">Sin fechas asignadas</span>';
+        return;
+    }
+    container.innerHTML = window.fechasSLAAgregadas.map((d, i) => 
+        `<div style="display:inline-flex; align-items:center; background:#fef3c7; border:1px solid #f59e0b; padding:2px 8px; border-radius:12px; font-size:12px; color:#92400e; font-weight:700;">
+            ${window.formatearFechaAbreviada ? window.formatearFechaAbreviada(d) : d} 
+            <span class="material-icons-round" style="font-size:14px; margin-left:4px; cursor:pointer; color:#b45309;" onclick="window.eliminarFechaSLA(${i})">cancel</span>
+        </div>`
+    ).join('');
+};
+
 window.abrirEvalModal = () => {
     let optsP1 = '<option value="">-- No Asignar (Cualquier gestor SGC) --</option>';
     let optsP2 = '<option value="">-- No Asignar (Cualquier gestor SGC) --</option>';
@@ -1341,7 +1396,20 @@ window.abrirEvalModal = () => {
     });
     window.setHtml('eval-asig-p1', optsP1); window.setHtml('eval-asig-p2', optsP2); window.setHtml('eval-asig-p4', optsP4);
     let pr = String(selectedDocData.prioridad || "Baja").toLowerCase();
-    window.setVal('eval-sla-dias', slaConfigDias[pr] || 7);
+    if(document.getElementById('eval-sla-dias')) window.setVal('eval-sla-dias', slaConfigDias[pr] || 7);
+    
+    window.fechasSLAAgregadas = [];
+    let diasHabiles = slaConfigDias[pr] || 7;
+    let tempDate = new Date();
+    while (diasHabiles > 0) {
+        tempDate.setDate(tempDate.getDate() + 1);
+        if (tempDate.getDay() !== 0 && tempDate.getDay() !== 6) {
+            window.fechasSLAAgregadas.push(tempDate.toISOString().split('T')[0]);
+            diasHabiles--;
+        }
+    }
+    if(window.renderFechasSLA) window.renderFechasSLA();
+
     window.setVal('eval-motivo', '');
     document.querySelector('input[name="eval_decision"][value="valida"]').checked = true;
     window.toggleEvalDecision();
@@ -1360,8 +1428,18 @@ window.guardarEvaluacion = async () => {
         await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { estado: 'Anulado', motivo_anulacion: mot, fecha_anulacion: now, chat: arrayUnion({u: currentUser.nombre, m: `❌ SOLICITUD ANULADA EN EVALUACIÓN: ${mot}`, t: new Date().toLocaleString()}) });
     } else {
         let p1 = $('eval-asig-p1').value, p2 = $('eval-asig-p2').value, p4 = $('eval-asig-p4').value;
-        let dias = parseInt($('eval-sla-dias').value) || 0; let dObj = new Date(); dObj.setDate(dObj.getDate() + dias);
+        
+        let dias = 0; let dObj = new Date(); dObj.setDate(dObj.getDate() + dias);
         let fSLA = dObj.toISOString().split('T')[0];
+        if(document.getElementById('eval-sla-dias')) {
+            dias = parseInt($('eval-sla-dias').value) || 0; 
+            dObj = new Date(); dObj.setDate(dObj.getDate() + dias);
+            fSLA = dObj.toISOString().split('T')[0];
+        }
+        if (window.fechasSLAAgregadas && window.fechasSLAAgregadas.length > 0) {
+            fSLA = window.fechasSLAAgregadas[window.fechasSLAAgregadas.length - 1];
+        }
+
         let p1Name = p1 || 'No especificado (Cualquiera)'; let p2Name = p2 || 'No especificado (Cualquiera)'; let p4Name = p4 || 'No especificado (Cualquiera)';
         await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { idx: 0, estado: PASOS_NOMBRES[0], fase_eval_fin: now, fase_0_ini: now, sla: fSLA, fecha_esperada_cierre: fSLA, asig_paso1: p1, asig_paso2: p2, asig_paso4: p4, chat: arrayUnion({u: currentUser.nombre, m: `✅ EVALUACIÓN APROBADA. SLA Fijado para: ${fSLA}. <br><br><b>Asignados SGC:</b><br>- Paso 1: ${p1Name}<br>- Paso 2: ${p2Name}<br>- Paso 4: ${p4Name}`, t: new Date().toLocaleString()}) });
         
@@ -1492,7 +1570,7 @@ window.devolverPaso = async () => {
     await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { 
         idx: nIdx, 
         estado: nEst, 
-        chat: arrayUnion({u: currentUser.nombre, m: `? <b>DEVUELTO A FASE ANTERIOR: ${nEst}</b><br>Motivo: ${motivo}`, t: new Date().toLocaleString()}) 
+        chat: arrayUnion({u: currentUser.nombre, m: `⏪ <b>DEVUELTO A FASE ANTERIOR: ${nEst}</b><br>Motivo: ${motivo}`, t: new Date().toLocaleString()}) 
     });
     window.hideLoading();
     window.closeModal();
@@ -2251,6 +2329,7 @@ window.guardarEdicionSol = async () => {
     const nGer = getValSafe('e-sol-ger');
     const nDep = getValSafe('e-sol-dep');
     const nMot = getValSafe('e-sol-mot').trim();
+    const f = $('e-sol-file');
 
     let extraEmails = []; 
     $$('#lista-involucrados-tags-edit .involucrado-item').forEach(el => {
@@ -2260,14 +2339,29 @@ window.guardarEdicionSol = async () => {
     if(!nTit || !nMot || !nGer || !nDep || !nTipo) return alert("Complete los campos obligatorios.");
     
     window.showLoading();
+    let fileUrl = null; let fileName = null;
+    if (f && f.files[0]) {
+        fileUrl = await window.uploadToCloudinary(f.files[0]);
+        fileName = f.files[0].name;
+        if (!fileUrl) { window.hideLoading(); return alert("Error al subir el nuevo archivo."); }
+    }
+
     let msjChat = `✏️ <b>Datos Editados:</b><br>- Título: ${nTit}<br>- Acción: ${nAcc}<br>- Prioridad: ${nPri}<br>- Tipo: ${nTipo}<br>- Gerencia: ${nGer} / ${nDep}`;
+    if (fileName) msjChat += `<br>- Nuevo Adjunto: ${fileName}`;
     
-    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), { 
+    let updates = { 
         titulo: nTit, accion: nAcc, prioridad: nPri, tipoDoc: nTipo, gerencia: nGer, departamento: nDep, involucrados: extraEmails, motivo: nMot,
         chat: arrayUnion({u: currentUser.nombre, m: msjChat, t: new Date().toLocaleString()}) 
-    });
+    };
+    if (fileUrl) {
+        updates.adjunto = fileUrl;
+        updates.adjunto_nombre = fileName;
+    }
+    
+    await updateDoc(doc(db, "artifacts", appId, "public", "data", "Solicitudes", selectedId), updates);
     
     window.hideLoading(); 
+    if(f) f.value = "";
     alert("Solicitud actualizada correctamente."); 
     window.setDisplay('m-original-data', 'block');
     window.verDetalle(selectedId);
@@ -2337,6 +2431,7 @@ window.descargarExcelFiltrado = (origen = 'hist') => {
 // MÓDULO DE AUDITORÍAS (CORREGIDO ERROR DE ARRAYS NULOS)
 // ==========================================
 window.switchAuditTab = (id) => { $$('.tab-btn').forEach(b=>b.classList.remove('active')); $$('.tab-content').forEach(c=>c.classList.remove('active')); if($(`btn-tab-${id}`)) $(`btn-tab-${id}`).classList.add('active'); if($(`tab-${id}`)) $(`tab-${id}`).classList.add('active'); };
+window.switchFormsTab = (id) => { ['lista', 'reporte'].forEach(t => { if($(`btn-tab-forms-${t}`)) $(`btn-tab-forms-${t}`).classList.remove('active'); if($(`forms-tab-${t}`)) $(`forms-tab-${t}`).classList.remove('active'); }); if($(`btn-tab-forms-${id}`)) $(`btn-tab-forms-${id}`).classList.add('active'); if($(`forms-tab-${id}`)) $(`forms-tab-${id}`).classList.add('active'); };
 window.abrirModalPlan = () => {
     window.setTxt('edit-year-label', $('aud-year-select').value); $$('#ah-auditor-list input').forEach(cb=>cb.checked=false);
     if(globalAuditPlan) {
@@ -2365,9 +2460,9 @@ window.saveAuditPlan = async () => {
     window.hideLoading(); alert("Plan Anual actualizado."); window.cerrarModalPlan();
 };
 
-window.cambiarAnioAuditoria = (val) => {
+window.cambiarAnioAuditoría = (val) => {
     if(val === 'nuevo') { let nYear = prompt("Ingrese el nuevo año a registrar (ej: 2028):"); if(nYear && !isNaN(nYear)) { let opt = document.createElement('option'); opt.value = nYear; opt.text = nYear; opt.selected = true; $('aud-year-select').add(opt, $('aud-year-select').options[1]); val = nYear; } else { window.setVal('aud-year-select', new Date().getFullYear().toString()); return; } }
-    window.loadAuditPlan(val); window.renderTablaAuditorias(val);
+    window.loadAuditPlan(val); window.renderTablaAuditorías(val);
 };
 
 window.loadAuditPlan = (year) => {
@@ -2383,10 +2478,10 @@ window.loadAuditPlan = (year) => {
     });
 };
 
-window.abrirNuevaAuditoria = () => { window.cancelarEdicionAuditoria(); window.setDisplay('modal-nueva-aud', 'flex'); };
+window.abrirNuevaAuditoría = () => { window.cancelarEdicionAuditoría(); window.setDisplay('modal-nueva-aud', 'flex'); };
 
 window.cargarAuditoriaParaEditar = async (id) => {
-    const au = globalAllAuditorias.find(x => x.id === id); if(!au) return; 
+    const au = globalAllAuditorías.find(x => x.id === id); if(!au) return; 
     editandoAuditoriaId = id; 
     if($('titulo-form-auditoria')) $('titulo-form-auditoria').innerText = "Editar Auditoría Programada"; 
 
@@ -2401,7 +2496,7 @@ window.cargarAuditoriaParaEditar = async (id) => {
     window.setDisplay('btn-cancelar-aud', 'inline-block'); window.setDisplay('modal-nueva-aud', 'flex');
 };
 
-window.cancelarEdicionAuditoria = () => {
+window.cancelarEdicionAuditoría = () => {
     editandoAuditoriaId = null; 
     if($('titulo-form-auditoria')) $('titulo-form-auditoria').innerText = "Programar Nueva Auditoría"; 
 
@@ -2416,7 +2511,7 @@ window.cancelarEdicionAuditoria = () => {
     window.setDisplay('btn-cancelar-aud', 'none'); window.setDisplay('modal-nueva-aud', 'none');
 };
 
-window.guardarAuditoria = async () => {
+window.guardarAuditoría = async () => {
     const f = $('aud-fecha').value; 
     const reqN = []; $$('#aud-req-list input:checked').forEach(c => reqN.push(c.value)); const r = reqN.join(', ');
 
@@ -2451,7 +2546,7 @@ window.guardarAuditoria = async () => {
             correosCc.push(EMAIL_ADMIN_SGC);
             correosCc = Array.from(new Set(correosCc)).filter(e => e && e !== "undefined" && e !== "null");
             
-            let msgAuditoria = `
+            let msgAuditoría = `
             <div style="font-family: sans-serif; color: #1e293b; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px;">
                 <div style="background: #0ea5e9; color: white; padding: 15px; text-align: center; border-radius: 8px 8px 0 0;">
                     <h2 style="margin: 0;">NUEVA AUDITORÍA PROGRAMADA</h2>
@@ -2471,16 +2566,16 @@ window.guardarAuditoria = async () => {
             </div>`;
             
             console.log("[Auditoría] Destinatarios identificados:", {to: correosTo, cc: correosCc});
-            window.sendNotification({to: correosTo.join(','), cc: correosCc.join(',')}, `Auditoría Programada: ${aNum}`, msgAuditoria);
+            window.sendNotification({to: correosTo.join(','), cc: correosCc.join(',')}, `Auditoría Programada: ${aNum}`, msgAuditoría);
             alert(`Auditoría ${aNum} programada.`);
         }
-        window.cancelarEdicionAuditoria(); 
+        window.cancelarEdicionAuditoría(); 
     } catch(e) { console.error(e); alert("Error guardando auditoria."); } finally { window.hideLoading(); }
 };
 
-window.exportarExcelAuditoria = () => {
-    if(!globalAuditorias || globalAuditorias.length === 0) return alert("No hay auditorías en pantalla para exportar.");
-    let dE = globalAuditorias.map(a => ({
+window.exportarExcelAuditoría = () => {
+    if(!globalAuditorías || globalAuditorías.length === 0) return alert("No hay auditorías en pantalla para exportar.");
+    let dE = globalAuditorías.map(a => ({
         "N° Auditoría": a.audit_num || '',
         "Fecha Programada": a.fecha ? window.formatearFechaAbreviada(a.fecha) : '',
         "Horario": `${a.hora_inicio || ''} - ${a.hora_fin || ''}`,
@@ -2494,26 +2589,26 @@ window.exportarExcelAuditoria = () => {
         "Observaciones": a.observacion || ''
     }));
     let wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dE), "Auditorias_Programadas");
-    XLSX.writeFile(wb, "Calendario_Auditorias_SGC.xlsx");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dE), "Auditorías_Programadas");
+    XLSX.writeFile(wb, "Calendario_Auditorías_SGC.xlsx");
 };
 
-window.renderTablaAuditorias = (yf) => {
+window.renderTablaAuditorías = (yf) => {
     if(!$('tbody-auditorias')) return; 
     let isAdm = currentUser.permisos.p_audit_admin || currentUser.permisos.admin || currentUser.permisos.p_gest_sgc;
 
-    globalAuditorias = globalAllAuditorias.filter(a => { 
+    globalAuditorías = globalAllAuditorías.filter(a => { 
         if(a.fecha && !a.fecha.startsWith(yf)) return false; 
         return isAdm || (a.auditado && a.auditado.includes(currentUser.nombre)) || (a.auditor && a.auditor.includes(currentUser.nombre)); 
     });
 
-    globalAuditorias.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)); 
+    globalAuditorías.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)); 
     let h = "";
 
-    globalAuditorias.forEach(a => {
+    globalAuditorías.forEach(a => {
         let e = String(a.estado || 'Programada'); 
         let b = e === 'Completada' ? 'badge-success' : (e === 'En Progreso' ? 'badge-info' : (e === 'Pausada' ? 'badge-dark' : 'badge-warning'));
-        let btn = `<button type="button" class="btn btn-primary" style="padding:6px 12px; font-size:12px; margin-right:5px; margin-bottom:5px;" onclick="window.verModalAuditoria('${a.id}')"><span class="material-icons-round" style="font-size:14px; vertical-align:middle;">visibility</span> Ver</button>`;
+        let btn = `<button type="button" class="btn btn-primary" style="padding:6px 12px; font-size:12px; margin-right:5px; margin-bottom:5px;" onclick="window.verModalAuditoría('${a.id}')"><span class="material-icons-round" style="font-size:14px; vertical-align:middle;">visibility</span> Ver</button>`;
         let roundLabel = a.rondas > 1 ? ` (R${a.rondas})` : '';
         
         const isAuditor = a.auditor && a.auditor.includes(currentUser.nombre); 
@@ -2534,7 +2629,7 @@ window.renderTablaAuditorias = (yf) => {
         h += `<tr><td><b>${a.audit_num || '-'}</b></td><td><b>${window.formatearFechaAbreviada(a.fecha)}</b><br><small>${a.hora_inicio || ''} - ${a.hora_fin || ''}</small></td><td>${a.requisitos ? a.requisitos.substring(0,30) + '...' : '-'}</td><td>${a.auditado || '-'}</td><td>${a.auditor || '-'}</td><td><span class="badge ${b}">${e}${roundLabel}</span></td><td class="no-export" style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">${btn}</td></tr>`;
     });
     window.setHtml('tbody-auditorias', h); 
-    if(isAdm) window.verificarAlertasAuditoria(globalAuditorias);
+    if(isAdm) window.verificarAlertasAuditoría(globalAuditorías);
 };
 
 window.iniciarAuditoriaDirecto = async (id) => { if(!confirm("¿Iniciar auditoría?")) return; window.showLoading(); await updateDoc(doc(db, "artifacts", appId, "public", "data", "Auditorias", id), {estado:"En Progreso", hora_real_inicio:new Date().toISOString(), rondas: 1}); window.hideLoading(); };
@@ -2546,7 +2641,7 @@ window.pausarAuditoriaDirecto = async (id) => {
 };
 window.reanudarAuditoriaDirecto = async (id) => { if(!confirm("¿Reanudar auditoría?")) return; window.showLoading(); await updateDoc(doc(db, "artifacts", appId, "public", "data", "Auditorias", id), {estado:"En Progreso"}); window.hideLoading(); };
 
-window.verModalAuditoria = async (id) => {
+window.verModalAuditoría = async (id) => {
 try {
     window.showLoading(); selectedAuditId = id; 
     const sn = await getDoc(doc(db, "artifacts", appId, "public", "data", "Auditorias", id)); 
@@ -2651,10 +2746,10 @@ try {
 }
 };
 
-window.comenzarAuditoria = async () => { if(selectedAuditData.estado === 'Pausada') { await window.reanudarAuditoriaDirecto(selectedAuditId); } else { await window.iniciarAuditoriaDirecto(selectedAuditId); } window.verModalAuditoria(selectedAuditId); };
-window.pausarAuditoria = async () => { await window.pausarAuditoriaDirecto(selectedAuditId); window.verModalAuditoria(selectedAuditId); };
-window.finalizarAuditoria = async () => { await window.finalizarAuditoriaDirecto(selectedAuditId); window.verModalAuditoria(selectedAuditId); };
-window.enviarComentarioAuditoria = async () => { const b = $('ma-comentario-libre'); const th = b.innerHTML; const f = $('ma-file-comentario'); if(!b.innerText.trim() && !f.files[0]) return; window.showLoading(); let u = null, fn = null; if(f.files[0]) { u = await window.uploadToCloudinary(f.files[0]); fn = f.files[0].name; } await updateDoc(doc(db,"artifacts",appId,"public","data","Auditorias",selectedAuditId), {bitacora: arrayUnion({u:currentUser.nombre, m:`💬 ${th}`, t:new Date().toLocaleString(), archivo:u, archivo_nombre:fn})}); b.innerHTML=""; f.value=""; window.hideLoading(); window.verModalAuditoria(selectedAuditId); };
+window.comenzarAuditoría = async () => { if(selectedAuditData.estado === 'Pausada') { await window.reanudarAuditoriaDirecto(selectedAuditId); } else { await window.iniciarAuditoriaDirecto(selectedAuditId); } window.verModalAuditoría(selectedAuditId); };
+window.pausarAuditoría = async () => { await window.pausarAuditoriaDirecto(selectedAuditId); window.verModalAuditoría(selectedAuditId); };
+window.finalizarAuditoría = async () => { await window.finalizarAuditoriaDirecto(selectedAuditId); window.verModalAuditoría(selectedAuditId); };
+window.enviarComentarioAuditoría = async () => { const b = $('ma-comentario-libre'); const th = b.innerHTML; const f = $('ma-file-comentario'); if(!b.innerText.trim() && !f.files[0]) return; window.showLoading(); let u = null, fn = null; if(f.files[0]) { u = await window.uploadToCloudinary(f.files[0]); fn = f.files[0].name; } await updateDoc(doc(db,"artifacts",appId,"public","data","Auditorias",selectedAuditId), {bitacora: arrayUnion({u:currentUser.nombre, m:`💬 ${th}`, t:new Date().toLocaleString(), archivo:u, archivo_nombre:fn})}); b.innerHTML=""; f.value=""; window.hideLoading(); window.verModalAuditoría(selectedAuditId); };
 
 window.sincronizarF020DOM = () => {
     let dA = [];
@@ -2701,7 +2796,7 @@ window.renderF020 = () => {
 
 window.agregarFilaF020 = () => { window.sincronizarF020DOM(); currentAuditF020.push({ id:'f020_'+Date.now(), pregunta:'', requisito:'', comentarios:'', auditado:'', nc:'N/A', observacion:'', fortaleza:'N/A' }); window.renderF020(); };
 window.eliminarF020 = (id) => { if(!confirm("¿Eliminar este ítem de la lista?")) return; window.sincronizarF020DOM(); currentAuditF020 = currentAuditF020.filter(x => x.id !== id); window.renderF020(); };
-window.guardarF020 = async (notificar=false) => { window.sincronizarF020DOM(); window.showLoading(); await updateDoc(doc(db,"artifacts",appId,"public","data","Auditorias",selectedAuditId), {lista_verificacion: currentAuditF020}); if(notificar) { window.sendNotification({to: EMAIL_ADMIN_SGC}, "F-020 Actualizado", `Auditor ${currentUser.nombre} subió F-020 para la auditoría ${selectedAuditData.audit_num}.`); alert("Guardado y Notificado a SGC"); } else { alert("Lista de Verificación (F-020) Guardada exitosamente."); } window.hideLoading(); window.verModalAuditoria(selectedAuditId); };
+window.guardarF020 = async (notificar=false) => { window.sincronizarF020DOM(); window.showLoading(); await updateDoc(doc(db,"artifacts",appId,"public","data","Auditorias",selectedAuditId), {lista_verificacion: currentAuditF020}); if(notificar) { window.sendNotification({to: EMAIL_ADMIN_SGC}, "F-020 Actualizado", `Auditor ${currentUser.nombre} subió F-020 para la auditoría ${selectedAuditData.audit_num}.`); alert("Guardado y Notificado a SGC"); } else { alert("Lista de Verificación (F-020) Guardada exitosamente."); } window.hideLoading(); window.verModalAuditoría(selectedAuditId); };
 window.enviarPreguntasSGC = () => window.guardarF020(true);
 
 window.generarBloqueNCDinamico = (i, idx, t, canEd) => {
@@ -2961,7 +3056,7 @@ try {
     window.sendNotification(destSAC, title, msgMail);
 
     window.setDisplay('modal-sac', 'none'); 
-    if(selectedAuditId) window.verModalAuditoria(selectedAuditId);
+    if(selectedAuditId) window.verModalAuditoría(selectedAuditId);
 } catch(e) {
     console.error(e); alert("Error al guardar SAC.");
 } finally {
@@ -3489,39 +3584,27 @@ window.abrirLlenarFormulario = (id) => {
             h += `<div class="dynamic-field-container" data-category="${c.categoria||''}" style="margin-bottom:25px; background:white; padding:20px; border-radius:10px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
                     <label for="ans_${c.id}" style="font-size:15px; font-weight:600; color:#1e293b; display:block; margin-bottom:12px;">${c.label} ${reqHTML}</label>`;
             
-            let tipo = c.tipo || c.type || 'text';
-            
-            if(tipo === 'text') h += `<input aria-label="ans_${c.id}" type="text" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%; border:1px solid #cbd5e1; padding:10px; border-radius:6px;">`;
-            else if(tipo === 'textarea') h += `<textarea aria-label="ans_${c.id}" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
-            else if(tipo === 'number') h += `<input aria-label="ans_${c.id}" type="number" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
-            else if(tipo === 'date') h += `<input aria-label="ans_${c.id}" type="date" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
-            else if(tipo === 'time') h += `<input aria-label="ans_${c.id}" type="time" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
-            else if(tipo === 'checkbox') h += `<label style="display:flex; align-items:center; gap:5px;" for="ans_chk_${c.id}"><input aria-label="ans_chk_${c.id}" type="checkbox" id="ans_chk_${c.id}" name="ans_${c.id}" style="width:auto; margin:0;"> Marcar</label>`;
-            else if(tipo === 'select') {
+            if(c.tipo === 'text') h += `<input aria-label="ans_${c.id}" type="text" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%; border:1px solid #cbd5e1; padding:10px; border-radius:6px;">`;
+            else if(c.tipo === 'textarea') h += `<textarea aria-label="ans_${c.id}" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" rows="3" style="width:100%;"></textarea>`;
+            else if(c.tipo === 'number') h += `<input aria-label="ans_${c.id}" type="number" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'date') h += `<input aria-label="ans_${c.id}" type="date" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'time') h += `<input aria-label="ans_${c.id}" type="time" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;">`;
+            else if(c.tipo === 'checkbox') h += `<label style="display:flex; align-items:center; gap:5px;" for="ans_chk_${c.id}"><input aria-label="ans_chk_${c.id}" type="checkbox" id="ans_chk_${c.id}" name="ans_${c.id}" style="width:auto; margin:0;"> Marcar</label>`;
+            else if(c.tipo === 'select') {
                 h += `<select aria-label="ans_${c.id}" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} class="search-bar" style="width:100%;"><option value="">-- Seleccione --</option>`;
-                if(c.opciones) c.opciones.forEach(op => h += `<option value="${op}">${op}</option>`);
+                c.opciones.forEach(op => h += `<option value="${op}">${op}</option>`);
                 h += `</select>`;
             }
-            else if(tipo === 'si_no') {
+            else if(c.tipo === 'si_no') {
                 h += `<div style="display:flex; gap:15px; margin-top:5px;">
                         <label style="display:flex; align-items:center; gap:5px;" for="ans_${c.id}_si"><input aria-label="ans_${c.id}_si" type="radio" id="ans_${c.id}_si" name="ans_${c.id}" value="Sí" ${reqAttr} style="width:auto; margin:0;"> Sí</label>
                         <label style="display:flex; align-items:center; gap:5px;" for="ans_${c.id}_no"><input aria-label="ans_${c.id}_no" type="radio" id="ans_${c.id}_no" name="ans_${c.id}" value="No" ${reqAttr} style="width:auto; margin:0;"> No</label>
                       </div>`;
             }
-            else if(tipo === 'archivo') {
+            else if(c.tipo === 'archivo') {
                 h += `<input aria-label="ans_${c.id}" type="file" id="ans_${c.id}" name="ans_${c.id}" ${reqAttr} style="margin-bottom:0; background:#f8fafc; padding:8px; border:1px dashed var(--border); width:100%;">`;
             }
-            else if(tipo === 'foto') {
-                h += `<input type="file" id="ans_${c.id}" name="ans_${c.id}" accept="image/*" capture="environment" ${reqAttr} style="width:100%; background:#f8fafc; padding:8px; border:1px dashed var(--border);">`;
-            }
-            else if(tipo === 'firma') {
-                h += `<canvas id="ans_firma_${c.id}" width="300" height="150" style="border:1px dashed #cbd5e1; background:#f8fafc; border-radius:6px; touch-action:none;"></canvas>
-                      <button type="button" onclick="window.limpiarFirma('${c.id}')" style="display:block; margin-top:5px; font-size:11px; padding:4px 8px; border-radius:4px; background:#e2e8f0; border:none; cursor:pointer;">Limpiar Firma</button>`;
-            }
-            else if(tipo === 'notificar') {
-                h += `<input type="email" id="ans_${c.id}" name="ans_${c.id}" placeholder="Email para notificar..." ${reqAttr} class="search-bar" style="width:100%;">`;
-            }
-            else if(tipo === 'semaforo') {
+            else if(c.tipo === 'semaforo') {
                 h += `<div style="border:1px solid var(--border); border-radius:8px; overflow-x:auto;">
                         <table style="width:100%; text-align:left; border-collapse:collapse; min-width:400px;">
                             <thead style="background:#e2e8f0; font-size:12px;"><tr>
@@ -3550,17 +3633,6 @@ window.abrirLlenarFormulario = (id) => {
             h += `</div>`;
         });
         container.innerHTML = h;
-
-        f.campos.forEach(c => {
-            let t = c.tipo || c.type || 'text';
-            if(t === 'firma') {
-                let canvas = document.getElementById('ans_firma_' + c.id);
-                if(canvas) {
-                    if(!window.firmasPad) window.firmasPad = {};
-                    window.initSignaturePad(canvas, c.id);
-                }
-            }
-        });
     }
     window.setDisplay('modal-fill-form', 'flex');
 };
@@ -3614,16 +3686,13 @@ window.guardarFormularioLleno = async () => {
         }
 
         let val = null;
-        let tipo = c.tipo || c.type || 'text';
-
-        if(tipo === 'checkbox') {
-            let el = document.getElementById(`ans_chk_${c.id}`);
-            if(el) val = el.checked;
-        } else if(tipo === 'si_no') {
+        if(c.tipo === 'checkbox') {
+            val = $(`ans_${c.id}`).checked;
+        } else if(c.tipo === 'si_no') {
             let selected = document.querySelector(`input[name="ans_${c.id}"]:checked`);
             if (selected) val = selected.value;
             if (c.requerido && !val) isValid = false;
-        } else if(tipo === 'semaforo') {
+        } else if(c.tipo === 'semaforo') {
             val = [];
             if(c.matriz_filas) {
                 c.matriz_filas.forEach((fila, filaIdx) => {
@@ -3635,9 +3704,9 @@ window.guardarFormularioLleno = async () => {
                 });
                 if(c.requerido && val.length < c.matriz_filas.length) isValid = false;
             }
-        } else if(tipo === 'archivo' || tipo === 'foto') {
+        } else if(c.tipo === 'archivo') {
             let fileInput = $(`ans_${c.id}`);
-            if (fileInput && fileInput.files.length > 0) {
+            if (fileInput.files.length > 0) {
                 let fileUrl = await window.uploadToCloudinary(fileInput.files[0]);
                 if(fileUrl) {
                     val = fileUrl;
@@ -3648,24 +3717,8 @@ window.guardarFormularioLleno = async () => {
             } else if (c.requerido) {
                 isValid = false;
             }
-        } else if(tipo === 'firma') {
-            let canvas = window.firmasPad ? window.firmasPad[c.id] : null;
-            if(canvas) {
-                let blank = document.createElement('canvas');
-                blank.width = canvas.width;
-                blank.height = canvas.height;
-                if(canvas.toDataURL() !== blank.toDataURL()) {
-                    val = canvas.toDataURL(); // Guardar como Base64
-                }
-            }
-            if(c.requerido && !val) isValid = false;
         } else {
             val = getValSafe(`ans_${c.id}`);
-            if(tipo === 'notificar' && val && typeof emailjs !== 'undefined') {
-                try {
-                    console.log("Notificando por EmailJS a: " + val);
-                } catch(e) {}
-            }
             if (c.requerido && !val) isValid = false;
         }
         
@@ -3780,20 +3833,66 @@ window.renderTablaForms = () => {
     tb.innerHTML = h;
 };
 
+window.renderReporteFormularios = () => {
+    let container = document.getElementById('reporte-formularios-container');
+    if(!container) return;
+    
+    if(globalForms.length === 0) {
+        container.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:40px;">No hay formularios creados en el sistema.</p>';
+        return;
+    }
+
+    let h = `<div class="table-responsive"><table style="width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <thead style="background:var(--table-header);">
+                    <tr><th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">Nombre del Formulario</th>
+                        <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">Descripción</th>
+                        <th style="padding:12px; text-align:center; border-bottom:2px solid var(--border);">Acción</th></tr>
+                </thead>
+                <tbody>`;
+    
+    globalForms.sort((a,b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion)).forEach(f => {
+        h += `<tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:12px;"><b>${f.titulo}</b></td>
+                <td style="padding:12px; color:var(--text-muted); font-size:13px;">${f.descripcion || '-'}</td>
+                <td style="padding:12px; text-align:center;">
+                    <button class="btn btn-success" style="padding:6px 15px; font-size:12px;" onclick="window.verRespuestasFormulario('${f.id}')"><span class="material-icons-round" style="font-size:16px; vertical-align:middle; margin-right:5px;">bar_chart</span> Ver Respuestas</button>
+                </td>
+              </tr>`;
+    });
+    
+    h += `</tbody></table></div>`;
+    container.innerHTML = h;
+};
+
 // ==========================================
 
 window.verDetalleDashboard = (tipo) => {
+    window.currentDashTipo = tipo;
     let excludeAnuladas = false;
     let checkbox = document.getElementById('dash-exclude-anuladas');
     if (checkbox) excludeAnuladas = checkbox.checked;
 
+    let filterMonth = '';
+    let monthInput = document.getElementById('dash-month-filter');
+    if (monthInput) filterMonth = monthInput.value;
+
     let solicitudesFiltered = globalSolicitudes || [];
+    
     if (excludeAnuladas) {
         solicitudesFiltered = solicitudesFiltered.filter(s => s.estado !== 'Anulado' && s.estado !== 'Rechazado');
+    }
+    
+    if (filterMonth) {
+        solicitudesFiltered = solicitudesFiltered.filter(s => {
+            let sDate = s.fecha || s.fecha_creacion;
+            if (!sDate) return false;
+            return sDate.startsWith(filterMonth);
+        });
     }
 
     let titulo = '';
     let data = [];
+    let extraHeader = '';
 
     if (tipo === 'tot') {
         titulo = 'Total Solicitudes';
@@ -3810,25 +3909,47 @@ window.verDetalleDashboard = (tipo) => {
             let f_sla = s.sla || s.fecha_esperada_cierre;
             return String(s.estado).includes('Aprobado Final') && f_sla && s.fecha_final && s.fecha_final <= f_sla;
         });
+    } else if (tipo === 'sla_mod') {
+        titulo = 'SLA Modificados (Cambios múltiples)';
+        extraHeader = '<th>Cambios</th>';
+        data = solicitudesFiltered.filter(s => {
+            let count = 0;
+            if (s.chat && Array.isArray(s.chat)) {
+                count = s.chat.filter(c => c.m && c.m.includes('SLA ACTUALIZADO')).length;
+            }
+            s._slaModCount = count;
+            return count >= 1;
+        });
     }
 
     if($('m-dash-tit')) $('m-dash-tit').innerHTML = `<span class="material-icons-round" style="vertical-align:middle; color:var(--primary); margin-right:8px;">insights</span> ${titulo} (${data.length})`;
+
+    let theadTr = document.querySelector('#modal-dash-details thead tr');
+    if (theadTr) {
+        theadTr.innerHTML = `<th>Código</th><th>Tipo</th><th>Solicitante</th><th>Estado</th>${extraHeader}<th class="no-export">Ver</th>`;
+    }
 
     let html = '';
     data.forEach(s => {
         let f_sla = s.sla || s.fecha_esperada_cierre;
         let slaVisual = f_sla ? window.formatearFechaAbreviada(f_sla) : '-';
+        let extraTd = '';
+        if (tipo === 'sla_mod') {
+            extraTd = `<td style="padding:12px; border-bottom:1px solid var(--border); text-align:center;"><span class="badge badge-warning" style="font-size:14px; padding:4px 8px;">${s._slaModCount}</span></td>`;
+        }
         html += `<tr>
             <td style="padding:12px; border-bottom:1px solid var(--border);"><b>${s.customId || s.id}</b><br><small style="color:var(--sidebar);">${window.formatearFechaAbreviada(s.fecha)}</small></td>
             <td style="padding:12px; border-bottom:1px solid var(--border);">${s.titulo}</td>
             <td style="padding:12px; border-bottom:1px solid var(--border);">${s.solicitante}</td>
             <td style="padding:12px; border-bottom:1px solid var(--border);"><span class="badge ${String(s.estado).includes('Aprobado') ? 'badge-success' : 'badge-warning'}">${s.estado || 'Pendiente'}</span><br><small>SLA: ${slaVisual}</small></td>
+            ${extraTd}
             <td class="no-export" style="padding:12px; border-bottom:1px solid var(--border);"><button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="window.setDisplay('modal-dash-details','none'); window.verDetalle('${s.docId || s.id}')">Ver Documento</button></td>
         </tr>`;
     });
 
     if(data.length === 0) {
-        html = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--sidebar);">No hay datos para mostrar en esta categoría</td></tr>`;
+        let colspan = tipo === 'sla_mod' ? 6 : 5;
+        html = `<tr><td colspan="${colspan}" style="text-align:center; padding:20px; color:var(--sidebar);">No hay datos para mostrar en esta categoría</td></tr>`;
     }
 
     if($('m-dash-tbody')) $('m-dash-tbody').innerHTML = html;
@@ -3848,22 +3969,23 @@ window.extraerTodaInformacion = () => {
 
         // 1. Solicitudes
         let dataSolicitudes = [
-            ["ID / Código", "Fecha Creada", "Solicitante", "Título", "Gerencia", "Prioridad", "Estado", "SLA / Esperada", "Fecha Cierre", "Autorizado Por", "Tiempo Fase 1 (Documentado)", "Tiempo Fase 2 (Verificado)", "Tiempo Fase 3 (Gerencia)", "Tiempo Fase 4 (SGC)", "Tiempo Total Flujo"]
+            ["ID / Código", "Fecha Creada", "Solicitante", "Título", "Gerencia", "Prioridad", "Tipo", "Categoría", "Motivo/Justificación", "Estado", "SLA / Esperada", "Fecha Cierre", "Autorizado Por"]
         ];
-        if (globalSolicitudes) {
-            globalSolicitudes.forEach(s => {
-                let isCanceled = (s.estado === 'Anulado' || s.estado === 'Rechazado');
-                let t1 = isCanceled ? 'N/A' : formatearDiferencia(s.fase_0_ini, s.fase_0_fin);
-                let t2 = isCanceled ? 'N/A' : formatearDiferencia(s.fase_1_ini, s.fase_1_fin);
-                let t3 = isCanceled ? 'N/A' : formatearDiferencia(s.fase_2_ini, s.fase_2_fin);
-                let t4 = isCanceled ? 'N/A' : formatearDiferencia(s.fase_3_ini, s.fase_3_fin);
-                let tTot = isCanceled ? 'N/A' : formatearDiferencia(s.fase_0_ini, s.fecha_final || s.fase_3_fin || s.fase_2_fin || s.fase_1_fin || s.fase_0_fin);
+        
+        let excludeAnuladas = false;
+        let checkbox = document.getElementById('dash-exclude-anuladas');
+        if (checkbox) excludeAnuladas = checkbox.checked;
 
+        if (globalSolicitudes) {
+            let solicitudesToExport = globalSolicitudes;
+            if (excludeAnuladas) {
+                solicitudesToExport = solicitudesToExport.filter(s => s.estado !== 'Anulado' && s.estado !== 'Rechazado');
+            }
+            solicitudesToExport.forEach(s => {
                 dataSolicitudes.push([
                     s.customId || s.id || '', s.fecha || '', s.solicitante || '', s.titulo || '', 
-                    s.gerencia || '', s.prioridad || '', s.estado || '', 
-                    s.sla || s.fecha_esperada_cierre || '', s.fecha_final || '', s.autorizado_por || '',
-                    t1, t2, t3, t4, tTot
+                    s.gerencia || '', s.prioridad || '', s.tipo || '', s.categoria || '', s.motivo || '', s.estado || '', 
+                    s.sla || s.fecha_esperada_cierre || '', s.fecha_final || '', s.autorizado_por || ''
                 ]);
             });
         }
@@ -3872,13 +3994,14 @@ window.extraerTodaInformacion = () => {
 
         // 2. Auditorías
         let dataAud = [
-            ["ID Auditoría", "Lugar / Proceso", "Fecha", "Requisitos", "Líder", "Equipo Auditor", "Estado", "Puntaje Promedio"]
+            ["ID Auditoría", "Lugar / Proceso", "Fecha", "Requisitos", "Líder", "Equipo Auditor", "Objetivos", "Alcance", "Estado", "Puntaje Promedio", "Hallazgos", "Fecha Informe"]
         ];
-        if (globalAllAuditorias) {
-            globalAllAuditorias.forEach(a => {
+        if (typeof globalAllAuditorías !== 'undefined' && globalAllAuditorías) {
+            globalAllAuditorías.forEach(a => {
+                let eq = Array.isArray(a.auditores) ? a.auditores.join(", ") : (a.auditores || '');
                 dataAud.push([
                     a.id || '', a.lugar || '', a.fecha || '', a.requisitos || '', 
-                    a.lider || '', a.auditores || '', a.estado || '', a.puntaje_global || ''
+                    a.lider || '', eq, a.objetivos || '', a.alcance || '', a.estado || '', a.puntaje_global || '', a.resumen_hallazgos || '', a.fecha_informe || ''
                 ]);
             });
         }
@@ -3887,13 +4010,13 @@ window.extraerTodaInformacion = () => {
 
         // 3. No Conformidades (SAC)
         let dataNC = [
-            ["SAC N°", "Fecha de Emisión", "Tipo", "Requisito Evaluado", "Responsable", "Descripción", "Acción Inmediata", "Estado", "Fecha Cierre"]
+            ["SAC N°", "Fecha de Emisión", "Tipo", "Requisito Evaluado", "Responsable", "Descripción", "Acción Inmediata", "Análisis de Causa", "Acción Correctiva", "Responsable Acción", "Fecha Prog. Acción", "Estado", "Fecha Cierre"]
         ];
-        if (globalAllSacs) {
+        if (typeof globalAllSacs !== 'undefined' && globalAllSacs) {
             globalAllSacs.forEach(n => {
                 dataNC.push([
                     n.sac_n || '', n.fecha || '', n.tipo_sac || '', n.requisito_evaluado || '', 
-                    n.responsable || '', n.descripcion || '', n.accion_inmediata || '', n.estado || '', n.fecha_cierre || ''
+                    n.responsable || '', n.descripcion || '', n.accion_inmediata || '', n.analisis_causa || '', n.accion_correctiva || '', n.responsable_accion || '', n.fecha_prog_accion || '', n.estado || '', n.fecha_cierre || ''
                 ]);
             });
         }
@@ -3903,14 +4026,14 @@ window.extraerTodaInformacion = () => {
         // 4. Proveedores
         if (typeof globalProveedores !== 'undefined') {
             let dataProv = [
-                ["RUC", "Razón Social", "Servicio", "Certificaciones", "Ev. Física", "Ev. TI", "Ev. RRHH", "Riesgo Global", "Estado", "Próxima Evaluación"]
+                ["RUC", "Razón Social", "Servicio", "Email", "Teléfono", "Certificaciones", "Ev. Física", "Ev. TI", "Ev. RRHH", "Riesgo Global", "Estado", "Próxima Evaluación", "Observaciones"]
             ];
             globalProveedores.forEach(p => {
                 let f = parseFloat(p.ev_fisica) || 0; let t = parseFloat(p.ev_ti) || 0; let r = parseFloat(p.ev_rrhh) || 0;
                 let prom = ((f+t+r)/3).toFixed(1);
                 dataProv.push([
-                    p.ruc || '', p.razon_social || '', p.servicio || '', p.certificaciones || '', 
-                    f, t, r, prom, p.estado || '', p.fecha_proxima || ''
+                    p.ruc || '', p.razon_social || '', p.servicio || '', p.email || '', p.telefono || '', p.certificaciones || '', 
+                    f, t, r, prom, p.estado || '', p.fecha_proxima || '', p.observaciones || ''
                 ]);
             });
             let wsProv = XLSX.utils.aoa_to_sheet(dataProv);
@@ -3920,13 +4043,13 @@ window.extraerTodaInformacion = () => {
         // 5. Riesgos
         if (typeof globalRiesgos !== 'undefined') {
             let dataRiesgo = [
-                ["ID Riesgo", "Proceso Afectado", "Amenaza", "Vulnerabilidad", "Probabilidad", "Impacto", "Severidad", "Acción Mitigación", "Responsable", "Estado"]
+                ["ID Riesgo", "Proceso Afectado", "Amenaza", "Vulnerabilidad", "Descripción", "Probabilidad", "Impacto", "Severidad", "Acción Mitigación", "Controles", "Responsable", "Estado"]
             ];
             globalRiesgos.forEach(r => {
                 let sev = (parseInt(r.probabilidad) || 0) * (parseInt(r.impacto) || 0);
                 dataRiesgo.push([
-                    r.rsk_id || '', r.proceso || '', r.amenaza || '', r.vulnerabilidad || '', 
-                    r.probabilidad || '', r.impacto || '', sev, r.accion_mitigacion || '', r.responsable || '', r.estado || ''
+                    r.rsk_id || '', r.proceso || '', r.amenaza || '', r.vulnerabilidad || '', r.descripcion || '',
+                    r.probabilidad || '', r.impacto || '', sev, r.accion_mitigacion || '', r.controles || '', r.responsable || '', r.estado || ''
                 ]);
             });
             let wsRiesgo = XLSX.utils.aoa_to_sheet(dataRiesgo);
@@ -4029,8 +4152,8 @@ window.abrirModalCalendarioMensual = async () => {
     // Obtener las fechas de las auditorías de ese año de forma local
     let auditDates = new Set();
     try {
-        if (typeof globalAllAuditorias !== 'undefined' && globalAllAuditorias) {
-            globalAllAuditorias.forEach(a => {
+        if (typeof globalAllAuditorías !== 'undefined' && globalAllAuditorías) {
+            globalAllAuditorías.forEach(a => {
                 if (a.fecha) {
                     const d = new Date(a.fecha);
                     if (d.getFullYear() === year) {
@@ -4597,116 +4720,3 @@ window.abrirModalIT = () => window.generarPlantillaFormulario("Controles de Segu
     {id: "fecha", label: "Fecha de Ejecución", tipo: "date", requerido: true},
     {id: "responsable", label: "Responsable de IT", tipo: "text", requerido: true}
 ]);
-
-// ==========================================
-// ESCANER Y GENERADOR QR
-// ==========================================
-let scannerQR = null;
-
-window.iniciarEscanerQR = () => {
-    window.setDisplay('modal-escaner-qr', 'flex');
-    if(scannerQR) scannerQR.clear();
-    scannerQR = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
-    scannerQR.render((decodedText, decodedResult) => {
-        scannerQR.clear();
-        window.cerrarEscanerQR();
-        let formId = null;
-        let ubicacion = null;
-        try {
-            let partes = decodedText.split('|');
-            partes.forEach(p => {
-                let [key, val] = p.split(':');
-                if(key && val) {
-                    if(key.trim() === 'formId') formId = val.trim();
-                    if(key.trim() === 'ubicacion') ubicacion = val.trim();
-                }
-            });
-        } catch(e) {}
-        
-        if(formId) {
-            let f = globalForms.find(x => x.id === formId);
-            if(f) {
-                window.abrirLlenarFormulario(formId);
-                if(ubicacion) {
-                    setTimeout(() => {
-                        let inputUbicacion = Array.from(document.querySelectorAll('#fill-form-container input')).find(i => i.placeholder.toLowerCase().includes('ubicaci') || (i.name && i.name.toLowerCase().includes('ubicaci')));
-                        if(inputUbicacion) inputUbicacion.value = ubicacion;
-                    }, 500);
-                }
-            } else { alert("Formulario no encontrado o no tienes permiso."); }
-        } else { alert("QR inválido o no reconocido: " + decodedText); }
-    }, (error) => {});
-};
-
-window.cerrarEscanerQR = () => { if(scannerQR) { scannerQR.clear(); scannerQR = null; } window.setDisplay('modal-escaner-qr', 'none'); };
-
-window.abrirModalGeneradorQR = () => {
-    let select = document.getElementById('qr-gen-form');
-    let opts = '<option value="">-- Seleccione un Formulario --</option>';
-    globalForms.forEach(f => { opts += `<option value="${f.id}">${f.titulo}</option>`; });
-    if(select) select.innerHTML = opts;
-    document.getElementById('qr-gen-ubicacion').value = '';
-    document.getElementById('qr-result-container').style.display = 'none';
-    window.setDisplay('modal-generador-qr', 'flex');
-};
-
-let lastQR = null;
-window.generarCodigoQR = () => {
-    let formId = getValSafe('qr-gen-form');
-    let ubic = getValSafe('qr-gen-ubicacion').trim();
-    if(!formId) return alert("Seleccione un formulario.");
-    
-    let texto = `formId:${formId}`;
-    if(ubic) texto += `|ubicacion:${ubic}`;
-    
-    let qrc = document.getElementById('qr-code-element');
-    qrc.innerHTML = '';
-    window.lastQR = new QRCode(qrc, { text: texto, width: 200, height: 200, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
-    document.getElementById('qr-result-text').innerText = texto;
-    document.getElementById('qr-result-container').style.display = 'block';
-};
-
-window.imprimirQR = () => {
-    let c = document.getElementById('qr-code-element').innerHTML;
-    let sel = document.getElementById('qr-gen-form');
-    let titulo = sel.options[sel.selectedIndex].text;
-    let ubic = getValSafe('qr-gen-ubicacion');
-    
-    let win = window.open('', '_blank');
-    win.document.write(`
-        <html><head><title>Imprimir QR</title>
-        <style>body{text-align:center; font-family:sans-serif; margin-top:50px;} h2{margin:5px 0;} p{margin:0; font-size:14px;}</style>
-        </head><body>
-        <h2>${titulo}</h2>
-        ${ubic ? `<p>Ubicación: <b>${ubic}</b></p>` : ''}
-        <div style="margin: 20px auto; display: inline-block;">${c}</div>
-        <br><p style="font-size:11px; color:#666;">Escanea este código desde la App para llenar el registro</p>
-        <script>window.onload = () => { window.print(); window.close(); }</script>
-        </body></html>
-    `);
-};
-
-window.initSignaturePad = (canvas, id) => {
-    let ctx = canvas.getContext('2d');
-    let drawing = false;
-    let getPos = (e) => {
-        let rect = canvas.getBoundingClientRect();
-        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: clientX - rect.left, y: clientY - rect.top };
-    };
-    let start = (e) => { drawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); e.preventDefault(); };
-    let draw = (e) => { if(!drawing) return; let pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); e.preventDefault(); };
-    let end = () => { drawing = false; };
-    
-    canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', end); canvas.addEventListener('mouseout', end);
-    canvas.addEventListener('touchstart', start, {passive: false}); canvas.addEventListener('touchmove', draw, {passive: false}); canvas.addEventListener('touchend', end);
-    
-    if(!window.firmasPad) window.firmasPad = {};
-    window.firmasPad[id] = canvas;
-};
-
-window.limpiarFirma = (id) => {
-    let canvas = window.firmasPad[id];
-    if(canvas) { let ctx = canvas.getContext('2d'); ctx.clearRect(0,0, canvas.width, canvas.height); }
-};
