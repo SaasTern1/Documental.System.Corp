@@ -261,6 +261,52 @@ let chartSlaInstance = null, chartMonthlyInstance = null, chartDonutStatsInstanc
 
 window.renderDashboardCharts = () => {
     try {
+        // Register lightweight Chart.js plugin for compact numeric labels and donut center text (once)
+        if(!window._compactChartsPluginRegistered && typeof Chart !== 'undefined') {
+            Chart.register({
+                id: 'compactDataLabels',
+                afterDatasetsDraw(chart) {
+                    try {
+                        const ctx = chart.ctx;
+                        if(!chart.data || !chart.chartArea) return;
+                        if(chart.config.type === 'bar') {
+                            chart.data.datasets.forEach((dataset, di) => {
+                                const meta = chart.getDatasetMeta(di);
+                                meta.data.forEach((elem, idx) => {
+                                    const val = dataset.data[idx];
+                                    if(val === null || val === undefined) return;
+                                    ctx.save();
+                                    ctx.fillStyle = '#0f172a';
+                                    ctx.font = '600 11px Inter, sans-serif';
+                                    ctx.textAlign = 'center';
+                                    const x = elem.x;
+                                    const y = elem.y - 6;
+                                    ctx.fillText(String(val), x, y);
+                                    ctx.restore();
+                                });
+                            });
+                        }
+                        if(chart.config.type === 'doughnut' && chart.canvas && chart.canvas.id === 'chartDonutStats') {
+                            // draw center total
+                            const ds = chart.data.datasets && chart.data.datasets[0] ? chart.data.datasets[0].data : [];
+                            const total = (ds || []).reduce((a,b)=>a+(Number(b)||0),0);
+                            const left = chart.chartArea.left, right = chart.chartArea.right, top = chart.chartArea.top, bottom = chart.chartArea.bottom;
+                            const cx = (left + right)/2; const cy = (top + bottom)/2;
+                            ctx.save();
+                            ctx.fillStyle = '#0f172a';
+                            ctx.textAlign = 'center';
+                            ctx.font = '700 18px Inter, sans-serif';
+                            ctx.fillText(String(total), cx, cy - 6);
+                            ctx.font = '500 11px Inter, sans-serif';
+                            ctx.fillStyle = 'rgba(15,23,42,0.65)';
+                            ctx.fillText('Total', cx, cy + 12);
+                            ctx.restore();
+                        }
+                    } catch(e) { /* ignore plugin draw errors */ }
+                }
+            });
+            window._compactChartsPluginRegistered = true;
+        }
         if(!currentUser || (!currentUser.permisos.admin && !currentUser.permisos.p_gest_sgc)) return;
         if (typeof Chart === 'undefined') return;
 
@@ -404,7 +450,7 @@ window.renderDashboardCharts = () => {
             chartDonutStatsInstance = new Chart(ctxDonut, {
                 type: 'doughnut',
                 data: { labels: ['Aprobadas', 'En Trámite', 'Anuladas'], datasets: [{ data: [d_aprobadas, d_pendientes, d_anuladas], backgroundColor: ['#6366f1', '#10b981', '#ef4444'], borderWidth: 0, hoverOffset: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } }, layout: { padding: 6 } }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true }, compactDataLabels: {} }, layout: { padding: 6 } }
             });
 
             if($('donut-legend-container')) {
@@ -427,6 +473,7 @@ window.renderDashboardCharts = () => {
                     </div>
                 `;
             }
+            if($('dash-total-box-val')) $('dash-total-box-val').innerText = d_total;
         }
 
         // 5. Poblar Tablas Secundarias en Dashboard
