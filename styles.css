@@ -129,6 +129,7 @@ body {
     ========================================================================== */
 .section.compact-dashboard .stats-grid .card h2 { font-size: 24px !important; }
 .section.compact-dashboard .stats-grid { gap: 12px !important; }
+.section.compact-dashboard .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: stretch; }
 .section.compact-dashboard .grid-2 { gap: 12px !important; }
 .section.compact-dashboard .card { padding: 12px; }
 .section.compact-dashboard .card h4 { font-size: 13px; margin-bottom: 8px; }
@@ -139,11 +140,22 @@ body {
 
 /* Compact KPI boxes */
 .kpi-compact { padding: 10px 12px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:var(--card-bg); box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.kpi-compact { min-height: 64px; }
 .kpi-compact:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 .kpi-compact-inner { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .kpi-label { font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; }
 .kpi-value { font-size:20px; font-weight:900; color:var(--text-main); }
 .kpi-value.percent { font-size:18px; }
+
+@media (max-width: 1024px) {
+    .section.compact-dashboard .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+    .section.compact-dashboard .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-value { font-size:18px; }
+    .kpi-label { font-size:10px; }
+}
+
 
 
 
