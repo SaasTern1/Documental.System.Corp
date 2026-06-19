@@ -32,9 +32,9 @@ let slaConfigDias = { alta: 3, media: 7, baja: 15 };
 
 // EXPOSICIÓN GLOBAL DE FUNCIONES DE AYUDA (Para evitar errores en el HTML)
 window.setDisplay = (id, val) => { if(document.getElementById(id)) document.getElementById(id).style.display = val; };
-window.setTxt = (id, txt) => { if(document.getElementById(id)) document.getElementById(id).innerText = txt; };
-window.setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val; };
-window.setHtml = (id, html) => { if(document.getElementById(id)) document.getElementById(id).innerHTML = html; };
+window.setTxt = (id, txt) => { if(document.getElementById(id)) document.getElementById(id).innerText = (window.normalizeText ? window.normalizeText(txt) : (txt||'')); };
+window.setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = (window.normalizeInputValue ? window.normalizeInputValue(val) : (val||'')); };
+window.setHtml = (id, html) => { if(document.getElementById(id)) { const processed = (window.normalizeHtmlString ? window.normalizeHtmlString(html) : html); document.getElementById(id).innerHTML = processed; } };
 
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
