@@ -356,11 +356,36 @@
 
             <!-- KPI Cards -->
             <div class="stats-grid grid-5" style="gap: 20px; margin-bottom: 30px;">
-                <div class="card" onclick="window.verDetalleDashboard('tot')" style="border-left: 5px solid var(--primary); cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label">Total Solicitudes</div><h2 id="dash-tot" style="font-size:36px; margin-top:5px; color:var(--primary);">0</h2></div>
-                <div class="card" onclick="window.verDetalleDashboard('pend')" style="border-left: 5px solid var(--warning); cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label">Pendientes / En Curso</div><h2 id="dash-pend" style="font-size:36px; margin-top:5px; color:var(--warning);">0</h2></div>
-                <div class="card" onclick="window.verDetalleDashboard('ok')" style="border-left: 5px solid var(--success); cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label">Aprobadías Oficiales</div><h2 id="dash-ok" style="font-size:36px; margin-top:5px; color:var(--success);">0</h2></div>
-                <div class="card" onclick="window.verDetalleDashboard('sla')" style="border-left: 5px solid #8b5cf6; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label">Cumplimiento SLA</div><h2 id="dash-sla-percent" style="font-size:36px; margin-top:5px; color:#8b5cf6;">0%</h2></div>
-                <div class="card" onclick="window.verDetalleDashboard('sla_mod')" style="border-left: 5px solid #ef4444; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)'"><div class="custom-label">SLA Modificados</div><h2 id="dash-sla-mods" style="font-size:36px; margin-top:5px; color:#ef4444;">0</h2></div>
+                <div class="card kpi-compact" onclick="window.verDetalleDashboard('tot')" style="border-left: 5px solid var(--primary);">
+                    <div class="kpi-compact-inner">
+                        <div class="kpi-label">TOTAL SOLICITUDES</div>
+                        <div id="dash-tot" class="kpi-value" style="color:var(--primary);">0</div>
+                    </div>
+                </div>
+                <div class="card kpi-compact" onclick="window.verDetalleDashboard('pend')" style="border-left: 5px solid var(--warning);">
+                    <div class="kpi-compact-inner">
+                        <div class="kpi-label">PENDIENTES / EN CURSO</div>
+                        <div id="dash-pend" class="kpi-value" style="color:var(--warning);">0</div>
+                    </div>
+                </div>
+                <div class="card kpi-compact" onclick="window.verDetalleDashboard('ok')" style="border-left: 5px solid var(--success);">
+                    <div class="kpi-compact-inner">
+                        <div class="kpi-label">APROBADAS</div>
+                        <div id="dash-ok" class="kpi-value" style="color:var(--success);">0</div>
+                    </div>
+                </div>
+                <div class="card kpi-compact" onclick="window.verDetalleDashboard('sla')" style="border-left: 5px solid #8b5cf6;">
+                    <div class="kpi-compact-inner">
+                        <div class="kpi-label">CUMPLIMIENTO SLA</div>
+                        <div id="dash-sla-percent" class="kpi-value" style="color:#8b5cf6;">0%</div>
+                    </div>
+                </div>
+                <div class="card kpi-compact" onclick="window.verDetalleDashboard('sla_mod')" style="border-left: 5px solid #ef4444;">
+                    <div class="kpi-compact-inner">
+                        <div class="kpi-label">SLA MODIFICADOS</div>
+                        <div id="dash-sla-mods" class="kpi-value" style="color:#ef4444;">0</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Dashboard Grid Row 1 -->
