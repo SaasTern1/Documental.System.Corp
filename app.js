@@ -351,8 +351,19 @@ window.renderDashboardCharts = () => {
                         { label: 'Real (Actuales)', data: dataReal, backgroundColor: '#10b981', borderRadius: 4, categoryPercentage: 0.8, barPercentage: 0.9 }
                     ] 
                 },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } }, x: { grid: { display: false }, border: { display: false } } }, plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false }, ticks: { font: { size: 11 } } }, x: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 11 } } } },
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } }, tooltip: { enabled: true } },
+                    layout: { padding: 6 }
+                }
             });
+
+            // Mostrar total para SLA (sumatoria de barras "Real")
+            if($('sla-total')) {
+                try { const slaTotal = (dataReal||[]).reduce((a,b)=>a+b,0); $('sla-total').innerText = 'Total: ' + slaTotal; } catch(e){}
+            }
         }
 
         // 3. Gráfico Evolución Mensual (Solicitudes por mes)
@@ -373,7 +384,7 @@ window.renderDashboardCharts = () => {
             chartMonthlyInstance = new Chart(ctxMonthly, {
                 type: 'bar',
                 data: { labels: mesesStr.slice(0, new Date().getMonth()+1), datasets: [{ label: 'Solicitudes', data: dataValues.slice(0, new Date().getMonth()+1), backgroundColor: '#6366f1', borderRadius: 4, hoverBackgroundColor: '#4f46e5' }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } }, x: { grid: { display: false }, border: { display: false } } }, plugins: { legend: { display: false } } }
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false }, ticks: { font: { size: 11 } } }, x: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 11 } } } }, plugins: { legend: { display: false } }, layout: { padding: 6 } }
             });
         }
 
@@ -393,16 +404,20 @@ window.renderDashboardCharts = () => {
             chartDonutStatsInstance = new Chart(ctxDonut, {
                 type: 'doughnut',
                 data: { labels: ['Aprobadas', 'En Trámite', 'Anuladas'], datasets: [{ data: [d_aprobadas, d_pendientes, d_anuladas], backgroundColor: ['#6366f1', '#10b981', '#ef4444'], borderWidth: 0, hoverOffset: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } }, layout: { padding: 6 } }
             });
 
             if($('donut-legend-container')) {
                 $('donut-legend-container').innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);">
+                        <div style="font-size:12px; font-weight:700; color:var(--text-main);">Total</div>
+                        <div style="font-size:13px; font-weight:900;">${d_total}</div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border);">
                         <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:#6366f1; border-radius:50%;"></div><span style="font-size:12px; color:var(--text-main); font-weight:600;">Aprobadas</span></div>
                         <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${d_aprobadas}</span><span style="background:#eef2ff; color:#6366f1; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pAp}%</span></div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border);">
                         <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:#10b981; border-radius:50%;"></div><span style="font-size:12px; color:var(--text-main); font-weight:600;">En Trámite</span></div>
                         <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:800;">${d_pendientes}</span><span style="background:#dcfce7; color:#10b981; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${pPe}%</span></div>
                     </div>

@@ -340,7 +340,7 @@
 
 
 
-        <section id="sec-dash" class="section">
+        <section id="sec-dash" class="section compact-dashboard">
             <div class="section-header">
                 <div class="section-header-info">
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #1e40af, #3b82f6);"><span class="material-icons-round">dashboard</span></div>
@@ -374,8 +374,12 @@
                 </div>
                 <!-- Bar Chart: Comparativa -->
                 <div class="card" style="border:1px solid var(--border); box-shadow:0 4px 6px rgba(0,0,0,0.05);">
-                    <h4 style="color:var(--sidebar); margin-bottom:15px; font-size:15px; font-weight:700;">Rendimiento: Esperado vs Actual (SLA)</h4>
-                    <div style="position: relative; height: 280px; width:100%;"><canvas id="chartSlaCompare"></canvas></div>
+                        <h4 style="color:var(--sidebar); margin-bottom:8px; font-size:15px; font-weight:700;">Rendimiento: Esperado vs Actual (SLA)</h4>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div></div>
+                            <div id="sla-total" style="font-weight:700; font-size:13px; color:var(--text-muted);">Total: 0</div>
+                        </div>
+                        <div style="position: relative; height: 200px; width:100%;"><canvas id="chartSlaCompare"></canvas></div>
                 </div>
             </div>
 
@@ -387,7 +391,7 @@
                         <h4 style="color:var(--sidebar); font-size:15px; font-weight:700; margin:0;">Evolución Mensual (Solicitudes)</h4>
                         <select id="sort-dashboard-select" aria-label="campo" style="font-size:11px; padding:4px; border:none; color:var(--text-muted); cursor:pointer;"><option>Sort By: Yearly</option></select>
                     </div>
-                    <div style="position: relative; height: 250px; width:100%;"><canvas id="chartMonthly"></canvas></div>
+                    <div style="position: relative; height: 180px; width:100%;"><canvas id="chartMonthly"></canvas></div>
                 </div>
                 <!-- Donut Chart: Estados -->
                 <div class="card" style="border:1px solid var(--border); box-shadow:0 4px 6px rgba(0,0,0,0.05);">
@@ -395,9 +399,9 @@
                         <h4 style="color:var(--sidebar); font-size:15px; font-weight:700; margin:0;">Estado General (Stats)</h4>
                         <span class="material-icons-round" style="color:var(--text-muted); font-size:18px;">more_horiz</span>
                     </div>
-                    <div style="display:flex; height:250px; align-items:center;">
+                    <div style="display:flex; height:180px; align-items:center;">
                         <div style="flex:1.5; position:relative; height:100%;"><canvas id="chartDonutStats"></canvas></div>
-                        <div style="flex:1; padding-left:15px;" id="donut-legend-container">
+                        <div style="flex:1; padding-left:12px;" id="donut-legend-container">
                             <!-- Custom HTML Legend will be injected here -->
                         </div>
                     </div>

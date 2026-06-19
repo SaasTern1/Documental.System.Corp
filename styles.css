@@ -124,6 +124,20 @@ body {
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* ==========================================================================
+    DASHBOARD — Compact view tweaks
+    ========================================================================== */
+.section.compact-dashboard .stats-grid .card h2 { font-size: 24px !important; }
+.section.compact-dashboard .stats-grid { gap: 12px !important; }
+.section.compact-dashboard .grid-2 { gap: 12px !important; }
+.section.compact-dashboard .card { padding: 12px; }
+.section.compact-dashboard .card h4 { font-size: 13px; margin-bottom: 8px; }
+.section.compact-dashboard .card .custom-label { font-size: 11px; }
+.section.compact-dashboard canvas { max-height: 240px; }
+.section.compact-dashboard #donut-legend-container { font-size: 12px; }
+.section.compact-dashboard .stats-grid.grid-5 .card h2 { font-size: 22px !important; }
+
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
