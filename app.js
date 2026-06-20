@@ -99,6 +99,27 @@ window.cambiarVista = (id, btn) => {
 };
 window.toggleMenu = () => { if($('sidebar')) $('sidebar').classList.toggle('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.toggle('active'); };
 
+// Ensure nav clicks work even if inline handlers fail — delegated listener
+document.addEventListener('click', (ev) => {
+    try {
+        const btn = ev.target.closest && ev.target.closest('.nav-link');
+        if (!btn) return;
+        ev.preventDefault();
+        let targetId = (btn.dataset && btn.dataset.target) || '';
+        if (!targetId) {
+            const oc = btn.getAttribute && btn.getAttribute('onclick');
+            if (oc) {
+                const m = oc.match(/cambiarVista\(['\"]([^'\"]+)['\"]/);
+                if (m) targetId = m[1];
+            }
+        }
+        if (targetId) {
+            try { if (typeof window._expandGroupOf === 'function') window._expandGroupOf(btn.id || ''); } catch(e){}
+            try { window.cambiarVista(targetId, btn); } catch(e) { console.warn('cambiarVista call failed', e); }
+        }
+    } catch(e) { /* silence */ }
+});
+
 window.toggleDarkMode = () => {
     const body = document.body; body.classList.toggle('dark-theme'); const isDark = body.classList.contains('dark-theme');
     localStorage.setItem('sgc_dark_mode', isDark);
