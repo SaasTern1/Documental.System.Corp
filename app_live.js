@@ -890,6 +890,7 @@ window.iniciarSesion = async () => {
         if (!saSnap.exists() || saSnap.data().pass !== p) { alert('Credenciales incorrectas.'); window.hideLoading(); return; }
         appId = 'sgc-final-v6'; currentEmpresaId = '1'; isSuperAdmin = true;
         currentUser = { ...saSnap.data(), permisos: { admin: true } };
+        if (window && typeof window.normalizeUserPermisos === 'function') window.normalizeUserPermisos(currentUser);
         localStorage.setItem('sgc_session_user', u); localStorage.setItem('sgc_appId', appId); localStorage.setItem('sgc_empresaId', '1');
         console.log('[Multiempresa] Super Admin autenticado.');
         window.completarLoginUI(); window.hideLoading(); return;
@@ -916,6 +917,7 @@ window.iniciarSesion = async () => {
         if (!qs.empty) {
             localStorage.setItem('sgc_session_user', u); localStorage.setItem('sgc_appId', appId); localStorage.setItem('sgc_empresaId', currentEmpresaId);
             currentUser = qs.docs[0].data();
+            if (window && typeof window.normalizeUserPermisos === 'function') window.normalizeUserPermisos(currentUser);
             console.log('[Multiempresa] Usuario autenticado en empresa:', empData.nombre);
             window.completarLoginUI();
         } else {
@@ -936,6 +938,7 @@ window.iniciarSesion = async () => {
         if (!saSnap.exists() || saSnap.data().pass !== p) { alert('Credenciales incorrectas.'); window.hideLoading(); return; }
         appId = 'sgc-final-v6'; currentEmpresaId = '1'; isSuperAdmin = true;
         currentUser = { ...saSnap.data(), permisos: { admin: true } };
+        if (window && typeof window.normalizeUserPermisos === 'function') window.normalizeUserPermisos(currentUser);
         localStorage.setItem('sgc_session_user', u); localStorage.setItem('sgc_appId', appId); localStorage.setItem('sgc_empresaId', '1');
         window.completarLoginUI(); window.hideLoading(); return;
       }
@@ -952,7 +955,9 @@ window.iniciarSesion = async () => {
     if (!qs.empty) {
         console.log('[Multiempresa] Usuario autenticado en empresa:', currentEmpresaId);
         localStorage.setItem('sgc_session_user', u); localStorage.setItem('sgc_appId', appId); localStorage.setItem('sgc_empresaId', currentEmpresaId);
-        currentUser = qs.docs[0].data(); window.completarLoginUI();
+        currentUser = qs.docs[0].data();
+        if (window && typeof window.normalizeUserPermisos === 'function') window.normalizeUserPermisos(currentUser);
+        window.completarLoginUI();
     } else {
         alert('Credenciales incorrectas. Si perteneces a otra empresa, ingresa su número.');
     }

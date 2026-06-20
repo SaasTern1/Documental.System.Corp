@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "version": "1.0",
+    "generated": "2026-06-20"
+  },
+  "permissions": {
+    "solicitudes.view.own": "Ver propias solicitudes",
+    "solicitudes.view.gerencia": "Ver solicitudes de su gerencia",
+    "solicitudes.view.all": "Ver todas las solicitudes",
+    "solicitudes.create": "Crear nuevas solicitudes",
+    "solicitudes.manage.inbox": "Bandeja de gestión (gestionar solicitudes)",
+    "solicitudes.approve.paso0": "Evaluar paso 0",
+    "solicitudes.approve.paso1": "Aprobar documentado (paso 1)",
+    "solicitudes.approve.paso2": "Aprobar verificado (paso 2)",
+    "solicitudes.approve.paso3": "Aprobar como gerente (paso 3)",
+    "solicitudes.approve.paso4": "Aprobar SGC (paso 4)",
+    "solicitudes.admin": "Administrador total de solicitudes",
+
+    "auditorias.view.assigned": "Ver auditorías asignadas propias",
+    "auditorias.manage": "Administrar auditorías",
+    "auditorias.role.internal_auditor": "Auditor interno",
+    "auditorias.role.process_owner": "Dueño de proceso",
+    "auditorias.sac.view": "Ver SAC",
+    "auditorias.sac.manage": "Administrar SAC",
+    "auditorias.checklist.view": "Ver lista de verificación",
+    "auditorias.checklist.manage": "Administrar lista de verificación",
+
+    "formularios.view_module": "Ver módulo de formularios",
+    "formularios.create": "Crear formularios",
+    "formularios.fill": "Llenar formularios",
+    "formularios.edit": "Editar formularios",
+    "formularios.view_response": "Ver respuesta de formularios",
+
+    "seguridad_fisica.view": "Ver seguridad física",
+    "seguridad_fisica.fill": "Llenar seguridad física",
+
+    "cadena_suministro.access": "Cadena de suministro",
+    "hsqe.access": "HSQE",
+    "recursos_humanos.access": "Recursos Humanos",
+    "tecnologia.access": "Tecnología",
+    "modules.view_all": "Ver módulos y respuestas",
+
+    "listado_maestro.view": "Ver listado maestro",
+    "listado_maestro.manage": "Gestionar listado maestro",
+    "listado_maestro.scan_qr": "Escanear QR",
+    "listado_maestro.generate_qr": "Generar QR",
+
+    "manual_oea.view": "Ver Manual OEA",
+    "manual_oea.manage": "Gestionar Manual OEA",
+
+    "evaluacion_proveedor.view": "Ver evaluación de proveedor",
+    "evaluacion_proveedor.edit": "Editar evaluación de proveedor",
+
+    "matriz_riesgo.view": "Ver matriz de riesgo",
+    "matriz_riesgo.edit": "Editar matriz de riesgo",
+
+    "users.manage": "Gestionar usuarios",
+    "structure.configure": "Configurar estructura",
+
+    "admin.full": "Administrador total (todo)",
+    "admin.limited": "Administrador (solo lo seleccionado)"
+  }
+}
