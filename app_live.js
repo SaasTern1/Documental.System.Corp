@@ -27,6 +27,36 @@ const EMAIL_SERVICE_ID = "service" + "_vum" + "xptj",
 
 try { if (typeof emailjs !== "undefined") { emailjs.init(EMAIL_PUBLIC_KEY); } } catch(e) { console.warn(e); }
 
+const EMAILJS_CDN = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+
+const ensureEmailJsLoaded = async () => {
+    if (typeof emailjs !== 'undefined') return true;
+    return new Promise((resolve, reject) => {
+        try {
+            const s = document.createElement('script');
+            s.src = EMAILJS_CDN;
+            s.onload = () => {
+                try { if (typeof emailjs !== 'undefined') { emailjs.init(EMAIL_PUBLIC_KEY); resolve(true); } else { resolve(false); } } catch(e) { console.warn('EmailJS init failed on load', e); resolve(false); }
+            };
+            s.onerror = () => { console.error('Error loading EmailJS script'); resolve(false); };
+            document.head.appendChild(s);
+            setTimeout(() => { if (typeof emailjs !== 'undefined') { try{ emailjs.init(EMAIL_PUBLIC_KEY); }catch(e){} resolve(true); } }, 3000);
+        } catch (e) { console.warn('ensureEmailJsLoaded error', e); resolve(false); }
+    });
+};
+
+const normalizeEmails = (input) => {
+    if (!input) return '';
+    let arr = [];
+    if (typeof input === 'string') arr = input.split(',');
+    else if (Array.isArray(input)) arr = input;
+    else if (input instanceof Set) arr = Array.from(input);
+    else arr = [String(input)];
+
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return arr.map(e => String(e||'').trim()).filter(e => regex.test(e)).join(',');
+};
+
 const CLOUD_NAME = "df79" + "cjklp", UPLOAD_PRESET = "fci_" + "docu" + "mentos", PASOS_NOMBRES = ["Pendiente Documentado", "Pendiente Verificado", "Pendiente Aprobación Gerencia", "Pendiente Aprobación SGC"];
 let slaConfigDias = { alta: 3, media: 7, baja: 15 };
 
@@ -138,51 +168,147 @@ window.descargarFicha = () => {
 window.del = async (c, id) => { if(confirm("¿Eliminar este registro?")) { window.showLoading(); await deleteDoc(doc(db, "artifacts", appId, "public", "data", c, id)); window.hideLoading(); } };
 window.getDownloadUrl = (url) => url ? url : "#";
 window.formatearFechaAbreviada = (fISO) => { if(!fISO) return ''; let f = fISO; if(f.length===10) f+='T12:00:00'; const d = new Date(f); if(isNaN(d)) return fISO; const m = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]; return `${d.getDate()}-${m[d.getMonth()]}-${d.getFullYear()}`; };
-window.sendNotification = async (dest, sub, msg) => { 
+window.sendNotification = async (dest, sub, msg) => {
     console.log("[EmailJS] Iniciando envío de notificación...");
-    
-    if (typeof emailjs === "undefined") {
-        console.error("[EmailJS] Error: La librería emailjs no está cargada o inicializada.");
+
+    const loaded = await ensureEmailJsLoaded();
+    if (!loaded || typeof emailjs === 'undefined') {
+        console.error('[EmailJS] Error: La librería emailjs no está cargada o inicializada.');
         return false;
     }
 
-    if (!dest || (!dest.to && !dest.cc)) {
-        console.warn("[EmailJS] Cancelado: No hay destinatarios válidos (to / cc).");
+    let toRaw = '';
+    let ccRaw = '';
+    if (!dest) {
+        console.warn('[EmailJS] Cancelado: No hay destinatarios (dest vacío).');
         return false;
     }
+    if (typeof dest === 'string' || Array.isArray(dest) || dest instanceof Set) {
+        toRaw = dest;
+    } else if (typeof dest === 'object') {
+        toRaw = dest.to || dest.to_email || dest.toEmail || '';
+        ccRaw = dest.cc || dest.cc_email || dest.ccEmail || '';
+    }
 
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    let cleanTo = dest.to ? dest.to.split(',').map(e => e.trim()).filter(e => regex.test(e)).join(',') : "";
-    let cleanCc = dest.cc ? dest.cc.split(',').map(e => e.trim()).filter(e => regex.test(e)).join(',') : "";
+    const cleanTo = normalizeEmails(toRaw);
+    const cleanCc = normalizeEmails(ccRaw);
 
     if (!cleanTo && !cleanCc) {
-        console.warn("[EmailJS] Cancelado: Los correos proporcionados no tienen un formato válido.");
+        console.warn('[EmailJS] Cancelado: Los correos proporcionados no tienen un formato válido.');
         return false;
     }
 
-    let senderName = "Sistema SGC";
-    if (typeof currentUser !== "undefined" && currentUser && currentUser.nombre) {
-        senderName = currentUser.nombre;
-    }
+    let senderName = 'Sistema SGC';
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.nombre) senderName = currentUser.nombre;
 
-    let params = { 
-        subject: sub || "Notificación SGC", 
-        message: msg || "",
+    const params = {
+        subject: sub || 'Notificación SGC',
+        message: msg || '',
         name: senderName,
-        to_email: cleanTo || "",
-        cc_email: cleanCc || ""
-    }; 
-    
-    console.log("[EmailJS] Parámetros a enviar:", params);
+        to_email: cleanTo || '',
+        cc_email: cleanCc || ''
+    };
+
+    console.log('[EmailJS] Parámetros a enviar:', params);
 
     try {
         const response = await emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, params);
-        console.log("[EmailJS] Éxito:", response.status, response.text);
+        console.log('[EmailJS] Éxito:', response.status, response.text);
         return true;
     } catch (e) {
-        console.error("[EmailJS] FAILED. Error al enviar el correo:", e);
+        console.error('[EmailJS] FAILED. Error al enviar el correo:', e);
         return false;
     }
+};
+
+// Compose a standardized HTML email body
+window.composeEmail = (title, bodyHtml, opts={}) => {
+    const appLink = opts.link || '#';
+    const actor = opts.actor || '';
+    const footer = `
+        <div style="font-size:12px; color:#6b7280; margin-top:18px; border-top:1px solid #e6eef8; padding-top:10px;">Este mensaje fue generado por el Sistema de Gestión SGC. <br>Accede al sistema: <a href="${appLink}">${appLink}</a></div>
+    `;
+    return `
+        <div style="font-family:Inter,Arial,Helvetica,sans-serif; color:#0f172a;">
+            <h2 style="margin:0 0 8px 0; font-size:16px;">${title}</h2>
+            <div style="font-size:14px; color:#0f172a;">${bodyHtml}</div>
+            ${footer}
+        </div>
+    `;
+};
+
+// Create an in-app notification record in Firestore
+window.createNotificationRecord = async (dest, title, message, meta={}) => {
+    try {
+        const toArr = [];
+        if (!dest) return null;
+        if (typeof dest === 'string') dest.split(',').forEach(e=>{ const t=e.trim(); if(t) toArr.push(t); });
+        else if (Array.isArray(dest)) dest.forEach(e=>{ if(e) toArr.push(String(e).trim()); });
+        else if (dest instanceof Set) Array.from(dest).forEach(e=>{ if(e) toArr.push(String(e).trim()); });
+        else if (typeof dest === 'object') { if(dest.to) toArr.push(...String(dest.to).split(',').map(x=>x.trim())); if(dest.cc) toArr.push(...String(dest.cc).split(',').map(x=>x.trim())); }
+        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'Notifications'), {
+            to: Array.from(new Set(toArr.filter(x=>x))),
+            title: title || '',
+            message: message || '',
+            meta: meta || {},
+            created_at: new Date().toISOString(),
+            read_by: []
+        });
+        return docRef.id;
+    } catch (e) { console.warn('createNotificationRecord failed', e); return null; }
+};
+
+window.notifications = [];
+window._notifUnsubscribe = null;
+
+// Start listening to in-app notifications for a user
+window.initNotificationsListener = async (userEmail) => {
+    try {
+        if (!userEmail) return;
+        if (window._notifUnsubscribe) { try { window._notifUnsubscribe(); } catch(e){} window._notifUnsubscribe = null; }
+        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'Notifications'), where('to', 'array-contains', userEmail));
+        window._notifUnsubscribe = onSnapshot(q, snap => {
+            const items = [];
+            snap.docs.forEach(d => { const data = d.data(); items.push({ id: d.id, ...data }); });
+            items.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+            window.notifications = items;
+            try { window.renderNotificationBell(); } catch(e){}
+        }, err => { console.warn('Notifications listener error', err); });
+    } catch(e) { console.warn('initNotificationsListener error', e); }
+};
+
+// Render bell UI (expects elements in DOM)
+window.renderNotificationBell = () => {
+    const countEl = $('notif-count'); const listEl = $('notif-list');
+    if (!countEl) return;
+    const unread = window.notifications.filter(n => !(n.read_by && n.read_by.includes(currentUser.email))).length;
+    countEl.innerText = unread > 0 ? String(unread) : '';
+    if (!listEl) return;
+    listEl.innerHTML = window.notifications.slice(0,20).map(n => {
+        const ago = n.created_at ? (new Date(n.created_at)).toLocaleString() : '';
+        return `<div class="notif-item" data-id="${n.id}" style="padding:8px; border-bottom:1px solid #eef2f7; display:flex; justify-content:space-between; gap:8px;"><div style="flex:1"><div style="font-weight:700;">${n.title}</div><div style="font-size:13px; color:#475569;">${String(n.message).slice(0,180)}</div></div><div style="font-size:11px; color:#94a3b8; white-space:nowrap">${ago}</div></div>`;
+    }).join('');
+};
+
+window.startNotificationSystem = () => {
+    try {
+        if (!currentUser || !currentUser.email) return;
+        try { window.renderNotificationBell(); } catch(e){}
+        window.initNotificationsListener(currentUser.email);
+    } catch(e) { console.warn('startNotificationSystem error', e); }
+};
+
+// Wrap sendNotification to also create in-app record
+const _origSendNotificationLive = window.sendNotification;
+window.sendNotification = async (dest, sub, msg, opts={}) => {
+    try {
+        let body = msg || '';
+        if (!String(body).includes('<html') && !String(body).includes('<div')) {
+            body = window.composeEmail(sub || 'Notificación SGC', String(body), { link: opts.link, actor: opts.actor });
+        }
+        try { await window.createNotificationRecord(dest, sub, body, { actor: opts.actor || (currentUser && currentUser.nombre) || '' }); } catch(e) { console.warn('failed to create notification record', e); }
+        return await _origSendNotificationLive(dest, sub, body);
+    } catch(e) { console.error('sendNotification wrapper error', e); return false; }
 };
 
 window.getDatosEnvio = async (sol) => {
@@ -820,6 +946,20 @@ window.renderTablasSolicitudes = () => {
 
 window.completarLoginUI = () => {
   window.setDisplay('login-screen', 'none'); window.setDisplay('sidebar', 'flex'); window.setDisplay('main', 'block');
+    // Collapse all nav groups except Documental and Auditoría; expand those two
+    try {
+        document.querySelectorAll('.nav-group-body').forEach(b => {
+            if (!b) return;
+            if (b.id === 'ng-documental' || b.id === 'ng-auditoria') {
+                b.classList.remove('collapsed');
+            } else {
+                if (!b.classList.contains('collapsed')) b.classList.add('collapsed');
+            }
+        });
+        document.querySelectorAll('.nav-group-header').forEach(h => h.classList.remove('open'));
+        if (document.getElementById('ng-documental-btn')) document.getElementById('ng-documental-btn').classList.add('open');
+        if (document.getElementById('ng-auditoria-btn')) document.getElementById('ng-auditoria-btn').classList.add('open');
+    } catch(e) { console.warn('Sidebar expand/collapse init failed', e); }
   window.setTxt('curr-name', currentUser.nombre || 'Usuario');
   
   // Mostrar empresa activa en sidebar
@@ -858,7 +998,10 @@ window.completarLoginUI = () => {
   window.setDisplay('btn-config-plan', isAdAud ? 'inline-flex' : 'none'); window.setDisplay('btn-nueva-aud', isAdAud ? 'inline-flex' : 'none');
   
   window.cargarDatosCentrales();
-  if (isSuperAdmin || p.p_gest_sgc || isAdm) window.cambiarVista('sec-all', $('nav-all')); else if (p.can_solicit) window.cambiarVista('sec-crear', $('nav-crear')); else if (p.p_ver_propias) window.cambiarVista('sec-hist', $('nav-hist')); else window.cambiarVista('sec-dash', $('nav-dash'));
+        try { window.startNotificationSystem(); } catch(e) { console.warn('startNotificationSystem failed', e); }
+    // Clear dashboard filters on login to prevent previous filters being applied after reload
+    ['dash-filter-desde','dash-filter-hasta','dash-filter-estado','dash-month-filter'].forEach(id => { try { if ($(id)) window.setVal(id, ''); } catch(e){} });
+    if (isSuperAdmin || p.p_gest_sgc || isAdm) window.cambiarVista('sec-all', $('nav-all')); else if (p.can_solicit) window.cambiarVista('sec-crear', $('nav-crear')); else if (p.p_ver_propias) window.cambiarVista('sec-hist', $('nav-hist')); else window.cambiarVista('sec-dash', $('nav-dash'));
 };
 
 window.logout = () => {
