@@ -1064,9 +1064,12 @@ window.completarLoginUI = () => {
   if ($('empresa-badge-nombre')) $('empresa-badge-nombre').innerText = empNombre;
   if ($('empresa-badge')) $('empresa-badge').style.display = isSuperAdmin ? 'block' : 'none';
 
-  const p = currentUser.permisos || {}; const isAdm = p.admin || isSuperAdmin || false;
-  const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
-    window.setDisplay('nav-dash', canDash ? 'flex' : 'none'); window.setDisplay('nav-forms', (p.p_ver_formularios || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-drive', 'flex');
+    const p = currentUser.permisos || {}; const isAdm = p.admin || isSuperAdmin || false;
+    const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
+        window.setDisplay('nav-dash', canDash ? 'flex' : 'none');
+        // Also hide the dashboard section when the user lacks dashboard permission
+        window.setDisplay('sec-dash', canDash ? 'block' : 'none');
+        window.setDisplay('nav-forms', (p.p_ver_formularios || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-drive', 'flex');
   window.setDisplay('nav-admin-group', (isAdm || p.p_users || p.p_struct) ? 'block' : 'none');
 
   // Grupo Super Admin (solo para isSuperAdmin)
@@ -1097,7 +1100,15 @@ window.completarLoginUI = () => {
     try { window.startNotificationSystem(); } catch(e) { console.warn('startNotificationSystem failed', e); }
     // Ensure dashboard filters are cleared on login so reloads don't keep previous filters
     ['dash-filter-desde','dash-filter-hasta','dash-filter-estado','dash-month-filter'].forEach(id => { try { if ($(id)) window.setVal(id, ''); } catch(e){} });
-    if (isSuperAdmin || p.p_gest_sgc || isAdm) window.cambiarVista('sec-all', $('nav-all')); else if (p.can_solicit) window.cambiarVista('sec-crear', $('nav-crear')); else if (p.p_ver_propias) window.cambiarVista('sec-hist', $('nav-hist')); else window.cambiarVista('sec-dash', $('nav-dash'));
+    // Default view selection - avoid opening dashboard if user lacks permission
+    if (isSuperAdmin || p.p_gest_sgc || isAdm) window.cambiarVista('sec-all', $('nav-all'));
+    else if (p.can_solicit) window.cambiarVista('sec-crear', $('nav-crear'));
+    else if (p.p_ver_propias) window.cambiarVista('sec-hist', $('nav-hist'));
+    else if (canDash) window.cambiarVista('sec-dash', $('nav-dash'));
+    else if ($('nav-crear') && $('nav-crear').style.display !== 'none') window.cambiarVista('sec-crear', $('nav-crear'));
+    else if ($('nav-hist') && $('nav-hist').style.display !== 'none') window.cambiarVista('sec-hist', $('nav-hist'));
+    else if ($('nav-forms') && $('nav-forms').style.display !== 'none') window.cambiarVista('sec-forms', $('nav-forms'));
+    else window.cambiarVista('sec-drive', $('nav-drive'));
 };
 
 window.logout = () => {
