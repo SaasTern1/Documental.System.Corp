@@ -11,6 +11,89 @@ const firebaseConfig = {
     appId: "1:7090302" + "83072:web:599" + "7837b36a" + "448e9515ca5" 
 };
 
+window.verDiasSolicitud = (id) => {
+    try {
+        const all = globalSolicitudes || [];
+        const s = all.find(x => (x.docId && x.docId === id) || (x.id && x.id === id) || (x.customId && x.customId === id));
+        if(!s) { alert('Solicitud no encontrada'); return; }
+
+        const startStr = s.fecha || s.fecha_creacion || s.fecha_inicio;
+        const endStr = s.sla || s.fecha_esperada_cierre || s.fecha_final;
+        if(!startStr || !endStr) { alert('No hay fechas suficientes para mostrar calendario (falta fecha inicio o SLA).'); return; }
+
+        const start = new Date(startStr.length===10 ? startStr + 'T00:00:00' : startStr);
+        const end = new Date(endStr.length===10 ? endStr + 'T23:59:59' : endStr);
+        if(isNaN(start.getTime()) || isNaN(end.getTime())) { alert('Fechas inválidas en la solicitud'); return; }
+
+        // Build months between start and end (inclusive)
+        const months = [];
+        let cur = new Date(start.getFullYear(), start.getMonth(), 1);
+        const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+        while(cur <= endMonth) {
+            months.push(new Date(cur.getFullYear(), cur.getMonth(), 1));
+            cur.setMonth(cur.getMonth() + 1);
+        }
+
+        const body = $('m-dias-body');
+        if(!body) return;
+        body.innerHTML = '';
+        months.forEach(mDate => {
+            const y = mDate.getFullYear(); const m = mDate.getMonth();
+            const firstDay = new Date(y, m, 1);
+            const lastDay = new Date(y, m+1, 0);
+            let html = `<div style="min-width:240px; border:1px solid var(--border); border-radius:8px; padding:10px; background:#fff;">
+                <div style="font-weight:700; margin-bottom:8px;">${firstDay.toLocaleString(undefined,{month:'long'})} ${y}</div>
+                <table style="width:100%; border-collapse:collapse; text-align:center; font-size:13px;"><thead><tr>
+                    <th style="width:12%; color:var(--sidebar);">D</th><th style="width:12%; color:var(--sidebar);">L</th><th style="width:12%; color:var(--sidebar);">M</th><th style="width:12%; color:var(--sidebar);">M</th><th style="width:12%; color:var(--sidebar);">J</th><th style="width:12%; color:var(--sidebar);">V</th><th style="width:12%; color:var(--sidebar);">S</th>
+                </tr></thead><tbody>`;
+            let week = [];
+            // pad empty cells until first weekday (Sunday=0)
+            let pad = firstDay.getDay();
+            for(let i=0;i<pad;i++) week.push('');
+            for(let d=1; d<= lastDay.getDate(); d++) {
+                week.push(d);
+                if(week.length === 7) {
+                    html += '<tr>' + week.map(cell => {
+                        if(cell === '') return '<td style="padding:6px; color:rgba(15,23,42,0.3);"></td>';
+                        const dayDate = new Date(y, m, cell);
+                        const inRange = dayDate >= new Date(start.getFullYear(), start.getMonth(), start.getDate()) && dayDate <= new Date(end.getFullYear(), end.getMonth(), end.getDate());
+                        if(inRange) return `<td style="padding:6px; background:#3b82f6; color:#fff; border-radius:4px;">${cell}</td>`;
+                        return `<td style="padding:6px;">${cell}</td>`;
+                    }).join('') + '</tr>';
+                    week = [];
+                }
+            }
+            if(week.length > 0) {
+                while(week.length < 7) week.push('');
+                html += '<tr>' + week.map(cell => cell === '' ? '<td style="padding:6px; color:rgba(15,23,42,0.3);"></td>' : `<td style="padding:6px;">${cell}</td>`).join('') + '</tr>';
+            }
+            html += `</tbody></table></div>`;
+            body.innerHTML += html;
+        });
+
+        if($('m-dias-tit')) $('m-dias-tit').innerText = `Días para trabajar: ${s.customId || s.id}`;
+        window.setDisplay('modal-dias-solicitud', 'flex');
+    } catch(e) { console.warn('verDiasSolicitud failed', e); alert('Error al mostrar calendario'); }
+};
+
+window.getResponsableActual = (s) => {
+    if(!s) return '-';
+    // Si está anulado o rechazado, no mostrar responsable
+    if(s.estado === 'Anulado' || s.estado === 'Rechazado') return '';
+    const findName = (email) => {
+        if(!email) return '';
+        try { const u = allUsers.find(x => (x.email||'').toLowerCase() === (email||'').toLowerCase()); if(u) return u.nombre; } catch(e) {}
+        return email;
+    };
+    // idx mapping: -1 = evaluación, 0 = paso1, 1 = paso2, 2 = gerencia/aprobación, 3 = paso4
+    if(s.idx === -1) return s.asig_eval_name || s.asig_eval || 'Pendiente Evaluación';
+    if(s.idx === 0) return findName(s.asig_paso1) || s.asig_paso1 || '-';
+    if(s.idx === 1) return findName(s.asig_paso2) || s.asig_paso2 || '-';
+    if(s.idx === 2) return s.gerente || s.gerencia || '-';
+    if(s.idx === 3) return findName(s.asig_paso4) || s.asig_paso4 || '-';
+    return '-';
+};
+
 const app = initializeApp(firebaseConfig); 
 const auth = getAuth(app); 
 const db = getFirestore(app); 
@@ -91,11 +174,17 @@ window.cerrarModalUsuario = () => window.setDisplay('modal-usuario', 'none');
 window.abrirModalUsuario = () => { window.resetUserForm(); window.setDisplay('modal-usuario', 'flex'); };
 window.toggleModPanel = v => window.setDisplay('panel-mod', v === 'Creación' ? 'none' : 'grid');
 
-window.cambiarVista = (id, btn) => {
-  $$('.section').forEach(s => s.classList.remove('active')); $$('.nav-link').forEach(l => l.classList.remove('active'));
-  if($(id)) $(id).classList.add('active'); if(btn) btn.classList.add('active');
-  if(window.innerWidth <= 768) { if($('sidebar')) $('sidebar').classList.remove('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.remove('active'); }
-  if(id === 'sec-dash') setTimeout(() => window.renderDashboardCharts(), 100); 
+// Keep track of user-locked view (e.g. user chose Panel Analítico and wants it to stay)
+window._lockedView = null;
+window.cambiarVista = (id, btn, force = false) => {
+    // If a view lock exists, prevent programmatic navigation away from it unless forced
+    if (window._lockedView && !force && id !== window._lockedView) return;
+    $$('.section').forEach(s => s.classList.remove('active'));
+    $$('.nav-link').forEach(l => l.classList.remove('active'));
+    if ($(id)) $(id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (window.innerWidth <= 768) { if ($('sidebar')) $('sidebar').classList.remove('open'); if ($('sidebar-overlay')) $('sidebar-overlay').classList.remove('active'); }
+    if (id === 'sec-dash') setTimeout(() => window.renderDashboardCharts(), 100);
 };
 window.toggleMenu = () => { if($('sidebar')) $('sidebar').classList.toggle('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.toggle('active'); };
 
@@ -115,6 +204,8 @@ document.addEventListener('click', (ev) => {
         }
         if (targetId) {
             try { if (typeof window._expandGroupOf === 'function') window._expandGroupOf(btn.id || ''); } catch(e){}
+            // If user clicked the dashboard, lock it so it stays active until user selects another view
+            try { if (targetId === 'sec-dash') window._lockedView = 'sec-dash'; else window._lockedView = null; } catch(e){}
             try { window.cambiarVista(targetId, btn); } catch(e) { console.warn('cambiarVista call failed', e); }
         }
     } catch(e) { /* silence */ }
@@ -171,10 +262,20 @@ window.abrirDocumento = async (url, nombreOriginal) => {
   if (url.toLowerCase().match(/\.(pdf|jpg|jpeg|png|gif)(\?|$)/)) {
     const win = window.open('', '_blank'); if (!win) return alert("Bloqueado.");
     win.document.write(`<html style="display:flex;justify-content:center;align-items:center;height:100vh;background:#f8fafc;"><head><title>${safeName}</title></head><body><h2>Cargando documento...</h2></body></html>`);
-    try { const r = await fetch(url); if(!r.ok) throw new Error(); const blob = await r.blob(); const bUrl = window.URL.createObjectURL(new File([blob], safeName, { type: blob.type })); win.location.href = bUrl; setTimeout(() => window.URL.revokeObjectURL(bUrl), 60000); } catch (e) { win.close(); alert("⚠️ Archivo no disponible."); }
+        try {
+            const r = await fetch(url); if(!r.ok) throw new Error(); const blob = await r.blob(); const bUrl = window.URL.createObjectURL(new File([blob], safeName, { type: blob.type })); win.location.href = bUrl; setTimeout(() => window.URL.revokeObjectURL(bUrl), 60000);
+        } catch (e) {
+            // Intentar como fallback abrir la URL directamente (evita bloqueos CORS en ciertos hosts)
+            try { win.close(); const fw = window.open(url, '_blank'); if(!fw) alert("⚠️ Archivo no disponible."); } catch (e2) { win.close(); alert("⚠️ Archivo no disponible."); }
+        }
   } else {
     window.showLoading();
-    try { const r = await fetch(url); if(!r.ok) throw new Error(); const bUrl = window.URL.createObjectURL(await r.blob()); const a = document.createElement('a'); a.style.display = 'none'; a.href = bUrl; a.download = safeName; document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(bUrl); document.body.removeChild(a); } catch (e) { alert("⚠️ Archivo no disponible."); }
+        try {
+            const r = await fetch(url); if(!r.ok) throw new Error(); const bUrl = window.URL.createObjectURL(await r.blob()); const a = document.createElement('a'); a.style.display = 'none'; a.href = bUrl; a.download = safeName; document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(bUrl); document.body.removeChild(a);
+        } catch (e) {
+            // Fallback: intentar abrir la URL en nueva pestaña para que el navegador gestione la descarga
+            try { const fw = window.open(url, '_blank'); if(!fw) alert("⚠️ Archivo no disponible."); } catch (e2) { alert("⚠️ Archivo no disponible."); }
+        }
     window.hideLoading();
   }
 };
@@ -420,6 +521,9 @@ let chartSlaInstance = null, chartMonthlyInstance = null, chartDonutStatsInstanc
 
 window.renderDashboardCharts = () => {
     try {
+        // Solo renderizar el dashboard si la sección está activa.
+        // Evita que cambios en otros módulos (filtros, listeners) afecten el Panel Analítico.
+        try { const dashEl = $('sec-dash'); if (!dashEl || !dashEl.classList.contains('active')) return; } catch(e) {}
         // Register lightweight Chart.js plugin for compact numeric labels and donut center text (once)
         if(!window._compactChartsPluginRegistered && typeof Chart !== 'undefined') {
             Chart.register({
@@ -466,7 +570,18 @@ window.renderDashboardCharts = () => {
             });
             window._compactChartsPluginRegistered = true;
         }
-        if(!currentUser || (!currentUser.permisos.admin && !currentUser.permisos.p_gest_sgc)) return;
+        if(!currentUser) return;
+        // Allow users with canonical dashboard permissions (or legacy admin/gest flags)
+        let canViewDash = false;
+        try {
+            if (typeof window.hasPermission === 'function') {
+                canViewDash = window.hasPermission(currentUser, 'solicitudes.view.all') || window.hasPermission(currentUser, 'solicitudes.manage') || window.hasPermission(currentUser, 'solicitudes.view.gerencia') || window.hasPermission(currentUser, 'solicitudes.view.own');
+            }
+        } catch(e) { }
+        if(!canViewDash) {
+            const p = currentUser.permisos || {};
+            if(!(p.admin || p.p_gest_sgc)) return;
+        }
         if (typeof Chart === 'undefined') return;
 
         let excludeAnuladas = false;
@@ -477,6 +592,12 @@ window.renderDashboardCharts = () => {
         if (excludeAnuladas) {
             solicitudesFiltered = solicitudesFiltered.filter(s => s.estado !== 'Anulado' && s.estado !== 'Rechazado');
         }
+
+        try {
+            console.debug('[renderDashboardCharts] user=', currentUser && (currentUser.usuario || currentUser.email || currentUser.nombre), 'permisos_canon=', currentUser && currentUser.permisos_canon);
+            console.debug('[renderDashboardCharts] counts', { solicitudes: (globalSolicitudes||[]).length, solicitudesFiltered: solicitudesFiltered.length, sacs: (globalAllSacs||[]).length, auditorias: (globalAllAuditorías||[]).length, proveedores: (globalProveedores||[]).length, riesgos: (globalRiesgos||[]).length, excludeAnuladas });
+            if((globalSolicitudes||[]).length>0) console.debug('[renderDashboardCharts] sample solicitud', globalSolicitudes[0]);
+        } catch(e) { console.warn('renderDashboardCharts debug failed', e); }
 
         // 0. KPIs Superiores
         if (globalSolicitudes) {
@@ -500,6 +621,17 @@ window.renderDashboardCharts = () => {
             if($('dash-pend')) $('dash-pend').innerText = pend;
             if($('dash-ok')) $('dash-ok').innerText = ok;
             if($('dash-sla-percent')) $('dash-sla-percent').innerText = slaPct + '%';
+            // SLA Modificados: cuenta de solicitudes con entradas en chat que mencionan "SLA ACTUALIZADO"
+            try {
+                let slaModCount = 0;
+                solicitudesFiltered.forEach(s => {
+                    if(s.chat && Array.isArray(s.chat)) {
+                        const found = s.chat.filter(c => c && c.m && String(c.m).toUpperCase().includes('SLA ACTUALIZADO')).length;
+                        if(found > 0) slaModCount++;
+                    }
+                });
+                if($('dash-sla-mods')) $('dash-sla-mods').innerText = slaModCount;
+            } catch(e) { console.warn('calc sla mods failed', e); }
         }
 
         // 1. Matriz de Riesgo OEA (Heatmap)
@@ -780,13 +912,15 @@ window.exportarExcelRiesgos = () => {
 
 window.cargarDatosCentrales = () => {
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "Usuarios"), (sn) => {
-    allUsers = []; let hU = "", cbU = "", oU = "", oI = '<option value="">-- Seleccionar --</option>';
+        console.debug('[snapshot Usuarios] count=', sn.size);
+        allUsers = []; let hU = "", cbU = "", oU = "", oI = '<option value="">-- Seleccionar --</option>';
     sn.forEach(d => { 
       let u = d.data(); allUsers.push(u); let gs = u.gerencias ? u.gerencias.join(', ') : (u.gerencia || 'N/A');
       hU += `<tr><td>${u.nombre} (${u.usuario})</td><td>${u.email||''}</td><td>${u.role||''} / <small>${gs}</small></td><td class="no-export"><button type="button" class="btn btn-info" style="padding:4px 8px; font-size:10px;" onclick="window.cargarUsuarioParaEditar('${u.usuario}')">Editar</button> <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="window.eliminarUsuario('${u.usuario}')">Eliminar</button></td></tr>`;
       cbU += `<label style="display:flex; gap:8px; font-size:13px; margin-bottom:6px;"><input aria-label="chk_user" type="checkbox" name="chk_user" value="${u.nombre}" data-email="${u.email}" style="margin:0; width:16px;" onchange="window.actualizarConteoPersonal()"> ${u.nombre} (${gs})</label>`;
       oU += `<option value="${u.nombre}" data-email="${u.email}">${u.nombre} (${gs})</option>`; if(u.email) oI += `<option value="${u.email}">${u.nombre} (${gs})</option>`;
     });
+    try { if(allUsers.length>0) console.debug('[snapshot Usuarios] sample user', allUsers[0].usuario || allUsers[0].email || allUsers[0].nombre); } catch(e){}
     window.setHtml('tbody-users', hU); window.setHtml('aud-auditado-list', cbU); window.setHtml('aud-auditor-list', cbU); window.setHtml('aud-formacion-list', cbU); window.setHtml('ah-auditor-list', cbU); 
     window.setHtml('ah-lider', '<option value="">-- Lider --</option>' + oU); window.setHtml('sol-involucrado-sel', oI); window.setHtml('m-new-involucrado-sel', oI); window.setHtml('e-sol-involucrado-sel', oI);
   });
@@ -854,26 +988,41 @@ window.cargarDatosCentrales = () => {
   });
 
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "ListadoMaestro"), (sn) => { dataMaestro = []; sn.forEach(d => { let obj = d.data(); obj.docId = d.id; dataMaestro.push(obj); }); window.renderTablaMaestro(); });
-  onSnapshot(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), (sn) => { globalSolicitudes = []; sn.forEach(d => { let obj = d.data(); obj.docId = d.id; globalSolicitudes.push(obj); }); window.renderTablasSolicitudes(); window.checkDailyAlerts(); });
+    onSnapshot(collection(db, "artifacts", appId, "public", "data", "Solicitudes"), (sn) => { 
+        console.debug('[snapshot Solicitudes] count=', sn.size);
+        globalSolicitudes = []; sn.forEach(d => { let obj = d.data(); obj.docId = d.id; globalSolicitudes.push(obj); }); 
+        try { if(globalSolicitudes.length>0) console.debug('[snapshot Solicitudes] sample', globalSolicitudes[0]); } catch(e){}
+        window.renderTablasSolicitudes(); window.checkDailyAlerts(); 
+        try { if(typeof window.renderTablaMaestro === 'function') window.renderTablaMaestro(); } catch(e) { console.warn('renderTablaMaestro failed', e); }
+        try { if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts(); } catch(e){}
+    });
   
     onSnapshot(collection(db, "artifacts", appId, "public", "data", "Auditorias"), (sn) => {
+        console.debug('[snapshot Auditorias] count=', sn.size);
         globalAllAuditorías = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalAllAuditorías.push(obj); });
+    try { if(globalAllAuditorías.length>0) console.debug('[snapshot Auditorias] sample', globalAllAuditorías[0]); } catch(e){}
     let cy = new Date().getFullYear().toString(); let ys = $('aud-year-select'); if(ys && ys.options.length === 0) ys.innerHTML = `<option value="${cy}">${cy}</option><option value="nuevo">+ Añadir Año</option>`;
         window.loadAuditPlan(ys ? ys.value : cy); window.renderTablaAuditorías(ys ? ys.value : cy);
   });
   
   // Listeners que actualizan el Dashboard Analítico
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "AccionesCorrectivas"), (sn) => { 
+      console.debug('[snapshot AccionesCorrectivas] count=', sn.size);
       globalAllSacs = []; sn.forEach(d => { let obj = d.data(); obj.sac_id = d.id; globalAllSacs.push(obj); }); 
-      window.renderF023Global(); window.renderDashboardCharts(); 
+      try { if(globalAllSacs.length>0) console.debug('[snapshot AccionesCorrectivas] sample', globalAllSacs[0]); } catch(e){}
+      window.renderF023Global(); if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts(); 
   });
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "Proveedores"), (sn) => { 
+      console.debug('[snapshot Proveedores] count=', sn.size);
       globalProveedores = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalProveedores.push(obj); }); 
-      window.renderTablaProveedores(); window.renderDashboardCharts(); 
+      try { if(globalProveedores.length>0) console.debug('[snapshot Proveedores] sample', globalProveedores[0]); } catch(e){}
+      window.renderTablaProveedores(); if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts(); 
   });
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "MatrizRiesgos"), (sn) => { 
+      console.debug('[snapshot MatrizRiesgos] count=', sn.size);
       globalRiesgos = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalRiesgos.push(obj); }); 
-      window.renderTablaRiesgos(); window.renderDashboardCharts(); 
+      try { if(globalRiesgos.length>0) console.debug('[snapshot MatrizRiesgos] sample', globalRiesgos[0]); } catch(e){}
+      window.renderTablaRiesgos(); if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts(); 
   });
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "Formularios"), (sn) => { 
       globalForms = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalForms.push(obj); }); 
@@ -1005,7 +1154,7 @@ window.renderTablasDinamicasDash = () => {
 
     if(!html) html = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">No se encontraron datos que coincidan con los filtros.</td></tr>`;
     window.setHtml('tbody-dash-dinamico', html);
-    window.renderDashboardCharts(); 
+    if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts(); 
 };
 
 window.renderTablasSolicitudes = () => {
@@ -1025,14 +1174,37 @@ window.renderTablasSolicitudes = () => {
 
     if(apr && f_sla && s.fecha_final) { totalCerradas++; if(s.fecha_final <= f_sla) cerradasATiempo++; }
 
-    if(isM) { hH += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}</td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bc}">${es}</span></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver / Gestionar</button></td></tr>`; }
+    // Compact row rendering with unified columns: ID | Solicitante | Documento | Responsable | Prioridad | Estado | SLA | Doc | Acción
+    const responsable = window.getResponsableActual ? window.getResponsableActual(s) : (s.asig_paso1||s.asig_paso2||s.asig_paso4||'-');
+    const compactTitle = `<div style="font-size:13px; font-weight:600;">${s.titulo}</div><div style="font-size:11px; color:#94a3b8; margin-top:4px;">${s.tipo_documento || ''}</div>`;
+    if(isM) { hH += `<tr style="font-size:13px;">
+        <td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td>
+        <td>${s.solicitante}</td>
+        <td style="max-width:360px;">${compactTitle}</td>
+        <td>${responsable}</td>
+        <td><span class="badge ${bp}">${ps}</span></td>
+        <td><span class="badge ${bc}">${es}</span><br><small style="color:#94a3b8">${et}</small></td>
+        <td>${slaVisual}</td>
+        <td style="text-align:center;">${docIcon}</td>
+        <td class="no-export"><button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver / Gestionar</button></td>
+    </tr>`; }
 
     let puedeVerTodas = false;
     if (esAdm || p.p_ver_todas) puedeVerTodas = true;
     else if (p.p_ver_ger && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia)) puedeVerTodas = true;
     else if (isM) puedeVerTodas = true;
 
-    if(puedeVerTodas) { hA += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}</td><td><span class="badge ${bp}">${ps}</span></td><td><span class="badge ${bc}">${es}</span><br><small>${et}</small></td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver Detalle</button></td></tr>`; }
+    if(puedeVerTodas) { hA += `<tr style="font-size:13px;">
+        <td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td>
+        <td>${s.solicitante}<br><small>${s.gerencia}</small></td>
+        <td style="max-width:360px;">${compactTitle}</td>
+        <td>${responsable}</td>
+        <td><span class="badge ${bp}">${ps}</span></td>
+        <td><span class="badge ${bc}">${es}</span><br><small>${et}</small></td>
+        <td>${slaVisual}</td>
+        <td style="text-align:center;">${docIcon}</td>
+        <td class="no-export"><button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Ver Detalle</button></td>
+    </tr>`; }
 
     let act = !apr && !c;
     let c1 = s.asig_paso1 ? (currentUser.email||'').toLowerCase() === s.asig_paso1.toLowerCase() : p.p_paso1;
@@ -1040,7 +1212,17 @@ window.renderTablasSolicitudes = () => {
     let c4 = s.asig_paso4 ? (currentUser.email||'').toLowerCase() === s.asig_paso4.toLowerCase() : p.p_paso4;
     let pgS = act && ((s.idx===0 && (esAdm||c1)) || (s.idx===1 && (esAdm||c2)) || (s.idx===3 && (esAdm||c4)) || (s.idx===-1 && (esAdm||p.p_eval_solicitud)));
     let pgG = act && s.idx===2 && p.p_ger_apr && currentUser.gerencias && currentUser.gerencias.includes(s.gerencia);
-    if(pgS || pgG) { hG += `<tr><td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td><td>${s.solicitante}<br><small>${s.gerencia}</small></td><td>${s.titulo}<br><span class="badge ${bp}">${ps}</span></td><td>${etBadge}</td><td>${slaVisual}</td><td style="text-align:center;">${docIcon}</td><td class="no-export"><button type="button" class="btn btn-warning" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Revisar / Firmar</button></td></tr>`; }
+    if(pgS || pgG) { hG += `<tr style="font-size:13px;">
+        <td><b>${s.customId}</b><br><small style="color:#94a3b8">${window.formatearFechaAbreviada(s.fecha)}</small></td>
+        <td>${s.solicitante}</td>
+        <td style="max-width:360px;">${compactTitle}</td>
+        <td>${responsable}</td>
+        <td><span class="badge ${bp}">${ps}</span></td>
+        <td><span class="badge ${bc}">${es}</span><br><small style="color:#94a3b8">${et}</small></td>
+        <td>${slaVisual}</td>
+        <td style="text-align:center;">${docIcon}</td>
+        <td class="no-export"><button type="button" class="btn btn-warning" style="padding:4px 8px; font-size:10px;" onclick="window.verDetalle('${s.docId}')">Revisar / Firmar</button></td>
+    </tr>`; }
   });
 
   window.setHtml('tbody-historial', hH); window.setHtml('tbody-all', hA); window.setHtml('tbody-gestionar', hG);
@@ -1057,7 +1239,7 @@ window.renderTablasSolicitudes = () => {
     window.setTxt('dash-glob-ok', sort.filter(s => String(s.estado||"").includes('Aprobado Final')).length); 
     let slaPer = totalCerradas > 0 ? Math.round((cerradasATiempo / totalCerradas) * 100) : 0; window.setTxt('dash-sla-percent', `${slaPer}%`);
   }
-  window.renderDashboardCharts();
+    if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts();
 };
 
 window.completarLoginUI = () => {
@@ -1085,31 +1267,40 @@ window.completarLoginUI = () => {
   if ($('empresa-badge-nombre')) $('empresa-badge-nombre').innerText = empNombre;
   if ($('empresa-badge')) $('empresa-badge').style.display = isSuperAdmin ? 'block' : 'none';
 
-    const p = currentUser.permisos || {}; const isAdm = p.admin || isSuperAdmin || false;
-    const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
-        window.setDisplay('nav-dash', canDash ? 'flex' : 'none');
-        // Also hide the dashboard section when the user lacks dashboard permission
-        window.setDisplay('sec-dash', canDash ? 'block' : 'none');
-        window.setDisplay('nav-forms', (p.p_ver_formularios || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-drive', 'flex');
-  window.setDisplay('nav-admin-group', (isAdm || p.p_users || p.p_struct) ? 'block' : 'none');
+    // Use canonical permissions object when available and avoid implicit admin overrides
+    const p = currentUser.permisos || {}; const pc = currentUser.permisos_canon || {};
+    const isAdm = !!(p.admin || isSuperAdmin || false);
+    // Dashboard/control links: fall back to legacy flags but prefer canonical keys where appropriate
+    const canDash = !!(pc['solicitudes.view.all'] || pc['solicitudes.manage'] || pc['solicitudes.create'] || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4);
+    window.setDisplay('nav-dash', canDash ? 'flex' : 'none');
+    window.setDisplay('sec-dash', canDash ? '' : 'none');
+    window.setDisplay('nav-forms', (pc['formularios.view_module'] || p.p_gest_sgc) ? 'flex' : 'none');
+    window.setDisplay('nav-hist', (pc['solicitudes.view.own'] || isAdm) ? 'flex' : 'none');
+    window.setDisplay('nav-all', (pc['solicitudes.view.all'] || pc['solicitudes.view.gerencia'] || isAdm) ? 'flex' : 'none');
+    window.setDisplay('nav-crear', (pc['solicitudes.create'] || p.can_solicit || isAdm) ? 'flex' : 'none');
+    window.setDisplay('nav-gest', (pc['solicitudes.manage'] || p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none');
+    window.setDisplay('nav-listado', (pc['listado_maestro.view'] || isAdm) ? 'flex' : 'none');
+    window.setDisplay('nav-drive', 'flex');
+    // Admin/config groups: require explicit canonical permission (do NOT grant just because user is admin)
+    window.setDisplay('nav-admin-group', (pc['users.manage'] || pc['structure.configure'] || p.p_users || p.p_struct) ? 'block' : 'none');
 
   // Grupo Super Admin (solo para isSuperAdmin)
   window.setDisplay('nav-superadmin-group', isSuperAdmin ? 'block' : 'none');
   if (isSuperAdmin) window.cargarTodasEmpresas();
 
-  const canAud = p.p_audit_ver || p.p_audit_admin || p.p_audit_auditor || p.p_audit_dueno || isAdm; 
-  window.setDisplay('nav-audit-group', canAud ? 'block' : 'none'); window.setDisplay('nav-norma', canAud ? 'flex' : 'none'); window.setDisplay('nav-audit', canAud ? 'flex' : 'none'); window.setDisplay('nav-noconf', (p.p_audit_admin || p.p_gest_sgc || p.p_audit_auditor || p.p_audit_dueno || isAdm) ? 'flex' : 'none');
-  
-  const canOea = p.p_proveedores || p.p_riesgos || isAdm || p.p_gest_sgc || p.p_audit_admin;
-  window.setDisplay('nav-oea-group', canOea ? 'block' : 'none');
-  window.setDisplay('nav-proveedores', (p.p_proveedores || isAdm || p.p_gest_sgc) ? 'flex' : 'none');
-  window.setDisplay('nav-riesgos', (p.p_riesgos || isAdm || p.p_gest_sgc) ? 'flex' : 'none');
-  
-  window.setDisplay('nav-segfisica-group', canOea ? 'block' : 'none');
-  window.setDisplay('nav-logistica-group', canOea ? 'block' : 'none');
-  window.setDisplay('nav-hseq-group', canOea ? 'block' : 'none');
-  window.setDisplay('nav-rrhh-group', canOea ? 'block' : 'none');
-  window.setDisplay('nav-it-group', canOea ? 'block' : 'none');
+    const canAud = !!(pc['auditorias.view.assigned'] || pc['auditorias.manage'] || pc['auditorias.role.internal_auditor'] || pc['auditorias.role.process_owner'] || p.p_audit_ver || isAdm);
+    window.setDisplay('nav-audit-group', canAud ? 'block' : 'none'); window.setDisplay('nav-norma', canAud ? 'flex' : 'none'); window.setDisplay('nav-audit', canAud ? 'flex' : 'none'); window.setDisplay('nav-noconf', (pc['auditorias.manage'] || p.p_audit_admin || p.p_gest_sgc || p.p_audit_auditor || p.p_audit_dueno || isAdm) ? 'flex' : 'none');
+
+    // Special modules: visibility strictly tied to canonical module permissions (no implicit admin override)
+    window.setDisplay('nav-oea-group', (pc['evaluacion_proveedor.view'] || pc['matriz_riesgo.view'] || pc['manual_oea.view']) ? 'block' : 'none');
+    window.setDisplay('nav-proveedores', pc['evaluacion_proveedor.view'] ? 'flex' : 'none');
+    window.setDisplay('nav-riesgos', pc['matriz_riesgo.view'] ? 'flex' : 'none');
+
+    window.setDisplay('nav-segfisica-group', pc['seguridad_fisica.view'] ? 'block' : 'none');
+    window.setDisplay('nav-logistica-group', pc['cadena_suministro.access'] ? 'block' : 'none');
+    window.setDisplay('nav-hseq-group', pc['hsqe.access'] ? 'block' : 'none');
+    window.setDisplay('nav-rrhh-group', pc['recursos_humanos.access'] ? 'block' : 'none');
+    window.setDisplay('nav-it-group', pc['tecnologia.access'] ? 'block' : 'none');
 
   const canRoot = p.p_users || p.p_struct || isAdm; 
   window.setDisplay('admin-only', canRoot ? 'block' : 'none'); window.setDisplay('nav-users', (p.p_users || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-struct', (p.p_struct || isAdm) ? 'flex' : 'none');
@@ -1122,7 +1313,8 @@ window.completarLoginUI = () => {
     // Ensure dashboard filters are cleared on login so reloads don't keep previous filters
     ['dash-filter-desde','dash-filter-hasta','dash-filter-estado','dash-month-filter'].forEach(id => { try { if ($(id)) window.setVal(id, ''); } catch(e){} });
     // Default view selection - avoid opening dashboard if user lacks permission
-    if (isSuperAdmin || p.p_gest_sgc || isAdm) window.cambiarVista('sec-all', $('nav-all'));
+    if (p.p_gest_sgc) window.cambiarVista('sec-dash', $('nav-dash'));
+    else if (isSuperAdmin || isAdm) window.cambiarVista('sec-all', $('nav-all'));
     else if (p.can_solicit) window.cambiarVista('sec-crear', $('nav-crear'));
     else if (p.p_ver_propias) window.cambiarVista('sec-hist', $('nav-hist'));
     else if (canDash) window.cambiarVista('sec-dash', $('nav-dash'));
@@ -1484,23 +1676,64 @@ window.agregarRequisitoOEA = async () => {
 window.eliminarRequisitoOEA = async (idx) => { if(!confirm("¿Eliminar este requisito?")) return; requisitosOEA.splice(idx, 1); await setDoc(doc(db, "artifacts", appId, "public", "data", "Configuracion", "NormaOEA"), { requisitos: requisitosOEA }, {merge: true}); };
 
 window.renderTablaMaestro = () => {
-if(!$('thead-listado-maestro')) return;
-let headHTML = "<tr>"; columnasMaestro.forEach(col => { let cName = typeof col === 'string' ? col : col.nombre; headHTML += `<th>${cName}</th>`; }); 
-if(currentUser && currentUser.permisos && (currentUser.permisos.p_gest_sgc || currentUser.permisos.admin)) { headHTML += `<th class="no-export">Acción</th>`; } headHTML += "</tr>"; window.setHtml('thead-listado-maestro', headHTML);
-let dataSort = [...dataMaestro]; if(columnasMaestro.length > 0) { let firstCol = typeof columnasMaestro[0] === 'string' ? columnasMaestro[0] : columnasMaestro[0].nombre; dataSort.sort((a,b) => (a[firstCol]||"").toString().localeCompare((b[firstCol]||"").toString())); }
-let tbodyHtml = "";
-dataSort.forEach(item => {
-  let rowHTML = "<tr>";
-  columnasMaestro.forEach(col => {
-    let cName = typeof col === 'string' ? col : col.nombre; let cType = typeof col === 'string' ? 'text' : col.tipo; let val = item[cName] || "";
-    if(cType === 'url' || val.toString().startsWith("http")) { let dUrl = window.getDownloadUrl(val); let fName = item['Nombre del documento'] || item['Título'] || "Documento_Maestro"; rowHTML += `<td><a href="#" onclick="window.abrirDocumento('${dUrl}', '${fName}'); return false;" class="file-link">📁 ${fName}</a></td>`; } 
-    else if(cName.toLowerCase().includes('estatus') || cName.toLowerCase().includes('estado')) { let badge = val.toLowerCase().includes('vigente') || val.toLowerCase().includes('activo') ? 'badge-success' : (val.toLowerCase().includes('obsoleto') || val.toLowerCase().includes('inactivo') ? 'badge-danger' : 'badge-warning'); rowHTML += `<td><span class="badge ${badge}">${val}</span></td>`; } 
-    else if(cType === 'date' || cName.toLowerCase().includes('fecha')) { rowHTML += `<td>${window.formatearFechaAbreviada(val)}</td>`; } else { rowHTML += `<td>${val}</td>`; }
-  });
-  if(currentUser && currentUser.permisos && (currentUser.permisos.p_gest_sgc || currentUser.permisos.admin)) { let btnAcciones = `<button type="button" class="btn btn-info" style="padding:5px; font-size:10px; margin-right:5px;" onclick="window.abrirModalListadoMaestro('${item.docId}')">EDITAR</button>`; btnAcciones += `<button type="button" class="btn btn-danger" style="padding:5px 8px; font-size:10px;" onclick="window.del('ListadoMaestro','${item.docId}')">X</button>`; rowHTML += `<td class="no-export">${btnAcciones}</td>`; }
-  rowHTML += "</tr>"; tbodyHtml += rowHTML;
-});
-window.setHtml('tbody-listado-maestro', tbodyHtml);
+    // Build maestro from globalSolicitudes for compact unified view
+    if(!$('thead-listado-maestro')) return;
+    const cols = [
+        'Código','Gerencia','Departamento','Tipo de documento','Nombre del documento','Nombre de solicitud','Número de solicitud relacionada','Fecha de Creación','Fecha última versión','Versión','VISTA PREVIA','Estatus','Código Anterior'
+    ];
+    let headHTML = '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '<th class="maestro-action no-export">Acción</th></tr>';
+    window.setHtml('thead-listado-maestro', headHTML);
+
+    let solicitudes = (globalSolicitudes || []).slice().sort((a,b) => ((a.customId||a.id)||'').toString().localeCompare(((b.customId||b.id)||'').toString()));
+    // Excluir solicitudes anuladas o rechazadas del Listado Maestro
+    solicitudes = solicitudes.filter(s => {
+        const st = String(s.estado || '').toLowerCase();
+        return !(st.includes('anulad') || st.includes('rechaz'));
+    });
+    let tbodyHtml = '';
+    solicitudes.forEach(s => {
+        const codigo = s.codigo_final || s.customId || s.id || '';
+        const gerencia = s.gerencia || '';
+        const departamento = s.departamento || '';
+        const tipo = s.tipoDoc || s.tipo || s.tipo_documento || '';
+        const nombreDocumento = s.documento_final_nombre || s.documento_nombre || s.adjunto_nombre || s.titulo || '';
+        const nombreSolicitud = s.titulo || '';
+        const numeroSolicitud = s.customId || s.id || '';
+        const fechaCre = window.formatearFechaAbreviada(s.fecha || s.fecha_creacion || '');
+        const fechaUlt = window.formatearFechaAbreviada(s.fecha_ultima_version || s.fecha_final || s.fecha_cierre || '');
+        const version = s.version || s.v || s.version_final || '';
+        const vistaUrl = s.documento_final || s.url || s.adjunto || s.archivo || '';
+        const estatus = (s.documento_final || String(s.estado||'').toLowerCase().includes('aprobado')) ? 'Activo' : 'Inactivo';
+        const codigoAnt = s.codigo_anterior || s.codigoAnterior || '';
+
+        let vistaHtml = vistaUrl ? `<a href="#" onclick="window.abrirDocumento('${window.getDownloadUrl ? window.getDownloadUrl(vistaUrl) : vistaUrl}', '${nombreDocumento||codigo}'); return false;" class="file-link">Ver</a>` : '-';
+
+        let actionBtns = '';
+        if(currentUser && currentUser.permisos && (currentUser.permisos.p_gest_sgc || currentUser.permisos.admin)) {
+            actionBtns = `<button type="button" class="btn btn-sm btn-info" style="padding:6px 8px; font-size:12px; margin-right:6px;" onclick="window.abrirModalListadoMaestro('${s.docId||s.id}')">EDITAR</button>`;
+            actionBtns += `<button type="button" class="btn btn-sm btn-danger" style="padding:6px 8px; font-size:12px;" onclick="window.del('ListadoMaestro','${s.docId||s.id}')">X</button>`;
+        } else {
+            actionBtns = `<button type="button" class="btn btn-sm btn-primary" style="padding:6px 8px; font-size:12px;" onclick="window.verDetalle('${s.docId||s.id}')">Ver</button>`;
+        }
+
+        tbodyHtml += `<tr class="maestro-row" style="font-size:13px;">
+            <td>${codigo}</td>
+            <td>${gerencia}</td>
+            <td>${departamento}</td>
+            <td>${tipo}</td>
+            <td style="max-width:360px; white-space:normal;">${nombreDocumento}</td>
+            <td style="max-width:220px; white-space:normal;">${nombreSolicitud}</td>
+            <td>${numeroSolicitud}</td>
+            <td>${fechaCre}</td>
+            <td>${fechaUlt}</td>
+            <td>${version}</td>
+            <td style="text-align:center;">${vistaHtml}</td>
+            <td><span class="badge ${estatus === 'Activo' ? 'badge-success' : 'badge-danger'}">${estatus}</span></td>
+            <td>${codigoAnt}</td>
+            <td class="maestro-action no-export" style="text-align:center;">${actionBtns}</td>
+        </tr>`;
+    });
+    window.setHtml('tbody-listado-maestro', tbodyHtml);
 };
 
 window.abrirModalListadoMaestro = (docId = null) => {
@@ -1525,9 +1758,42 @@ window.hideLoading(); window.setDisplay('modal-form-listado', 'none');
 };
 
 window.exportarExcelListado = () => {
-if(dataMaestro.length === 0) return alert("No hay registros en el Listado Maestro para exportar.");
-let dataExport = dataMaestro.map(item => { let rowObj = {}; columnasMaestro.forEach(col => { let cName = typeof col === 'string' ? col : col.nombre; rowObj[cName] = item[cName] || ""; }); return rowObj; });
-let wb = XLSX.utils.book_new(); let ws = XLSX.utils.json_to_sheet(dataExport); XLSX.utils.book_append_sheet(wb, ws, "Listado_Maestro"); XLSX.writeFile(wb, "Listado_Maestro_SGC.xlsx");
+    const solicitudes = (globalSolicitudes || []);
+    // Excluir solicitudes anuladas/rechazadas al exportar
+    const solicitudesFiltradas = solicitudes.filter(s => { const st = String(s.estado||'').toLowerCase(); return !(st.includes('anulad') || st.includes('rechaz')); });
+    if(solicitudesFiltradas.length === 0) return alert("No hay registros para exportar desde Solicitudes.");
+    const dataExport = solicitudes.map(s => ({
+        'Código': s.codigo_final || s.customId || s.id || '',
+        'Gerencia': s.gerencia || '',
+        'Departamento': s.departamento || '',
+        'Tipo de documento': s.tipoDoc || s.tipo || s.tipo_documento || '',
+        'Nombre del documento': s.documento_final_nombre || s.documento_nombre || s.adjunto_nombre || s.titulo || '',
+        'Nombre de solicitud': s.titulo || '',
+        'Número de solicitud relacionada': s.customId || s.id || '',
+        'Fecha de Creación': s.fecha || s.fecha_creacion || '',
+        'Fecha última versión': s.fecha_ultima_version || s.fecha_final || '',
+        'Versión': s.version || s.v || s.version_final || '',
+        'VISTA PREVIA': s.documento_final || s.url || s.adjunto || s.archivo || '',
+        'Estatus': (s.documento_final || String(s.estado||'').toLowerCase().includes('aprobado')) ? 'Activo' : 'Inactivo',
+        'Código Anterior': s.codigo_anterior || s.codigoAnterior || ''
+    }));
+    // Usar solo las solicitudes filtradas para exportar
+    const dataExportFiltrada = solicitudesFiltradas.map(s => ({
+        'Código': s.codigo_final || s.customId || s.id || '',
+        'Gerencia': s.gerencia || '',
+        'Departamento': s.departamento || '',
+        'Tipo de documento': s.tipoDoc || s.tipo || s.tipo_documento || '',
+        'Nombre del documento': s.documento_final_nombre || s.documento_nombre || s.adjunto_nombre || s.titulo || '',
+        'Nombre de solicitud': s.titulo || '',
+        'Número de solicitud relacionada': s.customId || s.id || '',
+        'Fecha de Creación': s.fecha || s.fecha_creacion || '',
+        'Fecha última versión': s.fecha_ultima_version || s.fecha_final || '',
+        'Versión': s.version || s.v || s.version_final || '',
+        'VISTA PREVIA': s.documento_final || s.url || s.adjunto || s.archivo || '',
+        'Estatus': (s.documento_final || String(s.estado||'').toLowerCase().includes('aprobado')) ? 'Activo' : 'Inactivo',
+        'Código Anterior': s.codigo_anterior || s.codigoAnterior || ''
+    }));
+    let wb = XLSX.utils.book_new(); let ws = XLSX.utils.json_to_sheet(dataExportFiltrada); XLSX.utils.book_append_sheet(wb, ws, "Listado_Maestro"); XLSX.writeFile(wb, "Listado_Maestro_SGC.xlsx");
 };
 
 // =========================================================================
@@ -3383,17 +3649,23 @@ const inicializarApp = async () => {
                 const saSnap = await getDoc(doc(db, 'plataforma', 'main', 'superAdmins', su));
                 if (saSnap.exists()) {
                     isSuperAdmin = true; appId = savedAppId || 'sgc-final-v6'; currentEmpresaId = savedEmpresaId || '1';
-                    currentUser = { ...saSnap.data(), permisos: { admin: true } };
-                    window.completarLoginUI(); window.hideLoading(); return;
+                        currentUser = { ...saSnap.data(), permisos: { admin: true } };
+                        if (window && typeof window.normalizeUserPermisos === 'function') window.normalizeUserPermisos(currentUser);
+                        window.completarLoginUI(); window.hideLoading(); return;
                 }
             }
             // Usuario normal
             const qs = await getDocs(query(collection(db, "artifacts", appId, "public", "data", "Usuarios"), where("usuario", "==", su)));
             if (!qs.empty) {
                 currentUser = qs.docs[0].data();
+                if (window && typeof window.normalizeUserPermisos === 'function') window.normalizeUserPermisos(currentUser);
                 try { const empSnap = await getDoc(doc(db, 'plataforma', 'main', 'empresas', currentEmpresaId)); if(empSnap.exists()) currentEmpresaConfig = empSnap.data(); } catch(e){}
+                console.debug('[inicializarApp] restored session', { su, appId, currentEmpresaId, user: currentUser.usuario || currentUser.email || currentUser.nombre, permisos_canon: currentUser.permisos_canon });
                 window.completarLoginUI();
-            } else window.logout();
+            } else {
+                console.debug('[inicializarApp] no session user found in collection, logging out', { su, appId });
+                window.logout();
+            }
         } catch(e) { console.error('[inicializarApp]', e); window.logout(); } 
         window.hideLoading();
     } else { window.setDisplay('login-screen', 'flex'); }
@@ -3420,15 +3692,23 @@ window.abrirModalDash = (tipo) => {
 
     let tbodyHTML = "";
     if(filtered.length === 0) {
-        tbodyHTML = "<tr><td colspan='5' style='text-align:center; padding:20px; color:#64748b;'>No hay datos para mostrar</td></tr>";
+        tbodyHTML = "<tr><td colspan='8' style='text-align:center; padding:20px; color:#64748b;'>No hay datos para mostrar</td></tr>";
     } else {
         filtered.forEach(s => {
             let estadoHTML = `<span class="badge ${s.estado === 'Anulado' || s.estado === 'Rechazado' ? 'badge-danger' : (String(s.estado||'').includes('Aprobado') ? 'badge-success' : 'badge-warning')}">${s.estado || 'En Trámite'}</span>`;
-            tbodyHTML += `<tr>
+            const responsable = window.getResponsableActual ? window.getResponsableActual(s) : (s.asig_paso1||s.asig_paso2||s.asig_paso4||'-');
+            const compactTitle = `<div style="font-size:13px; font-weight:600;">${s.titulo || (s.tipo_documento||'')}</div><div style="font-size:11px; color:#94a3b8;">${s.tipo_documento || ''}</div>`;
+            let docIcon = s.documento_final ? `<span title="Documento Publicado" style="font-size:16px;">📄</span>` : '<span style="color:#cbd5e1">-</span>';
+            let slaVisual = s.sla || s.fecha_esperada_cierre ? window.formatearFechaAbreviada(s.sla || s.fecha_esperada_cierre) : '<span style="color:#cbd5e1">-</span>';
+            let prioridad = s.prioridad || 'Baja'; let bp = prioridad==='Alta'?'badge-danger':(prioridad==='Media'?'badge-warning':'badge-info');
+            tbodyHTML += `<tr style="font-size:13px;">
                 <td><b>${s.customId || 'N/A'}</b></td>
-                <td>${s.tipo_documento || 'N/A'}</td>
+                <td style="max-width:320px;">${compactTitle}</td>
                 <td>${s.solicitante || 'N/A'}</td>
+                <td>${responsable}</td>
+                <td><span class="badge ${bp}">${prioridad}</span></td>
                 <td>${estadoHTML}</td>
+                <td>${slaVisual}</td>
                 <td class="no-export"><button class="btn btn-primary" style="padding:4px 10px; font-size:11px;" onclick="window.verDetalle('${s.docId}'); window.setDisplay('modal-dash-details', 'none');">Ver Solicitud</button></td>
             </tr>`;
         });
@@ -4177,11 +4457,17 @@ window.verDetalleDashboard = (tipo) => {
         });
     }
 
+    // Filtrar: no mostrar anuladas y mostrar solo solicitudes que tienen documento final y están aprobadas final
+    if (tipo !== 'pend' && tipo !== 'tot') {
+        data = (data || []).filter(s => s && s.documento_final && String(s.estado||'').toLowerCase().includes('aprobado final'));
+    }
+
     if($('m-dash-tit')) $('m-dash-tit').innerHTML = `<span class="material-icons-round" style="vertical-align:middle; color:var(--primary); margin-right:8px;">insights</span> ${titulo} (${data.length})`;
 
     let theadTr = document.querySelector('#modal-dash-details thead tr');
     if (theadTr) {
-        theadTr.innerHTML = `<th>Código</th><th>Tipo</th><th>Solicitante</th><th>Estado</th>${extraHeader}<th class="no-export">Ver</th>`;
+        // Mostrar datos finales del documento: versión final y fecha de emisión
+        theadTr.innerHTML = `<th>ID</th><th>Solicitante</th><th>Documento Final</th><th>Versión Final</th><th>Fecha Emisión</th><th>Responsable</th><th>Prioridad</th><th>Estado</th>${extraHeader}<th>Límite (SLA)</th><th class="no-export">Doc Final</th><th class="no-export">Acción</th>`;
     }
 
     let html = '';
@@ -4192,18 +4478,36 @@ window.verDetalleDashboard = (tipo) => {
         if (tipo === 'sla_mod') {
             extraTd = `<td style="padding:12px; border-bottom:1px solid var(--border); text-align:center;"><span class="badge badge-warning" style="font-size:14px; padding:4px 8px;">${s._slaModCount}</span></td>`;
         }
+        const responsable = window.getResponsableActual ? window.getResponsableActual(s) : (s.asig_paso1||s.asig_paso2||s.asig_paso4||'-');
+        const prioridad = s.prioridad || 'Baja'; const bp = prioridad==='Alta'?'badge-danger':(prioridad==='Media'?'badge-warning':'badge-info');
+        let docIcon = s.documento_final ? `<span title="Documento Publicado" style="font-size:16px;">📄</span>` : '<span style="color:#cbd5e1">-</span>';
+        const nombreDocFinal = s.documento_final_nombre || s.documento_nombre || s.adjunto_nombre || s.titulo || '';
+        const versionFinal = s.version_final || s.version || s.v || '';
+        const fechaEmision = s.fecha_final || s.fecha_emision || s.fecha_publicacion || '';
         html += `<tr>
             <td style="padding:12px; border-bottom:1px solid var(--border);"><b>${s.customId || s.id}</b><br><small style="color:var(--sidebar);">${window.formatearFechaAbreviada(s.fecha)}</small></td>
-            <td style="padding:12px; border-bottom:1px solid var(--border);">${s.titulo}</td>
-            <td style="padding:12px; border-bottom:1px solid var(--border);">${s.solicitante}</td>
-            <td style="padding:12px; border-bottom:1px solid var(--border);"><span class="badge ${String(s.estado).includes('Aprobado') ? 'badge-success' : 'badge-warning'}">${s.estado || 'Pendiente'}</span><br><small>SLA: ${slaVisual}</small></td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);">${s.solicitante}<br><small style="color:#94a3b8">${s.gerencia || ''}</small></td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);">${nombreDocFinal}</td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);">${versionFinal}</td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);">${fechaEmision ? window.formatearFechaAbreviada(fechaEmision) : '-'}</td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);">${responsable}</td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);"><span class="badge ${bp}">${prioridad}</span></td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);"><span class="badge ${String(s.estado).includes('Aprobado') ? 'badge-success' : 'badge-warning'}">${s.estado || 'Pendiente'}</span></td>
             ${extraTd}
-            <td class="no-export" style="padding:12px; border-bottom:1px solid var(--border);"><button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="window.setDisplay('modal-dash-details','none'); window.verDetalle('${s.docId || s.id}')">Ver Documento</button></td>
+            <td style="padding:12px; border-bottom:1px solid var(--border);">${slaVisual}</td>
+            <td style="padding:12px; border-bottom:1px solid var(--border); text-align:center;">${docIcon}</td>
+            <td class="no-export" style="padding:12px; border-bottom:1px solid var(--border);">
+                <button class="btn btn-info" style="padding:4px 8px; font-size:11px; margin-right:6px;" onclick="window.verDiasSolicitud('${s.docId || s.id}')">Ver Días</button>
+                <button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="window.setDisplay('modal-dash-details','none'); window.verDetalle('${s.docId || s.id}')">Ver / Acción</button>
+            </td>
         </tr>`;
     });
 
     if(data.length === 0) {
-        let colspan = tipo === 'sla_mod' ? 6 : 5;
+        // Base columns (ID, Solicitante, Documento Final, Versión Final, Fecha Emisión, Responsable, Prioridad, Estado, Límite (SLA), Doc Final, Acción) => 11
+        let base = 11;
+        // If extraHeader (like 'sla_mod') adds a column, include it
+        let colspan = base + (extraHeader ? 1 : 0);
         html = `<tr><td colspan="${colspan}" style="text-align:center; padding:20px; color:var(--sidebar);">No hay datos para mostrar en esta categoría</td></tr>`;
     }
 
@@ -4752,6 +5056,16 @@ window.checkRoleYPermisos = () => {
 window.renderTablaManuales = () => {
     if(!$('tbody-manuales')) return;
     let html = '';
+    // Mostrar manual antiguo si existe en la configuración (campo `manualOEA`)
+    if(manualOEA && manualOEA.url) {
+        html += `<tr>
+            <td><span class="material-icons-round" style="vertical-align:middle; font-size:16px; color:var(--primary);">library_books</span> ${manualOEA.nombre || 'Manual Oficial OEA (Legado)'}</td>
+            <td>${manualOEA.version || '1.0'} / ${manualOEA.fecha || 'N/A'}</td>
+            <td style="text-align:center;"><a href="#" onclick="window.abrirDocumento('${manualOEA.url}', '${(manualOEA.nombre||'Manual OEA').replace(/'/g, "\\'")}'); return false;" class="btn btn-info" style="font-size:11px; padding:6px 12px; border-radius:6px; text-decoration:none;"><span class="material-icons-round" style="font-size:14px; margin-right:4px;">visibility</span>Ver Doc</a></td>
+            <td style="text-align:center;"><span class="badge badge-warning" style="font-size:10px;">Legado</span></td>
+        </tr>`;
+    }
+
     globalManuales.forEach(m => {
         html += `<tr>
             <td><span class="material-icons-round" style="vertical-align:middle; font-size:16px; color:var(--primary);">library_books</span> ${m.nombre}</td>
@@ -4975,3 +5289,4 @@ window.abrirModalIT = () => window.generarPlantillaFormulario("Controles de Segu
     {id: "fecha", label: "Fecha de Ejecución", tipo: "date", requerido: true},
     {id: "responsable", label: "Responsable de IT", tipo: "text", requerido: true}
 ]);
+

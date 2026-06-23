@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -103,7 +103,7 @@
                 <span class="material-icons-round" style="font-size:70px; color:#60a5fa; margin-bottom:20px; text-shadow:0 10px 30px rgba(0,0,0,0.3);">local_police</span>
                 <h2 style="font-size:36px; font-weight:800; margin-bottom:15px; letter-spacing:-1px; line-height:1.2;">Protegiendo la Cadena<br>de Suministro Global</h2>
                 <p style="font-size:16px; line-height:1.6; max-width:450px; margin:0 auto; color:rgba(255,255,255,0.85);">
-                    Plataforma corporativa centralizadía para el control documental, auditorías integrales, acciones correctivas y evaluación de riesgos de socios comerciales según los estáándares de la certificación OEA.
+                    Plataforma corporativa centralizada para el control documental, auditorías integrales, acciones correctivas y evaluación de riesgos de socios comerciales según los estándares de la certificación OEA.
                 </p>
                 <div style="display:flex; justify-content:center; gap:20px; margin-top:40px;">
                     <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:12px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1);">
@@ -138,6 +138,10 @@
         <!-- NAV SCROLLABLE -->
         <nav style="flex:1; overflow-y:auto; overflow-x:hidden; padding-bottom:8px;">
 
+            <button class="nav-link" id="nav-dash" onclick="window.cambiarVista('sec-dash', this)" style="margin-bottom: 5px; border-radius: 8px;">
+                <span class="material-icons-round" style="color:#10b981;">dashboard</span> Panel Analítico
+            </button>
+
             <!-- --- MÓDULO DOCUMENTAL (colapsable) --- -->
             <div class="nav-group">
                 <button class="nav-group-header" onclick="window.toggleNavGroup('ng-documental')" id="ng-documental-btn">
@@ -154,7 +158,6 @@
                     <button class="nav-link nav-sub" id="nav-gest" onclick="window.cambiarVista('sec-gest', this)" style="display:none;"><span class="material-icons-round">fact_check</span> Bandeja de Gestión</button>
                     <button class="nav-link nav-sub" id="nav-listado" onclick="window.cambiarVista('sec-listado', this)" style="display:none;"><span class="material-icons-round">library_books</span> Listado Maestro</button>
                     <button class="nav-link nav-sub" id="nav-forms" onclick="window.cambiarVista('sec-forms', this)"><span class="material-icons-round">dynamic_form</span> Formularios</button>
-                    <button class="nav-link nav-sub" id="nav-dash" onclick="window.cambiarVista('sec-dash', this)"><span class="material-icons-round">dashboard</span> Panel Analítico</button>
                     <button class="nav-link nav-sub" id="nav-drive" onclick="window.cambiarVista('sec-drive', this)"><span class="material-icons-round">cloud_circle</span> Repositorio</button>
                 </div>
             </div>
@@ -217,7 +220,7 @@
                 <div class="nav-group-body" id="ng-segfisica">
                     <button class="nav-link nav-sub" id="nav-visitantes" onclick="window.cambiarVista('sec-visitantes', this)"><span class="material-icons-round">badge</span> Visitantes y Contratistas</button>
                     <button class="nav-link nav-sub" id="nav-mantenimiento" onclick="window.cambiarVista('sec-mantenimiento', this)"><span class="material-icons-round">build</span> Mantenimiento CCTV</button>
-                    <button class="nav-link nav-sub" id="nav-rondías" onclick="window.cambiarVista('sec-rondías', this)"><span class="material-icons-round">directions_walk</span> Rondías de Seguridad</button>
+                    <button class="nav-link nav-sub" id="nav-rondas" onclick="window.cambiarVista('sec-rondas', this)"><span class="material-icons-round">directions_walk</span> Rondas de Seguridad</button>
                 </div>
             </div>
 
@@ -262,7 +265,7 @@
                     <span class="material-icons-round ng-arrow" style="font-size:16px;transition:0.2s;">expand_more</span>
                 </button>
                 <div class="nav-group-body" id="ng-rrhh">
-                    <button class="nav-link nav-sub" id="nav-rrhh-confiabilidad" onclick="window.cambiarVista('sec-rrhh-confiabilidad', this)"><span class="material-icons-round">verified_user</span> Confiabilidíad y RRHH</button>
+                    <button class="nav-link nav-sub" id="nav-rrhh-confiabilidad" onclick="window.cambiarVista('sec-rrhh-confiabilidad', this)"><span class="material-icons-round">verified_user</span> Confiabilidad y RRHH</button>
                 </div>
             </div>
 
@@ -456,8 +459,8 @@
                     </div>
                 </div>
             </div>
-            <!-- Dashboard Grid Row 2: Audits & NCs -->
-            <div class="grid-2" style="gap: 20px; margin-bottom: 20px;">
+            <!-- Dashboard Grid Row 2: Audits & NCs (stacked for full width) -->
+            <div class="grid-2 dashboard-stack" style="gap: 20px; margin-bottom: 20px;">
                 <div class="card" style="border-top: 4px solid var(--success); padding:0; overflow:hidden;">
                     <div style="padding:15px; border-bottom:1px solid var(--border); background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
                         <h4 style="margin:0; font-size:14px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="color:var(--success); font-size:18px;">calendar_month</span> Próximas Auditorías</h4>
@@ -593,7 +596,7 @@
                     <input aria-label="Buscar por ID o Título..." type="text" id="search-hist" class="search-bar" style="margin:0;" placeholder="Buscar por ID o Título..." onkeyup="window.filtrarTabla('search-hist', 'tbody-historial')">
                     <button class="btn btn-success" onclick="window.descargarExcelFiltrado('hist')"><span class="material-icons-round">download</span> Exportar</button>
                 </div>
-                <div class="table-responsive"><table id="tabla-mis-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-historial"></tbody></table></div>
+                    <div class="table-responsive"><table id="tabla-mis-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Responsable</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-historial"></tbody></table></div>
             </div>
         </section>
 
@@ -609,7 +612,7 @@
                     <input aria-label="Buscar..." type="text" id="search-all" class="search-bar" style="margin:0;" placeholder="Buscar..." onkeyup="window.filtrarTabla('search-all', 'tbody-all')">
                     <button class="btn btn-success" onclick="window.descargarExcelFiltrado('all')"><span class="material-icons-round">download</span> Exportar Completo</button>
                 </div>
-                <div class="table-responsive"><table id="tabla-todas-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-all"></tbody></table></div>
+                <div class="table-responsive"><table id="tabla-todas-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Responsable</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-all"></tbody></table></div>
             </div>
         </section>
 
@@ -624,7 +627,7 @@
                 <div style="background: #f8fafc; padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
                     <div style="flex:1; min-width:250px;"><input aria-label="Buscar en tabla..." type="text" id="search-gest" class="search-bar" style="max-width:100%; margin-bottom:0;" placeholder="🔍 Buscar en tabla..." onkeyup="window.filtrarTabla('search-gest', 'tbody-gestionar')"></div>
                 </div>
-                <div class="table-responsive"><table id="tabla-gestion-solicitudes"><thead><tr><th style="width: 120px;">ID Sistema</th><th>Origen</th><th>Documento</th><th>Etapa Actual</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Gestión</th></tr></thead><tbody id="tbody-gestionar"></tbody></table></div>
+                <div class="table-responsive"><table id="tabla-gestion-solicitudes"><thead><tr><th>ID</th><th>Solicitante</th><th>Documento</th><th>Responsable</th><th>Prioridad</th><th>Estado</th><th>Límite (SLA)</th><th class="no-export" style="text-align:center;">Doc Final</th><th class="no-export">Acción</th></tr></thead><tbody id="tbody-gestionar"></tbody></table></div>
             </div>
         </section>
 
@@ -638,7 +641,7 @@
             </div>
             <div class="card" style="padding:0; margin-top:20px; overflow:hidden;">
                 <div style="padding: 20px; border-bottom:1px solid var(--border); background:#f8fafc;"><input aria-label="Buscar en el listado maestro..." type="text" id="search-maestro" class="search-bar" placeholder="Buscar en el listado maestro..." onkeyup="window.filtrarTabla('search-maestro', 'tbody-listado-maestro')" style="margin:0; max-width:400px;"></div>
-                <div class="table-responsive"><table id="tabla-listado-maestro" style="white-space:nowrap;"><thead id="thead-listado-maestro"></thead><tbody id="tbody-listado-maestro"></tbody></table></div>
+                <div class="table-responsive"><table id="tabla-listado-maestro" class="table-compact"><thead id="thead-listado-maestro"></thead><tbody id="tbody-listado-maestro"></tbody></table></div>
             </div>
         </section>
 
@@ -942,19 +945,19 @@
             </div>
         </section>
 
-        <section id="sec-rondías" class="section">
+        <section id="sec-rondas" class="section">
             <div class="section-header">
                 <div class="section-header-info">
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #84cc16, #65a30d);"><span class="material-icons-round">directions_walk</span></div>
-                    <div><h1>Rondías de Seguridad</h1><p>Patrullajes y recorridos de vigilancia</p></div>
+                    <div><h1>Rondas de Seguridad</h1><p>Patrullajes y recorridos de vigilancia</p></div>
                 </div>
-                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalRondía()"><span class="material-icons-round">add</span> Registrar Rondía</button><button class="btn btn-warning" onclick="window.editarPlantillaFormulario('Reporte de Rondías de Seguridad')" style="padding:6px 12px; margin-left:10px;" title="Editar Plantilla"><span class="material-icons-round">edit</span> Editar Formulario</button></div>
+                <div class="section-header-actions"><button class="btn btn-primary" onclick="window.abrirModalRonda()"><span class="material-icons-round">add</span> Registrar Ronda</button><button class="btn btn-warning" onclick="window.editarPlantillaFormulario('Reporte de Rondas de Seguridad')" style="padding:6px 12px; margin-left:10px;" title="Editar Plantilla"><span class="material-icons-round">edit</span> Editar Formulario</button></div>
             </div>
             <div class="card" style="padding:0; overflow:hidden; margin-top:20px;">
                 <div style="padding: 20px; border-bottom: 1px solid var(--border); display:flex; gap:10px;">
-                    <input aria-label="Buscar..." type="text" id="search-rondías" class="search-bar" style="margin:0;" placeholder="Buscar rondía..." onkeyup="window.filtrarTabla('search-rondías', 'tbody-rondías')">
+                    <input aria-label="Buscar..." type="text" id="search-rondas" class="search-bar" style="margin:0;" placeholder="Buscar ronda..." onkeyup="window.filtrarTabla('search-rondas', 'tbody-rondas')">
                 </div>
-                <div class="table-responsive"><table id="tabla-rondías"><thead><tr><th>Guardia / Responsable</th><th>Fecha y Hora</th><th>Incidencias</th><th>Observaciones</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-rondías"></tbody></table></div>
+                <div class="table-responsive"><table id="tabla-rondas"><thead><tr><th>Guardia / Responsable</th><th>Fecha y Hora</th><th>Incidencias</th><th>Observaciones</th><th style="text-align:center;">Acción</th></tr></thead><tbody id="tbody-rondas"></tbody></table></div>
             </div>
         </section>
 
@@ -1094,6 +1097,20 @@
                         <tbody id="m-dash-tbody"></tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="modal-dias-solicitud" style="display:none;">
+        <div class="modal-content" style="max-width:900px; display:block; width:100%; max-height:90vh; overflow-y:auto; padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                <h2 id="m-dias-tit" style="margin:0; font-size:18px; color:var(--text-main);">Días para trabajar la solicitud</h2>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button class="btn btn-dark" onclick="window.setDisplay('modal-dias-solicitud', 'none')" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
+                </div>
+            </div>
+            <div id="m-dias-body" style="display:flex; gap:14px; flex-wrap:wrap;">
+                <!-- Calendars inserted here -->
             </div>
         </div>
     </div>
@@ -1266,7 +1283,7 @@
             </div>
             
             <div class="modal-side">
-                <div style="padding:20px; background:var(--sidebar); color:white; font-weight:800; font-size:12px; letter-spacing:1px; position:sticky; top:0;"><span class="material-icons-round" style="vertical-align:middle; font-size:16px; margin-right:5px;">history</span> BITÁCORA</div>
+                <div style="padding:20px; background:var(--sidebar); color:white; font-weight:800; font-size:12px; letter-spacing:1px; position:sticky; top:0;"><span class="material-icons-round" style="vertical-align:middle; font-size:16px; margin-right:5px;">history</span> BITÁCORA</div>
                 <div id="chat-box" style="padding:15px;"></div>
             </div>
         </div>

@@ -90,11 +90,16 @@ window.cerrarModalUsuario = () => window.setDisplay('modal-usuario', 'none');
 window.abrirModalUsuario = () => { window.resetUserForm(); window.setDisplay('modal-usuario', 'flex'); };
 window.toggleModPanel = v => window.setDisplay('panel-mod', v === 'Creación' ? 'none' : 'grid');
 
-window.cambiarVista = (id, btn) => {
-  $$('.section').forEach(s => s.classList.remove('active')); $$('.nav-link').forEach(l => l.classList.remove('active'));
-  if($(id)) $(id).classList.add('active'); if(btn) btn.classList.add('active');
-  if(window.innerWidth <= 768) { if($('sidebar')) $('sidebar').classList.remove('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.remove('active'); }
-  if(id === 'sec-dash') setTimeout(() => window.renderDashboardCharts(), 100); 
+// Keep track of user-locked view: when user selects dashboard, keep it active
+window._lockedView = null;
+window.cambiarVista = (id, btn, force = false) => {
+    if (window._lockedView && !force && id !== window._lockedView) return;
+    $$('.section').forEach(s => s.classList.remove('active'));
+    $$('.nav-link').forEach(l => l.classList.remove('active'));
+    if ($(id)) $(id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (window.innerWidth <= 768) { if ($('sidebar')) $('sidebar').classList.remove('open'); if ($('sidebar-overlay')) $('sidebar-overlay').classList.remove('active'); }
+    if (id === 'sec-dash') setTimeout(() => window.renderDashboardCharts(), 100);
 };
 window.toggleMenu = () => { if($('sidebar')) $('sidebar').classList.toggle('open'); if($('sidebar-overlay')) $('sidebar-overlay').classList.toggle('active'); };
 
@@ -114,6 +119,7 @@ document.addEventListener('click', (ev) => {
         }
         if (targetId) {
             try { if (typeof window._expandGroupOf === 'function') window._expandGroupOf(btn.id || ''); } catch(e){}
+            try { if (targetId === 'sec-dash') window._lockedView = 'sec-dash'; else window._lockedView = null; } catch(e){}
             try { window.cambiarVista(targetId, btn); } catch(e) { console.warn('cambiarVista call failed', e); }
         }
     } catch(e) { /* silence */ }
@@ -770,15 +776,15 @@ window.cargarDatosCentrales = () => {
   // Listeners que actualizan el Dashboard Analítico
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "AccionesCorrectivas"), (sn) => { 
       globalAllSacs = []; sn.forEach(d => { let obj = d.data(); obj.sac_id = d.id; globalAllSacs.push(obj); }); 
-      window.renderF023Global(); window.renderDashboardCharts(); 
+      window.renderF023Global(); if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts(); 
   });
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "Proveedores"), (sn) => { 
       globalProveedores = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalProveedores.push(obj); }); 
-      window.renderTablaProveedores(); window.renderDashboardCharts(); 
+      window.renderTablaProveedores(); if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts(); 
   });
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "MatrizRiesgos"), (sn) => { 
       globalRiesgos = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalRiesgos.push(obj); }); 
-      window.renderTablaRiesgos(); window.renderDashboardCharts(); 
+      window.renderTablaRiesgos(); if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts(); 
   });
   onSnapshot(collection(db, "artifacts", appId, "public", "data", "Formularios"), (sn) => { 
       globalForms = []; sn.forEach(d => { let obj = d.data(); obj.id = d.id; globalForms.push(obj); }); 
@@ -910,7 +916,7 @@ window.renderTablasDinamicasDash = () => {
 
     if(!html) html = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">No se encontraron datos que coincidan con los filtros.</td></tr>`;
     window.setHtml('tbody-dash-dinamico', html);
-    window.renderDashboardCharts(); 
+    if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts(); 
 };
 
 window.renderTablasSolicitudes = () => {
@@ -962,7 +968,7 @@ window.renderTablasSolicitudes = () => {
     window.setTxt('dash-glob-ok', sort.filter(s => String(s.estado||"").includes('Aprobado Final')).length); 
     let slaPer = totalCerradas > 0 ? Math.round((cerradasATiempo / totalCerradas) * 100) : 0; window.setTxt('dash-sla-percent', `${slaPer}%`);
   }
-  window.renderDashboardCharts();
+    if($('sec-dash') && $('sec-dash').classList.contains('active')) window.renderDashboardCharts();
 };
 
 window.completarLoginUI = () => {
@@ -993,7 +999,8 @@ window.completarLoginUI = () => {
     const canDash = isAdm || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4;
     window.setDisplay('nav-dash', canDash ? 'flex' : 'none');
     // Also hide the dashboard section when the user lacks dashboard permission
-    window.setDisplay('sec-dash', canDash ? 'block' : 'none');
+    // Leave display empty when permitted so CSS .active controls visibility
+    window.setDisplay('sec-dash', canDash ? '' : 'none');
     window.setDisplay('nav-forms', (p.p_ver_formularios || p.p_gest_sgc) ? 'flex' : 'none'); window.setDisplay('nav-hist', (p.p_ver_propias || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-all', (p.p_ver_todas || p.p_ver_ger || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-crear', (p.can_solicit || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-gest', (p.p_gest_sgc || p.p_ger_apr || p.p_paso1 || p.p_paso2 || p.p_paso4 || p.p_eval_solicitud || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-listado', (p.p_ver_listado || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-drive', 'flex');
   window.setDisplay('nav-admin-group', (isAdm || p.p_users || p.p_struct) ? 'block' : 'none');
 

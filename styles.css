@@ -555,6 +555,15 @@ body {
     gap: 20px;
 }
 
+/* Dashboard-specific: stack audits & NCs and use full width without overflow */
+.section.compact-dashboard .grid-2.dashboard-stack {
+    grid-template-columns: 1fr !important;
+}
+.section.compact-dashboard .grid-2.dashboard-stack .card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .grid-3 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1655,7 +1664,8 @@ body.dark-theme div[style*="background:#bfdbfe"] {
     .sidebar-overlay,
     .section-header-actions,
     .no-export {
-        display: none !important;
+        /* reservado: usar esta clase para elementos que no deben exportarse.
+           No ocultar por defecto en la UI para mantener botones de acción visibles. */
     }
 
     body {
@@ -1679,6 +1689,16 @@ body.dark-theme div[style*="background:#bfdbfe"] {
     table {
         font-size: 11px;
     }
+
+/* Compact listado maestro styling */
+#tabla-listado-maestro { font-size:13px; }
+#tabla-listado-maestro thead th { padding:8px 10px; font-size:12px; }
+#tabla-listado-maestro tbody td { padding:8px 10px; vertical-align:middle; }
+#tabla-listado-maestro .maestro-action { position: sticky; right: 0; background: #fff; z-index: 5; }
+#tabla-listado-maestro .file-link { color:var(--primary); font-weight:600; }
+#tabla-listado-maestro .btn-sm { padding:6px 8px; font-size:12px; }
+#tabla-listado-maestro tbody td { white-space:nowrap; }
+#tabla-listado-maestro tbody td:nth-child(5) { white-space:normal; }
 }
 
 /* ==========================================================================
