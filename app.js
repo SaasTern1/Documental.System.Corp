@@ -1271,7 +1271,7 @@ window.completarLoginUI = () => {
     const p = currentUser.permisos || {}; const pc = currentUser.permisos_canon || {};
     const isAdm = !!(p.admin || isSuperAdmin || false);
     // Dashboard/control links: fall back to legacy flags but prefer canonical keys where appropriate
-    const canDash = !!(pc['solicitudes.view.all'] || pc['solicitudes.manage'] || pc['solicitudes.create'] || p.p_gest_sgc || p.p_paso1 || p.p_paso2 || p.p_paso4);
+    const canDash = !!(p.p_gest_sgc);
     window.setDisplay('nav-dash', canDash ? 'flex' : 'none');
     window.setDisplay('sec-dash', canDash ? '' : 'none');
     window.setDisplay('nav-forms', (pc['formularios.view_module'] || p.p_gest_sgc) ? 'flex' : 'none');
