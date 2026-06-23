@@ -138,10 +138,6 @@
         <!-- NAV SCROLLABLE -->
         <nav style="flex:1; overflow-y:auto; overflow-x:hidden; padding-bottom:8px;">
 
-            <button class="nav-link" id="nav-dash" onclick="window.cambiarVista('sec-dash', this)" style="margin-bottom: 5px; border-radius: 8px;">
-                <span class="material-icons-round" style="color:#10b981;">dashboard</span> Panel Analítico
-            </button>
-
             <!-- --- MÓDULO DOCUMENTAL (colapsable) --- -->
             <div class="nav-group">
                 <button class="nav-group-header" onclick="window.toggleNavGroup('ng-documental')" id="ng-documental-btn">
@@ -152,6 +148,7 @@
                     <span class="material-icons-round ng-arrow" style="font-size:16px;transition:0.2s;">expand_more</span>
                 </button>
                 <div class="nav-group-body" id="ng-documental">
+                    <button class="nav-link nav-sub" id="nav-dash" onclick="window.cambiarVista('sec-dash', this)" style="display:none;"><span class="material-icons-round" style="color:#10b981;">dashboard</span> Panel Analítico</button>
                     <button class="nav-link nav-sub" id="nav-hist" onclick="window.cambiarVista('sec-hist', this)"><span class="material-icons-round">history</span> Mis Solicitudes</button>
                     <button class="nav-link nav-sub" id="nav-all" onclick="window.cambiarVista('sec-all', this)" style="display:none;"><span class="material-icons-round">all_inbox</span> Todas las Solicitudes</button>
                     <button class="nav-link nav-sub" id="nav-crear" onclick="window.cambiarVista('sec-crear', this)"><span class="material-icons-round">add_box</span> Crear Solicitud</button>
@@ -460,7 +457,7 @@
                 </div>
             </div>
             <!-- Dashboard Grid Row 2: Audits & NCs (stacked for full width) -->
-            <div class="grid-2 dashboard-stack" style="gap: 20px; margin-bottom: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px;">
                 <div class="card" style="border-top: 4px solid var(--success); padding:0; overflow:hidden;">
                     <div style="padding:15px; border-bottom:1px solid var(--border); background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
                         <h4 style="margin:0; font-size:14px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="color:var(--success); font-size:18px;">calendar_month</span> Próximas Auditorías</h4>
@@ -476,7 +473,7 @@
                 </div>
                 <div class="card" style="border-top: 4px solid var(--danger); padding:0; overflow:hidden;">
                     <div style="padding:15px; border-bottom:1px solid var(--border); background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
-                        <h4 style="margin:0; font-size:14px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="color:var(--danger); font-size:18px;">warning</span> Ášltimas No Conformidades</h4>
+                        <h4 style="margin:0; font-size:14px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="color:var(--danger); font-size:18px;">warning</span> Últimas No Conformidades</h4>
                     </div>
                     <div class="table-responsive" style="max-height:250px; overflow-y:auto;">
                         <table style="width:100%; text-align:left; font-size:12px; white-space:nowrap;">

@@ -615,23 +615,18 @@ window.renderDashboardCharts = () => {
                     if(s.fecha_final <= f_sla) slaOnTime++;
                 }
             });
-            let slaPct = slaCount > 0 ? Math.round((slaOnTime / slaCount) * 100) : 0;
+            let slaLate = slaCount - slaOnTime;
+            let slaPctOnTime = slaCount > 0 ? Math.round((slaOnTime / slaCount) * 100) : 0;
+            let slaPctLate = slaCount > 0 ? Math.round((slaLate / slaCount) * 100) : 0;
+            let reabiertas = solicitudesFiltered.filter(s => String(s.estado).toLowerCase().includes('reabierta') || String(s.estado).toLowerCase().includes('reprogramada')).length;
 
             if($('dash-tot')) $('dash-tot').innerText = tot;
+            if($('dash-sla-in')) $('dash-sla-in').innerText = slaOnTime;
+            if($('dash-sla-in-sub')) $('dash-sla-in-sub').innerText = slaPctOnTime + '% de las cerradas';
+            if($('dash-sla-out')) $('dash-sla-out').innerText = slaLate;
+            if($('dash-sla-out-sub')) $('dash-sla-out-sub').innerText = slaPctLate + '% de las cerradas';
             if($('dash-pend')) $('dash-pend').innerText = pend;
-            if($('dash-ok')) $('dash-ok').innerText = ok;
-            if($('dash-sla-percent')) $('dash-sla-percent').innerText = slaPct + '%';
-            // SLA Modificados: cuenta de solicitudes con entradas en chat que mencionan "SLA ACTUALIZADO"
-            try {
-                let slaModCount = 0;
-                solicitudesFiltered.forEach(s => {
-                    if(s.chat && Array.isArray(s.chat)) {
-                        const found = s.chat.filter(c => c && c.m && String(c.m).toUpperCase().includes('SLA ACTUALIZADO')).length;
-                        if(found > 0) slaModCount++;
-                    }
-                });
-                if($('dash-sla-mods')) $('dash-sla-mods').innerText = slaModCount;
-            } catch(e) { console.warn('calc sla mods failed', e); }
+            if($('dash-reopen')) $('dash-reopen').innerText = reabiertas;
         }
 
         // 1. Matriz de Riesgo OEA (Heatmap)
@@ -773,8 +768,11 @@ window.renderDashboardCharts = () => {
             // Solo futuras y del año
             let sortedAudits = [...globalAllAuditorías].sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).slice(0, 5);
             sortedAudits.forEach(a => {
-                let statusColor = a.estado === 'Finalizada' ? 'var(--success)' : (a.estado === 'Cancelada' ? 'var(--danger)' : 'var(--warning)');
-                audHtml += `<tr><td>${a.lugar || 'N/A'}</td><td>${window.formatearFechaAbreviada(a.fecha)}</td><td>${a.auditor_nombre || a.auditor || 'N/A'}</td><td><span style="color:${statusColor}; font-weight:600;">${a.estado}</span></td></tr>`;
+                let isCompleted = a.estado === 'Finalizada' || a.estado === 'Completada';
+                let statusColor = isCompleted ? 'var(--success)' : (a.estado === 'Cancelada' ? 'var(--danger)' : '#3b82f6');
+                let displayEstado = isCompleted ? 'Completada' : (a.estado || 'Programada');
+                let bgStyle = isCompleted ? '#dcfce7' : (a.estado === 'Cancelada' ? '#fee2e2' : '#e0f2fe');
+                audHtml += `<tr><td>${a.lugar || 'N/A'}</td><td>${window.formatearFechaAbreviada(a.fecha)}</td><td>${a.auditor_nombre || a.auditor || 'N/A'}</td><td><span style="display:inline-block; padding:4px 10px; border-radius:12px; background:${bgStyle}; color:${statusColor}; font-weight:600; font-size:11px;">${displayEstado}</span></td></tr>`;
             });
             $('dash-tbody-audits').innerHTML = audHtml || '<tr><td colspan="4" style="text-align:center;">No hay auditorías próximas</td></tr>';
         }
