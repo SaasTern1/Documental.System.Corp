@@ -599,34 +599,57 @@ window.renderDashboardCharts = () => {
             if((globalSolicitudes||[]).length>0) console.debug('[renderDashboardCharts] sample solicitud', globalSolicitudes[0]);
         } catch(e) { console.warn('renderDashboardCharts debug failed', e); }
 
-        // KPI 1 - Total Solicitudes
-            if ($('dash-tot')) {
-            $('dash-tot').innerText = tot;
-            }
 
-            // KPI 2 - Pendientes
-            if ($('dash-pend')) {
-                $('dash-pend').innerText = pend;
-            }
 
-            // KPI 3 - Cerradas / Completadas
+        //bloque de KPIs
+
+            // SLA Calculation
+            let slaCount = 0;
+            let slaOnTime = 0;
+
+            solicitudesFiltered.forEach(s => {
+                let f_sla = s.sla || s.fecha_esperada_cierre;
+
+                if (
+                    String(s.estado).includes('Aprobado Final') &&
+                    f_sla &&
+                    s.fecha_final
+                ) {
+                    slaCount++;
+
+                    if (s.fecha_final <= f_sla) {
+                        slaOnTime++;
+                    }
+                }
+            });
+
+            let slaLate = slaCount - slaOnTime;
+            let slaPctOnTime = slaCount > 0
+                ? Math.round((slaOnTime / slaCount) * 100)
+                : 0;
+
+            let reabiertas = solicitudesFiltered.filter(s =>
+                String(s.estado).toLowerCase().includes('reabierta') ||
+                String(s.estado).toLowerCase().includes('reprogramada')
+            ).length;
+
+                // Totales generales
+            let tot = solicitudesFiltered.length;
+
+            let pend = solicitudesFiltered.filter(s =>
+                !String(s.estado).includes('Aprobado Final')
+            ).length;
+
             let ok = solicitudesFiltered.filter(s =>
                 String(s.estado).includes('Aprobado Final')
             ).length;
 
-            if ($('dash-ok')) {
-                $('dash-ok').innerText = ok;
-            }
+            if ($('dash-tot')) $('dash-tot').innerText = tot;
+            if ($('dash-pend')) $('dash-pend').innerText = pend;
+            if ($('dash-ok')) $('dash-ok').innerText = ok;
+            if ($('dash-sla-percent')) $('dash-sla-percent').innerText = slaPctOnTime + '%';
+            if ($('dash-sla-mods')) $('dash-sla-mods').innerText = reabiertas;
 
-            // KPI 4 - Cumplimiento SLA
-            if ($('dash-sla-percent')) {
-                $('dash-sla-percent').innerText = slaPctOnTime + '%';
-            }
-
-            // KPI 5 - Reabiertas / Reprogramadas
-            if ($('dash-sla-mods')) {
-                $('dash-sla-mods').innerText = reabiertas;
-            }
 
         // 1. Matriz de Riesgo OEA (Heatmap)
         const grid = $('heatmap-grid');
