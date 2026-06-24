@@ -602,6 +602,7 @@ window.renderDashboardCharts = () => {
 
 
         //bloque de KPIs
+            
 
             // SLA Calculation
             let slaCount = 0;
@@ -634,15 +635,28 @@ window.renderDashboardCharts = () => {
             ).length;
 
                 // Totales generales
+            // Total de solicitudes
             let tot = solicitudesFiltered.length;
 
-            let pend = solicitudesFiltered.filter(s =>
-                !String(s.estado).includes('Aprobado Final')
-            ).length;
+            // Pendientes reales (excluye cerradas, anuladas y rechazadas)
+            let pend = solicitudesFiltered.filter(s => {
+                const estado = String(s.estado || '').trim().toLowerCase();
 
-            let ok = solicitudesFiltered.filter(s =>
-                String(s.estado).includes('Aprobado Final')
-            ).length;
+                return estado !== 'aprobado final' &&
+                    estado !== 'anulado' &&
+                    estado !== 'rechazado' &&
+                    estado !== 'cerrada' &&
+                    estado !== 'completada';
+            }).length;
+
+            // Cerradas / completadas
+            let ok = solicitudesFiltered.filter(s => {
+                const estado = String(s.estado || '').trim().toLowerCase();
+
+                return estado === 'aprobado final' ||
+                    estado === 'cerrada' ||
+                    estado === 'completada';
+            }).length;
 
             if ($('dash-tot')) $('dash-tot').innerText = tot;
             if ($('dash-pend')) $('dash-pend').innerText = pend;
