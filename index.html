@@ -688,7 +688,14 @@
                     <button class="btn btn-info" id="btn-config-plan" style="display:none; padding:8px 12px; font-size:12px;" onclick="window.abrirModalPlan()"><span class="material-icons-round" style="font-size:16px;">settings</span> Configurar Plan</button>
                     <button class="btn btn-primary" id="btn-nueva-aud" style="display:none; padding:8px 12px; font-size:12px;" onclick="window.abrirNuevaAuditoría()"><span class="material-icons-round" style="font-size:16px;">add</span> Nueva Auditoría</button>
                     <button class="btn btn-success" onclick="window.exportarExcelAuditoría()" style="padding:8px 12px; font-size:12px;"><span class="material-icons-round" style="font-size:16px;">download</span> Exportar</button>
-                    <button class="btn btn-info" id="btn-notif-manual-aud" style="display:none; padding:8px 12px; font-size:12px; background:#0ea5e9; color:white; border:none;" onclick="window.enviarNotificacionManualAuditorias()" title="Enviar notificación por correo a las auditorías generadas"><span class="material-icons-round" style="font-size:16px;">mark_email_read</span> Enviar Notificación Manual</button>
+                    <button class="btn btn-info"
+                    id="btn-notif-manual-aud"
+                    style="display:none; padding:8px 12px; font-size:12px; background:#0ea5e9; color:white; border:none;"
+                    onclick="window.abrirModalNotificacionAuditoria()"
+                    title="Enviar recordatorio de auditoría">
+                    <span class="material-icons-round" style="font-size:16px;">mark_email_read</span>
+                    Enviar Recordatorio
+                    </button>
                 </div>
             </div>
 
