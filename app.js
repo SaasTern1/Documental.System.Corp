@@ -5326,7 +5326,7 @@ window.abrirModalIT = () => window.generarPlantillaFormulario("Controles de Segu
 
 
 
-window.enviarNotificacionManualAuditoria = async (id) => {
+window.abrirModalNotificacionAuditoria = async (id) => {
 
     let a = (globalAllAuditorías || []).find(x => x.id == id);
 
