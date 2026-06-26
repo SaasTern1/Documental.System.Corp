@@ -5324,7 +5324,6 @@ window.abrirModalIT = () => window.generarPlantillaFormulario("Controles de Segu
     {id: "responsable", label: "Responsable de IT", tipo: "text", requerido: true}
 ]);
 
-
 window.abrirModalNotificacionAuditoria = () => {
 
     let pendientes = (globalAllAuditorías || []).filter(a =>
@@ -5356,10 +5355,12 @@ window.abrirModalNotificacionAuditoria = () => {
 
     let auditoria = pendientes[opcion - 1];
 
-    // Aquí se llama a la función que envía el correo
+    // ESTA LÍNEA SE QUEDA
     window.enviarNotificacionManualAuditoria(auditoria);
 
-    window.enviarNotificacionManualAuditoria = async (a) => {
+};
+
+window.enviarNotificacionManualAuditoria = async (a) => {
 
     if (a.estado === "Completada" || a.estado === "Cancelada") {
         alert("Esta auditoría ya no puede ser notificada.");
@@ -5480,15 +5481,12 @@ if (enviado)
 else
     alert("❌ No fue posible enviar el correo.");
 
-    } catch (e) {
+    } catch(e) {
 
         window.hideLoading();
         console.error(e);
         alert("Ocurrió un error al enviar el recordatorio.");
 
     }
-
-};
-
 
 };
