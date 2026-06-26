@@ -1340,7 +1340,7 @@ window.completarLoginUI = () => {
   window.setDisplay('admin-only', canRoot ? 'block' : 'none'); window.setDisplay('nav-users', (p.p_users || isAdm) ? 'flex' : 'none'); window.setDisplay('nav-struct', (p.p_struct || isAdm) ? 'flex' : 'none');
   
   let isAdAud = p.p_audit_admin || p.p_gest_sgc || isAdm;
-  window.setDisplay('btn-config-plan', isAdAud ? 'inline-flex' : 'none'); window.setDisplay('btn-nueva-aud', isAdAud ? 'inline-flex' : 'none');
+  window.setDisplay('btn-config-plan', isAdAud ? 'inline-flex' : 'none'); window.setDisplay('btn-nueva-aud', isAdAud ? 'inline-flex' : 'none'); window.setDisplay('btn-notif-manual-aud', isAdAud ? 'inline-flex' : 'none');
   
   window.cargarDatosCentrales();
     try { window.startNotificationSystem(); } catch(e) { console.warn('startNotificationSystem failed', e); }
@@ -5324,3 +5324,66 @@ window.abrirModalIT = () => window.generarPlantillaFormulario("Controles de Segu
     {id: "responsable", label: "Responsable de IT", tipo: "text", requerido: true}
 ]);
 
+
+
+window.enviarNotificacionManualAuditorias = async () => {
+    let pendientes = (globalAllAuditorías || []).filter(a => a.estado !== 'Completada' && a.estado !== 'Cancelada');
+    if (pendientes.length === 0) { alert('No hay auditorías pendientes para notificar.'); return; }
+    if (!confirm(`¿Enviar recordatorios por correo para ${pendientes.length} auditoría(s) pendiente(s)?`)) return;
+
+    window.showLoading();
+    let enviados = 0;
+    let fallidos = 0;
+
+    for (const a of pendientes) {
+        let toEmails = new Set();
+        if (a.auditado_emails) a.auditado_emails.forEach(e => { if (e && e !== 'undefined' && e !== 'null') toEmails.add(e); });
+        if (a.auditor_emails) a.auditor_emails.forEach(e => { if (e && e !== 'undefined' && e !== 'null') toEmails.add(e); });
+        if (a.auditado) {
+            a.auditado.split(', ').forEach(n => {
+                let u = allUsers.find(x => x.nombre === n);
+                if (u && u.email) toEmails.add(u.email);
+            });
+        }
+        if (a.auditor) {
+            a.auditor.split(', ').forEach(n => {
+                let u = allUsers.find(x => x.nombre === n);
+                if (u && u.email) toEmails.add(u.email);
+            });
+        }
+
+        let ccEmails = new Set([EMAIL_ADMIN_SGC]);
+        if (globalAuditPlan && globalAuditPlan.correos) globalAuditPlan.correos.forEach(x => ccEmails.add(x));
+
+        let correosTo = Array.from(toEmails).filter(e => e && e !== 'undefined' && e !== 'null');
+        let correosCc = Array.from(ccEmails).filter(e => e && e !== 'undefined' && e !== 'null');
+
+        if (correosTo.length === 0 && correosCc.length === 0) { fallidos++; continue; }
+
+        let msgMail = window.composeEmail('Recordatorio de Auditoría', `
+            <div style="font-family: sans-serif; color: #1e293b; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <div style="background: #0ea5e9; color: white; padding: 15px; text-align: center; border-radius: 8px 8px 0 0;">
+                    <h2 style="margin: 0;">RECORDATORIO DE AUDITORÍA</h2>
+                </div>
+                <div style="padding: 20px; line-height: 1.6;">
+                    <p>Este es un recordatorio de la auditoría <b>${a.audit_num || 'N/A'}</b> programada en el sistema.</p>
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px dashed #cbd5e1; margin-bottom: 15px;">
+                        <b>Fecha:</b> ${window.formatearFechaAbreviada(a.fecha)}<br>
+                        <b>Horario:</b> ${a.hora_inicio || 'N/A'} - ${a.hora_fin || 'N/A'}<br>
+                        <b>Lugar:</b> ${a.lugar || 'N/A'}<br>
+                        <b>Área/Proceso:</b> ${a.requisitos || a.proceso || 'N/A'}<br>
+                        <b>Auditado(s):</b> ${a.auditado || 'N/A'}<br>
+                        <b>Auditor(es):</b> ${a.auditor || 'N/A'}<br>
+                        <b>Estado:</b> ${a.estado || 'N/A'}
+                    </div>
+                    <p style="margin: 0;">Por favor, verificar la agenda en el módulo de Auditoría.</p>
+                </div>
+            </div>`);
+
+        let ok = await window.sendNotification({to: correosTo.join(','), cc: correosCc.join(',')}, `Recordatorio Auditoría: ${a.audit_num || 'N/A'}`, msgMail);
+        if (ok) enviados++; else fallidos++;
+    }
+
+    window.hideLoading();
+    alert(`Proceso completado.\n\nNotificaciones enviadas: ${enviados}\nFallidos: ${fallidos}\nTotal procesadas: ${pendientes.length}`);
+};

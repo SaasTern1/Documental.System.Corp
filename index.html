@@ -11,13 +11,13 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: wss: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    
+
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    
+
     <link rel="stylesheet" href="styles.css">
     <style>
         /* ESTILOS PARA LA MATRIZ DE RIESGOS (HEATMAP) */
@@ -680,7 +680,7 @@
                     <div class="section-header-icon" style="background: linear-gradient(135deg, #059669, #10b981);"><span class="material-icons-round">calendar_month</span></div>
                     <div><h1>Calendario de Auditoría</h1><p>Planificación, ejecución y seguimiento de auditorías internas</p></div>
                 </div>
-                <div style="display:flex; gap:10px; align-items:center; background:white; padding:8px 15px; border-radius:12px; border:1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="display:flex; gap:10px; align-items:center; background:white; padding:8px 15px; border-radius:12px; border:1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-wrap:wrap;">
                     <label for="aud-year-select" style="margin:0; font-size:12px;">Año:</label>
                     <select aria-label="aud-year-select" id="aud-year-select" style="margin:0; width:100px; padding:8px; border:none; font-weight:bold; color:var(--primary); background:transparent; cursor:pointer; font-size:14px;" onchange="window.cambiarAnioAuditoría(this.value)"></select>
                     <div style="width:1px; height:20px; background:var(--border); margin:0 5px;"></div>
@@ -688,6 +688,7 @@
                     <button class="btn btn-info" id="btn-config-plan" style="display:none; padding:8px 12px; font-size:12px;" onclick="window.abrirModalPlan()"><span class="material-icons-round" style="font-size:16px;">settings</span> Configurar Plan</button>
                     <button class="btn btn-primary" id="btn-nueva-aud" style="display:none; padding:8px 12px; font-size:12px;" onclick="window.abrirNuevaAuditoría()"><span class="material-icons-round" style="font-size:16px;">add</span> Nueva Auditoría</button>
                     <button class="btn btn-success" onclick="window.exportarExcelAuditoría()" style="padding:8px 12px; font-size:12px;"><span class="material-icons-round" style="font-size:16px;">download</span> Exportar</button>
+                    <button class="btn btn-info" id="btn-notif-manual-aud" style="display:none; padding:8px 12px; font-size:12px; background:#0ea5e9; color:white; border:none;" onclick="window.enviarNotificacionManualAuditorias()" title="Enviar notificación por correo a las auditorías generadas"><span class="material-icons-round" style="font-size:16px;">mark_email_read</span> Enviar Notificación Manual</button>
                 </div>
             </div>
 
@@ -876,7 +877,7 @@
                 <div class="card" style="border: 1px solid var(--border); box-shadow: var(--shadow-sm);"><h3 style="font-size:14px; margin-bottom:15px; color:var(--text-main);">Columnas Listado Maestro</h3><div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;"><input aria-label="col-nom" type="text" id="col-nom" placeholder="Nombre Columna" style="margin:0; flex:1; min-width:140px;"><select aria-label="col-tipo" id="col-tipo" style="margin:0; width:120px;"><option value="text">Texto</option><option value="date">Fecha</option><option value="number">Número</option><option value="url">Enlace</option></select><button class="btn btn-primary" onclick="window.agregarColumna()" style="padding:10px 15px;"><span class="material-icons-round" style="font-size:16px;">add</span> Añadir</button></div><div id="list-columnas" class="settings-list"></div></div>
                 <div class="card" style="border: 1px solid var(--border); box-shadow: var(--shadow-sm);"><h3 style="font-size:14px; margin-bottom:15px; color:var(--text-main);">Estatus Listado Maestro</h3><div style="display:flex; gap:8px; margin-bottom:20px;"><input aria-label="está-nom" type="text" id="está-nom" placeholder="Ej: Obsoleto" style="margin:0; flex:1;"><button class="btn btn-primary" onclick="window.agregarEstatus()" style="padding:10px 15px;"><span class="material-icons-round" style="font-size:16px;">add</span> Añadir</button></div><div id="list-estatus" class="settings-list"></div></div>
             </div>
-            
+
             <h3 style="margin:35px 0 20px; color:var(--primary); border-bottom:2px solid var(--border); padding-bottom:10px; font-size:20px;">Integración en la Nube (Drive)</h3>
             <div class="card" style="border-top: 4px solid var(--accent);">
                 <p style="font-size:11px; color:var(--text-muted); margin-bottom:15px;">Pega el enlace web (URL) o el ID de la carpeta pública de Google Drive que funcionará como el Repositorio Documental Oficial del sistema.</p>
@@ -885,7 +886,7 @@
                     <button class="btn btn-primary" onclick="window.guardarConfigDrive()"><span class="material-icons-round">save</span> Guardar URL</button>
                 </div>
             </div>
-            
+
             <h3 style="margin:35px 0 20px; color:var(--primary); border-bottom:2px solid var(--border); padding-bottom:10px; font-size:20px;">Configuración de Nivel de Servicio (SLA)</h3>
             <div class="resp-grid">
                 <div class="card" style="border-top: 4px solid var(--danger);">
@@ -1097,7 +1098,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="modal-overlay" id="modal-dias-solicitud" style="display:none;">
         <div class="modal-content" style="max-width:900px; display:block; width:100%; max-height:90vh; overflow-y:auto; padding:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px;">
@@ -1130,7 +1131,7 @@
                 </div>
 
                 <div class="step-container" style="margin-bottom:25px;"><div class="step" id="s0"><div class="step-dot">0</div><div class="custom-label">Evaluación</div></div><div class="step" id="s1"><div class="step-dot">1</div><div class="custom-label">Creación Doc</div></div><div class="step" id="s2"><div class="step-dot">2</div><div class="custom-label">Verificación</div></div><div class="step" id="s3"><div class="step-dot">3</div><div class="custom-label">Aprobación</div></div><div class="step" id="s4"><div class="step-dot">4</div><div class="custom-label">Publicación SGC</div></div></div>
-                
+
                 <div id="m-admin-sla" style="display:none; margin-bottom:20px; background:#fffbeb; padding:15px 20px; border-radius:12px; border: 1px dashed var(--warning); box-shadow: var(--shadow-sm);">
                     <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
                         <div style="display:flex; align-items:center; gap:8px;">
@@ -1142,7 +1143,7 @@
                         <button class="btn btn-warning" id="btn-save-sla" onclick="window.guardarSLA()" style="padding:10px 20px;"><span class="material-icons-round" style="font-size:16px;">save</span> Guardar SLA</button>
                     </div>
                 </div>
-                
+
                 <div id="m-asignados-panel" style="display:none; margin-bottom:20px; background:#f0f9ff; padding:15px; border-radius:10px; border:1px solid #bae6fd;">
                     <div class="custom-label" style="color:var(--primary); font-weight:800; font-size:12px; margin-bottom:10px; display:flex; align-items:center; gap:6px;"><span class="material-icons-round" style="font-size:16px;">people</span> Responsables Asignados (Evaluación SGC)</div>
                     <div class="resp-grid" style="gap:10px;">
@@ -1151,12 +1152,12 @@
                         <div><div class="custom-label">Paso 4 (Publicar)</div><p id="m-asig-p4" style="font-size:13px; font-weight:600;"></p></div>
                     </div>
                 </div>
-                
+
 
 
                 <div id="m-display-final" style="display:none; margin-bottom:25px; background:linear-gradient(to right, #f0fdf4, #ffffff); padding:25px; border-radius:16px; border: 1px solid #bbf7d0; box-shadow:var(--shadow-sm);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #dcfce3; padding-bottom:15px;">
-                        <h3 style="color:#166534; margin:0; display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="font-size:24px;">task_alt</span> Documento Oficial Publicado</h3> 
+                        <h3 style="color:#166534; margin:0; display:flex; align-items:center; gap:8px;"><span class="material-icons-round" style="font-size:24px;">task_alt</span> Documento Oficial Publicado</h3>
                         <button id="btn-edit-final" class="btn btn-warning" style="display:none; padding:8px 14px; font-size:12px;" onclick="window.habilitarEdicionFinal()"><span class="material-icons-round" style="font-size:16px;">edit</span> Editar Oficial</button>
                     </div>
                     <div class="resp-grid" style="background:white; padding:20px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
@@ -1177,7 +1178,7 @@
                         <div><div class="custom-label">Tipo Documento</div><p id="m-tipo" style="font-weight:600; font-size:14px; color:var(--text-main);"></p></div>
                         <div><div class="custom-label">Acción Solicitadía</div><p id="m-accion" style="font-weight:800; color:var(--primary); font-size:14px; background:rgba(30,64,175,0.05); display:inline-block; padding:4px 10px; border-radius:6px; border:1px solid rgba(30,64,175,0.1);"></p></div>
                     </div>
-                    
+
                     <div class="section-title" style="display:flex; align-items:center; gap:8px; margin-top:30px;"><span class="material-icons-round" style="color:var(--primary); font-size:18px;">attachment</span> 2. DOCUMENTACIÓN ADJUNTA</div>
                     <div class="resp-grid" style="background:#fff; padding:20px; border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
                         <div><div class="custom-label">Archivo Borrador / Origen</div><div id="m-file-link" style="font-size:14px; margin-top:5px;"></div></div>
@@ -1190,13 +1191,13 @@
                             <div><div class="custom-label">Fecha Ult. Ver.</div><p id="m-fecha-ult" style="font-weight:800; font-size:14px;"></p></div>
                         </div>
                     </div>
-                    
+
                     <div class="section-title" style="display:flex; align-items:center; gap:8px; margin-top:30px;"><span class="material-icons-round" style="color:var(--primary); font-size:18px;">group</span> 3. MOTIVACIÓN E INVOLUCRADOS</div>
                     <div style="margin-top:10px; padding:20px; background:#fff; border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow-sm);">
                         <div class="custom-label">Justificación / Motivo Detallado</div>
                         <p id="m-jus" style="line-height:1.6; color:var(--text-main); font-size:13px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-top:8px;"></p>
                     </div>
-                    
+
                     <div id="m-involucrados-container" style="margin-top:15px;">
                         <div class="custom-label">Personal Involucrado / Revisores Extras</div>
                         <div id="m-involucrados-list" style="margin-bottom:10px; min-height:30px; padding:10px; background:#f8fafc; border-radius:8px; border:1px solid var(--border);"></div>
@@ -1278,7 +1279,7 @@
                     <div style="display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;"><input aria-label="m-file-comentario" type="file" id="m-file-comentario" style="margin:0; flex:1; min-width:200px; padding:8px;"><button class="btn btn-success" onclick="window.enviarComentarioLibre()" style="padding:10px 20px; font-size:12px;">Subir Comentario</button></div>
                 </div>
             </div>
-            
+
             <div class="modal-side">
                 <div style="padding:20px; background:var(--sidebar); color:white; font-weight:800; font-size:12px; letter-spacing:1px; position:sticky; top:0;"><span class="material-icons-round" style="vertical-align:middle; font-size:16px; margin-right:5px;">history</span> BITÁCORA</div>
                 <div id="chat-box" style="padding:15px;"></div>
@@ -1295,22 +1296,22 @@
                <div><label for="pr-ruc">RUC / Identificación</label><input aria-label="pr-ruc" type="text" id="pr-ruc"></div>
                <div><label for="pr-serv">Servicio o Producto Principal</label><input aria-label="pr-serv" type="text" id="pr-serv"></div>
                <div style="grid-column: 1 / -1;"><label for="pr-cert">Certificaciones (OEA, ISO, BASC...)</label><input aria-label="Separadías por comas" type="text" id="pr-cert" placeholder="Separadías por comas"></div>
-               
+
                <div><label for="pr-ev-fisica">Evaluación Seg. Física (1-10)</label><input aria-label="pr-ev-fisica" type="number" id="pr-ev-fisica" min="1" max="10" value="0" onchange="window.calcularRiesgoProveedor()"></div>
                <div><label for="pr-ev-ti">Evaluación Seg. TI (1-10)</label><input aria-label="pr-ev-ti" type="number" id="pr-ev-ti" min="1" max="10" value="0" onchange="window.calcularRiesgoProveedor()"></div>
                <div><label for="pr-ev-rrhh">Evaluación Seg. RRHH (1-10)</label><input aria-label="pr-ev-rrhh" type="number" id="pr-ev-rrhh" min="1" max="10" value="0" onchange="window.calcularRiesgoProveedor()"></div>
-               
+
                <div><label for="pr-fecha-eval">Fecha Próxima Eval.</label><input aria-label="pr-fecha-eval" type="date" id="pr-fecha-eval"></div>
                <div><label for="pr-estado">Estado</label><select aria-label="pr-estado" id="pr-estado"><option>Aprobado</option><option>Condicionado</option><option>Rechazado</option></select></div>
-               
+
                <div style="grid-column: 1 / -1;"><label for="pr-obs">Observaciones / Recomendaciones</label><textarea aria-label="pr-obs" id="pr-obs" rows="3"></textarea></div>
            </div>
-           
+
            <div style="background:#f8fafc; padding:15px; border-radius:8px; margin:20px 0; text-align:center; border:1px dashed var(--info);">
-               <b>Puntaje Promedio:</b> <span id="pr-puntaje-disp" style="font-size:18px; margin-right:15px;">0</span> 
+               <b>Puntaje Promedio:</b> <span id="pr-puntaje-disp" style="font-size:18px; margin-right:15px;">0</span>
                <b>Nivel Riesgo (Calculado):</b> <span id="pr-riesgo-badge" class="badge badge-success">NO CALCULADO</span>
            </div>
-           
+
            <div style="display:flex; gap:10px; margin-top:20px; justify-content: flex-end;">
                <button type="button" class="btn btn-dark" onclick="window.setDisplay('modal-proveedor', 'none')">Cancelar</button>
                <button type="button" class="btn btn-primary" onclick="window.guardarProveedor()">GUARDAR PROVEEDOR</button>
@@ -1328,19 +1329,19 @@
                <div><label for="ri-amenaza">Amenaza / Vulnerabilidíad</label><select aria-label="ri-amenaza" id="ri-amenaza"><option>Robo / Pérdidía</option><option>Ciberataque / Hackeo</option><option>Fallo en Operaciones</option><option>Incumplimiento Legal</option><option>Contaminación Carga</option><option>Desastre Natural</option><option>Otro</option></select></div>
                <div><label for="ri-resp">Responsable (Gestor)</label><select aria-label="ri-resp" id="ri-resp"><option>No Asignado</option></select></div>
                <div style="grid-column: 1 / -1;"><label for="ri-desc">Descripción detalladía del Riesgo</label><textarea aria-label="ri-desc" id="ri-desc" rows="3"></textarea></div>
-               
+
                <div><label for="ri-prob">Probabilidíad (1-5)</label><input aria-label="ri-prob" type="number" id="ri-prob" min="1" max="5" value="1" onchange="window.actualizarSeveridíadColor()"></div>
                <div><label for="ri-imp">Impacto (1-5)</label><input aria-label="ri-imp" type="number" id="ri-imp" min="1" max="5" value="1" onchange="window.actualizarSeveridíadColor()"></div>
-               
+
                <div style="grid-column: 1 / -1; display:flex; align-items:center; gap:15px; margin: 10px 0;">
                    <b>Nivel de Severidíad Automático:</b>
                    <span id="ri-sev-badge" class="badge badge-success" style="font-size:14px; padding:8px 12px;">SEVERIDAD: 1 (BAJO)</span>
                </div>
-               
+
                <div style="grid-column: 1 / -1;"><label for="ri-controles">Controles Actuales</label><textarea aria-label="Describa los controles que ya existen para estáe riesgo..." id="ri-controles" rows="2" placeholder="Describa los controles que ya existen para estáe riesgo..."></textarea></div>
                <div><label for="ri-accion">Acción a Tomar</label><select aria-label="ri-accion" id="ri-accion"><option>Mitigar (Tratar)</option><option>Aceptar</option><option>Transferir</option><option>Evitar</option></select></div>
            </div>
-           
+
            <div style="display:flex; gap:10px; margin-top:20px; justify-content: flex-end;">
                <button type="button" class="btn btn-dark" onclick="window.setDisplay('modal-riesgo', 'none')">Cancelar</button>
                <button type="button" class="btn btn-primary" onclick="window.guardarRiesgo()">GUARDAR RIESGO</button>
@@ -1350,7 +1351,7 @@
     <div class="modal-overlay" id="modal-usuario" style="display:none; z-index:3000;">
         <div class="modal-content" style="max-width:1100px; display:block; padding: 30px; height:auto; max-height:90vh; overflow-y:auto;">
            <h2 style="color:var(--primary); margin: 20px 0; display:flex; align-items:center; gap:8px;" id="user-form-title"><span class="material-icons-round">person_add</span> Registrar / Editar Usuario</h2>
-           
+
            <div class="resp-grid">
                <div><label for="u-nom">Nombre Completo</label><input aria-label="u-nom" type="text" id="u-nom"></div>
                <div><label for="u-usr">Usuario ID (login)</label><input aria-label="u-usr" type="text" id="u-usr"></div>
@@ -1372,7 +1373,7 @@
                    <!-- SOLICITUDES -->
                    <div style="border: 1px solid var(--border); padding: 15px; border-radius: 8px; background: #f8fafc;">
                        <h4 style="color:var(--primary); margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom:10px;"><span class="material-icons-round" style="font-size:16px; vertical-align:middle;">assignment</span> Módulo Solicitudes</h4>
-                       
+
                        <div style="margin-bottom:10px;">
                            <b style="font-size:11px; color:#64748b; text-transform:uppercase;">Permisos de Visualización (Ver)</b>
                            <div style="margin-top:5px; display:flex; flex-direction:column; gap:4px;">
@@ -1590,7 +1591,7 @@
 
                     <h4 style="border-bottom:1px solid #e2e8f0; padding-bottom:10px; margin-top:30px;">Bitácora de Auditoría</h4>
                     <div id="chat-box-audit" style="max-height: 250px; background:#f8fafc; border:1px solid var(--border); border-radius:8px;"></div>
-                    
+
                     <div id="general-comment-area-audit" style="margin-top:15px;">
                         <div class="custom-label">AÑADIR NOTA / HALLAZGO RÁPIDO:</div>
                         <div style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:white; margin-bottom:10px;">
@@ -1730,15 +1731,15 @@
                     <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Fuente de No Conformidíad</div><div style="padding:0; border-bottom:1px solid #ccc;"><select aria-label="sac-fuente" id="sac-fuente" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"><option value="Auditoría Interna">Auditoría Interna</option><option value="Auditoría Externa">Auditoría Externa</option><option value="Incidente">Incidente / Accidente</option><option value="Queja Cliente">Queja de Cliente</option><option value="Otro">Otro</option></select></div>
                     <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">En el caso de otro, detalle:</div><div style="padding:0; border-bottom:1px solid #ccc;"><input aria-label="sac-fuente-otro" type="text" id="sac-fuente-otro" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px;"></div>
                     <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#fef3c7;">Detalle NC / Problema</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="sac-detalle" id="sac-detalle" rows="4" style="border:none; margin:0; width:100%; border-radius:0; background:#f8fafc; resize:vertical; padding:12px;"></textarea></div>
-                    
+
                     <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#e0f2fe; color:#0369a1;">Beneficio Esperado</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="sac-beneficio" id="sac-beneficio" rows="3" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:12px;"></textarea></div>
                     <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#e0f2fe; color:#0369a1;">Análisis de Causa-Raíz</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="sac-causa" id="sac-causa" rows="4" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:12px;"></textarea></div>
                     <div style="padding:8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; font-weight:bold; background:#e0f2fe; color:#0369a1;">Acción a Implementar</div><div style="padding:0; border-bottom:1px solid #ccc;"><textarea aria-label="sac-accion" id="sac-accion" rows="4" style="border:none; margin:0; width:100%; border-radius:0; resize:vertical; padding:12px;"></textarea></div>
-                    
+
                     <div style="padding:8px; border-right:1px solid #ccc; font-weight:bold; background:#fef3c7;">Responsable de la AC</div><div style="padding:0; display:flex; align-items:center;"><select aria-label="sac-dueno" id="sac-dueno" style="border:none; margin:0; width:100%; border-radius:0; height:100%; padding:8px; font-weight:bold; color:var(--primary);"></select></div>
 
                 </div>
-                
+
                 <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">PLAN DE ACCIÓN</h4>
                 <div class="table-responsive" style="margin-bottom:10px;">
                     <table style="width:100%; border:1px solid #ccc; font-size:12px; text-align:left;">
@@ -1775,7 +1776,7 @@
                         <b>Acceso restáringido:</b> Solo la persona que creó estáa SAC puede cerrarla definitivamente.
                     </div>
                 </div>
-                
+
                 <div style="display:flex; gap:10px; margin-top:20px;"><button type="button" class="btn btn-primary" id="btn-save-sac" onclick="window.guardarSAC()" style="flex:1; padding:15px; font-size:16px;">Guardar Avances de la SAC</button><button type="button" class="btn btn-ghost" onclick="window.setDisplay('modal-sac', 'none')" style="padding:15px; width:150px; background:#e2e8f0;">Cancelar</button></div>
             </div>
         </div>
@@ -1788,7 +1789,7 @@
         <div class="modal-content" style="max-width: 700px; display:block; width:100%; height:auto; padding:30px;">
             <h3 style="color:var(--primary); margin-top:0; display:flex; align-items:center; gap:8px;"><span class="material-icons-round">gavel</span> Evaluación Inicial (SGC)</h3>
             <p style="font-size:13px; color:var(--text-muted);">Verifica la viabilidíad de la solicitud antes de asignarla y activar el SLA.</p>
-            
+
             <div style="margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border);">
                 <label style="font-weight:800; font-size:13px; margin-bottom:10px; display:block;">Decisión de SGC:</label>
                 <div style="display:flex; gap:20px;">
@@ -1867,7 +1868,7 @@
                 </div>
                 <div id="fb-perm-editar-list" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:5px; min-height:10px;"></div>
             </div>
-            
+
             <div class="grid-2" style="gap:20px;">
                 <!-- Panel Izquierdo: Datos Básicos y Controles -->
                 <div>
@@ -1887,7 +1888,7 @@
                         <label style="font-size:11px;">Opciones del Selector (separadías por coma)</label>
                         <input aria-label="Ej: Auto, Moto, Camión" type="text" id="fb-dynamic-options" class="search-bar" placeholder="Ej: Auto, Moto, Camión" style="width:100%; margin-bottom:0;" onchange="window.renderFormPreview()">
                     </div>
-                    
+
                     <h4 style="font-size:13px; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">Añadir Nuevo Campo</h4>
                     <label for="fb-tipo-campo">Tipo de Campo</label>
                     <select aria-label="fb-tipo-campo" id="fb-tipo-campo" name="fb-tipo-campo" style="margin-bottom:10px;">
@@ -1908,20 +1909,20 @@
                     </select>
                     <label for="fb-label-campo">Etiqueta (Pregunta)</label>
                     <input aria-label="Ej: ¿Cuál es su nombre?" type="text" id="fb-label-campo" name="fb-label-campo" placeholder="Ej: ¿Cuál es su nombre?">
-                    
+
                     <!-- Opciones para Select -->
                     <div id="fb-opciones-panel" style="display:none; background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:15px;">
                         <label for="fb-opciones-campo" style="font-size:11px;">Opciones (separadías por coma)</label>
                         <input aria-label="Opción 1, Opción 2, Opción 3" type="text" id="fb-opciones-campo" name="fb-opciones-campo" placeholder="Opción 1, Opción 2, Opción 3" style="margin-bottom:0;">
                     </div>
-                    
+
                     <label for="fb-req-campo" style="display:flex; align-items:center; gap:5px; font-size:12px; margin-bottom:15px; cursor:pointer;">
                         <input aria-label="fb-req-campo" type="checkbox" id="fb-req-campo" name="fb-req-campo" style="margin:0; width:auto;"> Campo Obligatorio
                     </label>
 
                     <button class="btn btn-info" onclick="window.agregarCampoBuilder()" style="width:100%;"><span class="material-icons-round" style="font-size:16px;">add_circle</span> Añadir Campo a la Vista Previa</button>
                 </div>
-                
+
                 <!-- Panel Derecho: Vista Previa -->
                 <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:20px;">
                     <h4 style="font-size:13px; color:var(--primary); margin-bottom:15px; text-align:center;">Vista Previa del Formulario</h4>
@@ -2019,15 +2020,15 @@
                 <h2 style="margin:0; font-size:18px; display:flex; align-items:center; gap:10px;"><span class="material-icons-round" style="color:var(--primary);">qr_code_2</span> Generador de Códigos QR</h2>
                 <button class="btn btn-dark" onclick="window.setDisplay('modal-generador-qr', 'none')" style="padding:6px 12px;"><span class="material-icons-round" style="font-size:16px;">close</span></button>
             </div>
-            
+
             <label style="font-size:12px;">Seleccionar Formulario para el QR</label>
             <select aria-label="Formulario QR" id="qr-gen-form" class="search-bar" style="width:100%; margin-bottom:15px;"></select>
-            
+
             <label style="font-size:12px;">Ubicación / Identificador Específico</label>
             <input aria-label="qr-gen-ubicacion" type="text" id="qr-gen-ubicacion" class="search-bar" placeholder="Ej: Puerta Principal, CCTV-05" style="width:100%; margin-bottom:20px;">
-            
+
             <button class="btn btn-primary" onclick="window.generarCodigoQR()" style="width:100%; margin-bottom:20px;"><span class="material-icons-round">qr_code</span> Generar QR</button>
-            
+
             <div id="qr-result-container" style="display:none; text-align:center; border:1px dashed var(--border); padding:20px; border-radius:8px; background:#f8fafc;">
                 <div id="qr-code-element" style="display:flex; justify-content:center; margin-bottom:15px;"></div>
                 <p id="qr-result-text" style="font-size:11px; color:var(--text-muted); margin-bottom:15px; word-break:break-all;"></p>
@@ -2139,10 +2140,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
-
