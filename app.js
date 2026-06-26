@@ -5354,10 +5354,141 @@ window.abrirModalNotificacionAuditoria = () => {
         return;
     }
 
-    // Obtener la auditoría seleccionada
     let auditoria = pendientes[opcion - 1];
 
-    // Enviar el objeto completo
+    // Aquí se llama a la función que envía el correo
     window.enviarNotificacionManualAuditoria(auditoria);
+
+    window.enviarNotificacionManualAuditoria = async (a) => {
+
+    if (a.estado === "Completada" || a.estado === "Cancelada") {
+        alert("Esta auditoría ya no puede ser notificada.");
+        return;
+    }
+
+    if (!confirm(`¿Enviar recordatorio de la auditoría ${a.audit_num}?`))
+        return;
+
+    window.showLoading();
+
+    try {
+
+        let toEmails = new Set();
+
+if (a.auditado_emails)
+    a.auditado_emails.forEach(e => {
+        if (e && e !== "undefined" && e !== "null")
+            toEmails.add(e);
+    });
+
+if (a.auditor_emails)
+    a.auditor_emails.forEach(e => {
+        if (e && e !== "undefined" && e !== "null")
+            toEmails.add(e);
+    });
+
+if (a.auditado) {
+    a.auditado.split(", ").forEach(n => {
+        let u = allUsers.find(x => x.nombre === n);
+        if (u?.email) toEmails.add(u.email);
+    });
+}
+
+if (a.auditor) {
+    a.auditor.split(", ").forEach(n => {
+        let u = allUsers.find(x => x.nombre === n);
+        if (u?.email) toEmails.add(u.email);
+    });
+}
+
+let ccEmails = new Set([EMAIL_ADMIN_SGC]);
+
+if (globalAuditPlan?.correos)
+    globalAuditPlan.correos.forEach(e => ccEmails.add(e));
+
+let correosTo = [...toEmails].filter(Boolean);
+let correosCc = [...ccEmails].filter(Boolean);
+
+if (!correosTo.length && !correosCc.length) {
+    window.hideLoading();
+    alert("No existen destinatarios.");
+    return;
+}
+
+let cuerpo = window.composeEmail(
+    "Recordatorio de Auditoría",
+    `
+    <div style="font-family:sans-serif;color:#1e293b;width:100%;border:1px solid #e2e8f0;border-radius:8px;">
+        <div style="background:#0ea5e9;color:white;padding:15px;text-align:center;border-radius:8px 8px 0 0;">
+            <h2 style="margin:0;">RECORDATORIO DE AUDITORÍA</h2>
+        </div>
+
+        <div style="padding:20px;line-height:1.6;">
+
+            <p>
+                Este es un recordatorio de la auditoría
+                <b>${a.audit_num || "N/A"}</b>.
+            </p>
+
+            <div style="background:#f8fafc;padding:15px;border-radius:6px;border:1px dashed #cbd5e1;">
+
+                <b>Fecha:</b> ${window.formatearFechaAbreviada(a.fecha)}<br>
+
+                <b>Horario:</b>
+                ${a.hora_inicio || "N/A"} -
+                ${a.hora_fin || "N/A"}<br>
+
+                <b>Lugar:</b>
+                ${a.lugar || "N/A"}<br>
+
+                <b>Área/Proceso:</b>
+                ${a.requisitos || a.proceso || "N/A"}<br>
+
+                <b>Auditado(s):</b>
+                ${a.auditado || "N/A"}<br>
+
+                <b>Auditor(es):</b>
+                ${a.auditor || "N/A"}<br>
+
+                <b>Estado:</b>
+                ${a.estado || "N/A"}
+
+            </div>
+
+            <p style="margin-top:15px;">
+                Favor verificar la programación en el módulo de Auditoría.
+            </p>
+
+        </div>
+    </div>
+    `
+);
+
+let enviado = await window.sendNotification(
+    {
+        to: correosTo.join(","),
+        cc: correosCc.join(",")
+    },
+    `Recordatorio Auditoría: ${a.audit_num}`,
+    cuerpo
+);
+
+window.hideLoading();
+
+if (enviado)
+    alert("✅ Recordatorio enviado correctamente.");
+else
+    alert("❌ No fue posible enviar el correo.");
+
+    } catch (e) {
+
+        window.hideLoading();
+        console.error(e);
+        alert("Ocurrió un error al enviar el recordatorio.");
+
+    }
+
+};
+
 
 };
